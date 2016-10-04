@@ -8,7 +8,7 @@ _(In case of a bug report Please complete the table below)_
 
 | Information | Description |
 |--------------|---------|
-| League\Uri version |  |
+| League\Uri\Schemes version |  |
 | PHP/HHVM version |  |
 | OS Platform |  |
 

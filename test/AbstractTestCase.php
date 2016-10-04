@@ -1,6 +1,6 @@
 <?php
 
-namespace League\Uri\Test;
+namespace LeagueTest\Uri\Schemes;
 
 use PHPUnit_Framework_TestCase as TestCase;
 
@@ -23,9 +23,7 @@ class AbstractTestCase extends TestCase
                 continue;
             }
             if (!$this->supportsDebugInfo()) {
-                $this->markTestSkipped(
-                    'your PHP/HHVM version does not support `__debugInfo`'
-                );
+                $this->markTestSkipped('your PHP/HHVM version does not support `__debugInfo`');
             }
         }
     }

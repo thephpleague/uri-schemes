@@ -1,64 +1,136 @@
-URI
+Uri Schemes
 =======
 
-[![Build Status](https://img.shields.io/travis/thephpleague/uri/master.svg?style=flat-square)](https://travis-ci.org/thephpleague/uri)
-[![HHVM Status](https://img.shields.io/hhvm/league/uri.svg?style=flat-square)](http://hhvm.h4cc.de/package/league/uri)
-[![Coverage Status](https://img.shields.io/scrutinizer/coverage/g/thephpleague/uri.svg?style=flat-square)](https://scrutinizer-ci.com/g/thephpleague/uri/code-structure)
-[![Quality Score](https://img.shields.io/scrutinizer/g/thephpleague/uri.svg?style=flat-square)](https://scrutinizer-ci.com/g/thephpleague/uri)
-[![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE)
-[![Latest Version](https://img.shields.io/github/release/thephpleague/uri.svg?style=flat-square)](https://github.com/thephpleague/uri/releases)
-[![Total Downloads](https://img.shields.io/packagist/dt/league/uri.svg?style=flat-square)](https://packagist.org/packages/league/uri)
-
-The `Uri` package provides simple and intuitive classes to create and manage URIs in PHP.
-
-Highlights
-------
-
-- Simple API
-- [RFC3986](http://tools.ietf.org/html/rfc3986) compliant
-- Implements the `UriInterface` from [PSR-7][]
-- Fully documented
-- Framework Agnostic
-- Composer ready, [PSR-2][] and [PSR-4][] compliant
-
-Documentation
-------
-
-Full documentation can be found at [uri.thephpleague.com](http://uri.thephpleague.com). Contribute to this documentation in the [gh-pages](https://github.com/thephpleague/uri/tree/gh-pages) branch
+This package contains concrete URI objects represented as immutable value object. Each URI object implements `League\Uri\Interfaces\Uri` interface as defined in the [uri-interfaces package](https://github.com/thephpleague/uri-interfaces) or the `Psr\Http\Message\UriInterface` from [PSR-7](http://www.php-fig.org/psr/psr-7/).
 
 System Requirements
 -------
 
 You need:
 
-- **PHP >= 5.5.0** or **HHVM >= 3.6**, but the latest stable version of PHP/HHVM is recommended
+- **PHP >= 5.6.0** but the latest stable version of PHP is recommended
 - the `mbstring` extension
 - the `intl` extension
 
-To use the library.
-
-Install
+Dependencies
 -------
 
-Install `Uri` using Composer.
+- [PSR-7](http://www.php-fig.org/psr/psr-7/)
+- [uri-interfaces](https://github.com/thephpleague/uri-interfaces)
+- [uri-components](https://github.com/thephpleague/uri-components)
+- [uri-parser](https://github.com/thephpleague/uri-parser)
 
-```
-$ composer require league/uri
-```
+Installation
+--------
 
-Testing
+Clone this repo and use composer install
+
+Documentation
+--------
+
+The following URI objects are defined (order alphabetically):
+
+- `League\Uri\Schemes\Data` : represents a Data scheme URI
+- `League\Uri\Schemes\File` : represents a File scheme URI
+- `League\Uri\Schemes\FTP` : represents a FTP scheme URI
+- `League\Uri\Schemes\Http` : represents a HTTP/HTTPS scheme URI
+- `League\Uri\Schemes\Ws` : represents a WS/WSS scheme URI
+
+Usage
 -------
 
-`Uri` has a [PHPUnit](https://phpunit.de) test suite and a coding style compliance test suite using [PHP CS Fixer](http://cs.sensiolabs.org/). To run the tests, run the following command from the project folder.
+All URI objects expose the same methods.
 
-``` bash
-$ composer test
+### Accessing URI parts and components
+
+You can access the URI string, its individual parts and components using their respective getter methods.
+
+```php
+<?php
+
+public Uri::__toString(): string
+public Uri::getScheme(void): string
+public Uri::getUserInfo(void): string
+public Uri::getHost(void): string
+public Uri::getPort(void): int|null
+public Uri::getAuthority(void): string
+public Uri::getPath(void): string
+public Uri::getQuery(void): string
+public Uri::getFragment(void): string
+```
+
+Which will lead to the following result for a simple URI:
+
+```php
+<?php
+
+use League\Uri\Schemes\Http;
+
+$uri = new Http("http://foo:bar@www.example.com:81/how/are/you?foo=baz#title");
+echo $uri;                 //displays "http://foo:bar@www.example.com:81/how/are/you?foo=baz#title"
+echo $uri->getScheme();    //displays "http"
+echo $uri->getUserInfo();  //displays "foo:bar"
+echo $uri->getHost();      //displays "www.example.com"
+echo $uri->getPort();      //displays 81 as an integer
+echo $uri->getAuthority(); //displays "foo:bar@www.example.com:81"
+echo $uri->getPath();      //displays "/how/are/you"
+echo $uri->getQuery();     //displays "foo=baz"
+echo $uri->getFragment();  //displays "title"
+```
+
+### Modifying URIs, URI parts and components
+
+**If the modifications do not alter the current object, it is returned as is, otherwise, a new modified object is returned.**
+
+**The method may trigger a `InvalidArgumentException` exception if the resulting URI is not valid for a scheme specific URI.**
+
+## Basic modifications
+
+To completely replace one of the URI part you can use the modifying methods exposed by all URI object
+
+```php
+<?php
+
+public Uri::withScheme(string $scheme): self
+public Uri::withUserInfo(string $user [, string $password = null]): self
+public Uri::withHost(string $host): self
+public Uri::withPort(int|null $port): self
+public Uri::withPath(string $path): self
+public Uri::withQuery(string $query): self
+public Uri::withFragment(string $fragment): self
+```
+
+Since All URI object are immutable you can chain each modifying methods to simplify URI creation and/or modification.
+
+```php
+<?php
+
+use League\Uri\Schemes\Ws;
+
+$uri = new Ws("ws://thephpleague.com/fr/")
+    ->withScheme("wss")
+    ->withUserInfo("foo", "bar")
+    ->withHost("www.example.com")
+    ->withPort(81)
+    ->withPath("/how/are/you")
+    ->withQuery("foo=baz");
+
+echo $uri; //displays wss://foo:bar@www.example.com:81/how/are/you?foo=baz
 ```
 
 Contributing
 -------
 
 Contributions are welcome and will be fully credited. Please see [CONTRIBUTING](.github/CONTRIBUTING.md) and [CONDUCT](CONDUCT.md) for details.
+
+Testing
+-------
+
+`uri-schemes` has a [PHPUnit](https://phpunit.de) test suite and a coding style compliance test suite using [PHP CS Fixer](http://cs.sensiolabs.org/). To run the tests, run the following command from the project folder.
+
+``` bash
+$ composer test
+```
 
 Security
 -------
@@ -75,7 +147,3 @@ License
 -------
 
 The MIT License (MIT). Please see [License File](LICENSE) for more information.
-
-[PSR-2]: http://www.php-fig.org/psr/psr-2/
-[PSR-4]: http://www.php-fig.org/psr/psr-4/
-[PSR-7]: http://www.php-fig.org/psr/psr-7/

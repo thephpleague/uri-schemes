@@ -4,7 +4,7 @@ Contributions are **welcome** and will be fully **credited**.
 
 ## Bug Report
 
-We accept bug reports via issues created on [Github](https://github.com/thephpleague/uri/issues).
+We accept bug reports via issues created on [Github](https://github.com/thephpleague/uri-schemes/issues).
 
 ### Prior to submitting your report
 
@@ -22,7 +22,7 @@ We accept bug reports via issues created on [Github](https://github.com/thephple
 
 ## Pull Request
 
-We accept contributions via Pull Requests on [Github](https://github.com/thephpleague/uri/pull).
+We accept contributions via Pull Requests on [Github](https://github.com/thephpleague/uri-schemes/pull).
 
 - **[PSR-2 Coding Standard](http://www.php-fig.org/psr/psr-2/)** - Your patch won't be accepted if it doesn't pass the package coding style test suite.
 
