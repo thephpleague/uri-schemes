@@ -14,6 +14,7 @@ namespace League\Uri\Schemes;
 
 use InvalidArgumentException;
 use League\Uri\Components\Traits\ImmutableComponent;
+use League\Uri\HostValidation;
 use League\Uri\Parser;
 
 /**
@@ -26,6 +27,7 @@ use League\Uri\Parser;
  */
 abstract class AbstractUri
 {
+    use HostValidation;
     use ImmutableComponent;
 
     /**
@@ -241,24 +243,6 @@ abstract class AbstractUri
     }
 
     /**
-     * Filter the URI host component
-     *
-     * @param string|null $host the URI host component
-     *
-     * @return string|null
-     */
-    protected function filterHost($host)
-    {
-        if (in_array($host, ['', null], true)) {
-            return $host;
-        }
-
-        $components = static::getParser()->__invoke('//u:p@'.$host.':1');
-
-        return $this->formatHost($components['host']);
-    }
-
-    /**
      * Format the Host component
      *
      * @param string $host
@@ -302,10 +286,11 @@ abstract class AbstractUri
         static $regexp;
         if (null === $regexp) {
             $regexp = '/(?:[^'
-            .self::$unreservedChars
-            .self::$subdelimChars
-            .'\:\/@]+|%(?!'
-            .self::$encodedChars.'))/x';
+                .static::$unreservedChars
+                .static::$subdelimChars
+                .'\:\/@]+|%(?!'
+                .static::$encodedChars
+                .'))/x';
         }
 
         return $this->encode($this->decodePath($path), $regexp);
@@ -344,8 +329,8 @@ abstract class AbstractUri
     {
         static $regexp;
         if (null === $regexp) {
-            $regexp = '/(?:[^'.self::$unreservedChars.self::$subdelimChars.'\:\/@\?]+
-                |%(?!'.self::$encodedChars.'))/x';
+            $regexp = '/(?:[^'.static::$unreservedChars.static::$subdelimChars.'\:\/@\?]+
+                |%(?!'.static::$encodedChars.'))/x';
         }
 
         return $this->encode($this->decodeComponent($component), $regexp);
@@ -380,7 +365,7 @@ abstract class AbstractUri
      */
     protected function filterPort($port)
     {
-        if (null === $port) {
+        if (in_array($port, ['', null], true)) {
             return $port;
         }
 
@@ -814,11 +799,9 @@ abstract class AbstractUri
      */
     public function withHost($host)
     {
-        $host = $this->filterHost($this->validateString($host));
-        if ('' === $host) {
-            $host = null;
-        }
-
+        $host = $this->validateString($host);
+        $host = '' !== $host ? $this->filterHost($host) : null;
+        $host = $this->formatHost($host);
         if ($host === $this->host) {
             return $this;
         }
