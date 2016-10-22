@@ -40,7 +40,7 @@ class Ftp extends AbstractUri implements Uri
      */
     protected function isValidUri()
     {
-        $filter =  function ($value) {
+        $filter = function ($value) {
             return $value !== null;
         };
 
