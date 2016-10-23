@@ -6,7 +6,7 @@ use InvalidArgumentException;
 use League\Uri\Schemes\Http;
 
 /**
- * @group uri
+ * @group http
  */
 class HttpTest extends AbstractTestCase
 {
