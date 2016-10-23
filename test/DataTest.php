@@ -7,7 +7,6 @@ use League\Uri\Schemes\Data;
 use RuntimeException;
 
 /**
- * @group uri
  * @group data
  */
 class DataTest extends AbstractTestCase

@@ -55,11 +55,10 @@ class Http extends AbstractUri implements UriInterface
     public static function createFromServer(array $server)
     {
         return new static(
-            static::fetchServerScheme($server).'://'
-            .static::fetchServerUserInfo($server)
-            .static::fetchServerHost($server)
-            .static::fetchServerPort($server)
-            .static::fetchServerRequestUri($server)
+            static::fetchScheme($server).'://'
+            .static::fetchUserInfo($server)
+            .static::fetchHostname($server)
+            .static::fetchRequestUri($server)
         );
     }
 
@@ -70,7 +69,7 @@ class Http extends AbstractUri implements UriInterface
      *
      * @return string
      */
-    protected static function fetchServerScheme(array $server)
+    protected static function fetchScheme(array $server)
     {
         $server += ['HTTPS' => ''];
         $res = filter_var($server['HTTPS'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
@@ -85,7 +84,7 @@ class Http extends AbstractUri implements UriInterface
      *
      * @return string
      */
-    protected static function fetchServerUserInfo(array $server)
+    protected static function fetchUserInfo(array $server)
     {
         $server += ['PHP_AUTH_USER' => null, 'PHP_AUTH_PW' => null, 'HTTP_AUTHORIZATION' => null];
         $login = $server['PHP_AUTH_USER'];
@@ -119,10 +118,20 @@ class Http extends AbstractUri implements UriInterface
      *
      * @return string
      */
-    protected static function fetchServerHost(array $server)
+    protected static function fetchHostname(array $server)
     {
         if (isset($server['HTTP_HOST'])) {
-            return static::fetchServerHostname($server['HTTP_HOST']);
+            preg_match(
+                ',^(?<host>(\[.*\]|[^:])*)(\:(?<port>[^/?\#]*))?$,x',
+                $server['HTTP_HOST'],
+                $matches
+            );
+
+            if (!isset($matches['port']) && isset($server['SERVER_PORT'])) {
+                return $server['HTTP_HOST'].':'.$server['SERVER_PORT'];
+            }
+
+            return $server['HTTP_HOST'];
         }
 
         if (isset($server['SERVER_ADDR'])) {
@@ -130,43 +139,10 @@ class Http extends AbstractUri implements UriInterface
                 $server['SERVER_ADDR'] = '['.$server['SERVER_ADDR'].']';
             }
 
-            return $server['SERVER_ADDR'];
+            return $server['SERVER_ADDR'].':'.$server['SERVER_PORT'];
         }
 
         throw new InvalidArgumentException('Host could not be detected');
-    }
-
-    /**
-     * Returns the environment hostname
-     *
-     * @param string $host the environment server hostname
-     *                     the port info can sometimes be
-     *                     associated with the hostname
-     *
-     * @return string
-     */
-    protected static function fetchServerHostname($host)
-    {
-        preg_match(",^(([^(\[\])]*):)?(?<host>.*)?$,", strrev($host), $matches);
-
-        return strrev($matches['host']);
-    }
-
-    /**
-     * Returns the environment port
-     *
-     * @param array $server the environment server typically $_SERVER
-     *
-     * @return string
-     */
-    protected static function fetchServerPort(array $server)
-    {
-        $server += ['HTTP_HOST' => '', 'SERVER_PORT' => ''];
-        if (preg_match(',^(?<port>([^(\[\])]*):),', strrev($server['HTTP_HOST']), $matches)) {
-            return strrev($matches['port']);
-        }
-
-        return ':'.$server['SERVER_PORT'];
     }
 
     /**
@@ -176,7 +152,7 @@ class Http extends AbstractUri implements UriInterface
      *
      * @return string
      */
-    protected static function fetchServerRequestUri(array $server)
+    protected static function fetchRequestUri(array $server)
     {
         if (isset($server['REQUEST_URI'])) {
             return $server['REQUEST_URI'];
