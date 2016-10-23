@@ -53,7 +53,7 @@ class Data extends AbstractUri implements Uri
     /**
      * Filter the URI path component
      *
-     * @param string|null $host the URI host component
+     * @param string|null $path the URI path component
      *
      * @return string|null
      */
@@ -71,8 +71,6 @@ class Data extends AbstractUri implements Uri
      */
     public static function createFromPath($path)
     {
-        $path = (string) DataPath::createFromPath($path);
-
-        return new static('data:'.$path);
+        return new static('data:'.DataPath::createFromPath($path));
     }
 }

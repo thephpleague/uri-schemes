@@ -220,7 +220,7 @@ abstract class AbstractUri
         }
 
         $user_info = $this->validateString($user);
-        if (preg_match(',[:@?#],', $user_info)) {
+        if (strlen($user_info) !== strcspn($user_info, ':@/?#')) {
             throw new InvalidArgumentException(sprintf(
                 'The encoded user `%s` contains invalid characters',
                 $user_info
@@ -232,7 +232,7 @@ abstract class AbstractUri
         }
 
         $password = $this->validateString($password);
-        if (preg_match(',[@?#],', $password)) {
+        if (strlen($password) !== strcspn($password, '@/?#')) {
             throw new InvalidArgumentException(sprintf(
                 'The encoded password `%s` contains invalid characters',
                 $password
@@ -261,13 +261,13 @@ abstract class AbstractUri
     /**
      * Filter the URI path component
      *
-     * @param string $host the URI host component
+     * @param string $path the URI path component
      *
      * @return string
      */
     protected function filterPath($path)
     {
-        if (!preg_match(',[?#],', $path)) {
+        if (strlen($path) === strcspn($path, '?#')) {
             return $path;
         }
 
@@ -310,7 +310,7 @@ abstract class AbstractUri
             return $query;
         }
 
-        if (!preg_match(',[#],', $query)) {
+        if (strlen($query) === strcspn($query, '#')) {
             $this->use_query_delimiter = true;
             return $this->formatQueryAndFragment($query);
         }
