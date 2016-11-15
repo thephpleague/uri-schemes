@@ -152,31 +152,20 @@ abstract class AbstractUri
      */
     public function __construct($uri = '')
     {
-        $components = $this->getParser()->__invoke(static::validateString($uri));
+        static $parser;
+        if (null === $parser) {
+            $parser = new Parser();
+        }
+
+        $components = $parser(static::validateString($uri));
         $this->scheme = $this->filterScheme($components['scheme']);
         $this->user_info = $this->filterUserInfo($components['user'], $components['pass']);
         $this->host = $this->formatHost($components['host']);
-        $this->port = $this->filterPort($components['port']);
-        $this->authority = $this->setAuthority();
+        $this->port = $this->formatPort($this->filterPort($components['port']));
         $this->path = $this->formatPath($this->filterPath($components['path']));
-        $this->query = $this->filterQuery($components['query']);
-        $this->fragment = $this->filterFragment($components['fragment']);
+        list($this->query, $this->use_query_delimiter) = $this->formatQueryAndFragment($components['query']);
+        list($this->fragment, $this->use_fragment_delimiter) = $this->formatQueryAndFragment($components['fragment']);
         $this->assertValidUri();
-        $this->uri = $this->getUriString();
-    }
-
-    /**
-     * Return an instance of a Parser
-     *
-     * @return Parser
-     */
-    protected static function getParser()
-    {
-        if (null === static::$parser) {
-            static::$parser = new Parser();
-        }
-
-        return static::$parser;
     }
 
     /**
@@ -259,6 +248,46 @@ abstract class AbstractUri
     }
 
     /**
+     * Filter the URI port component
+     *
+     * @param int|null $port the URI port component
+     *
+     * @throws InvalidArgumentException If the submitted port is invalid
+     *
+     * @return int|null
+     */
+    protected function filterPort($port)
+    {
+        if (null === $port) {
+            return $port;
+        }
+
+        if (is_int($port) && ($port >= 1 && $port <= 65535)) {
+            return $port;
+        }
+
+        throw new InvalidArgumentException(sprintf('The submitted port is invalid %s', $port));
+    }
+
+    /**
+     * Format the Port component
+     *
+     * @param int|null $port
+     *
+     * @return int|null
+     */
+    protected function formatPort($port)
+    {
+        if (array_key_exists($this->scheme, static::$supported_schemes)
+            && static::$supported_schemes[$this->scheme] === $port
+        ) {
+            return null;
+        }
+
+        return $port;
+    }
+
+    /**
      * Filter the URI path component
      *
      * @param string $path the URI path component
@@ -305,82 +334,43 @@ abstract class AbstractUri
      */
     protected function filterQuery($query)
     {
-        if (null === $query) {
-            $this->use_query_delimiter = false;
-            return $query;
-        }
-
         if (strlen($query) === strcspn($query, '#')) {
-            $this->use_query_delimiter = true;
-            return $this->formatQueryAndFragment($query);
+            return $query;
         }
 
         throw new InvalidArgumentException(sprintf('The encoded query `%s` contains invalid characters', $query));
     }
 
-    /**
-     * Format the Query or Fragment component
-     *
-     * @param string $component
-     *
-     * @return string
-     */
     protected function formatQueryAndFragment($component)
     {
+        if (null === $component) {
+            return [$component, false];
+        }
+
         static $regexp;
         if (null === $regexp) {
             $regexp = '/(?:[^'.static::$unreservedChars.static::$subdelimChars.'\:\/@\?]+
                 |%(?!'.static::$encodedChars.'))/x';
         }
 
-        return $this->encode($this->decodeComponent($component), $regexp);
+        return [$this->encode($this->decodeComponent($component), $regexp), true];
     }
 
     /**
-     * Filter the URI fragment component
+     * assert the URI internal state is valid
      *
-     * @param string|null $fragment the URI fragment component
-     *
-     * @return string|null
+     * @throws InvalidArgumentException if the URI is in an invalid state
      */
-    protected function filterFragment($fragment)
+    protected function assertValidUri()
     {
-        if (null === $fragment) {
-            $this->use_fragment_delimiter = false;
-            return $fragment;
+        $this->authority = $this->setAuthority();
+        $this->uri = $this->getUriString();
+        if (!$this->isValidUri()) {
+            throw new InvalidArgumentException(sprintf(
+                'The URI components will produce an `%s` object in invalid state',
+                get_class($this)
+            ));
         }
-
-        $this->use_fragment_delimiter = true;
-        return $this->formatQueryAndFragment($fragment);
-    }
-
-    /**
-     * Filter the URI port component
-     *
-     * @param int|null $port the URI port component
-     *
-     * @throws InvalidArgumentException If the submitted port is invalid
-     *
-     * @return int|null
-     */
-    protected function filterPort($port)
-    {
-        if (in_array($port, ['', null], true)) {
-            return $port;
-        }
-
-        $port = filter_var($port, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 65535]]);
-        if (!$port) {
-            throw new InvalidArgumentException('The submitted port is invalid');
-        }
-
-        if (array_key_exists($this->scheme, static::$supported_schemes)
-            && static::$supported_schemes[$this->scheme] === $port
-        ) {
-            return null;
-        }
-
-        return $port;
     }
 
     /**
@@ -435,21 +425,6 @@ abstract class AbstractUri
     }
 
     /**
-     * assert the URI internal state is valid
-     *
-     * @throws InvalidArgumentException if the URI is in an invalid state
-     */
-    protected function assertValidUri()
-    {
-        if (!$this->isValidUri()) {
-            throw new InvalidArgumentException(sprintf(
-                'The URI components will produce an `%s` object in invalid state',
-                get_class($this)
-            ));
-        }
-    }
-
-    /**
      * Tell whether the current URI is in valid state.
      *
      * The URI object validity depends on the scheme. This method
@@ -479,25 +454,6 @@ abstract class AbstractUri
         }
 
         return false !== strpos(substr($this->path, 0, $pos), '/');
-    }
-
-    /**
-     * Tell whether the current Authority is valid
-     *
-     * @return bool
-     */
-    protected function isAllowedAuthority()
-    {
-        $pos = 0;
-        if (null === $this->host) {
-            $pos = false;
-        }
-
-        if ('' != $this->scheme && 0 !== $pos) {
-            return false;
-        }
-
-        return !('' === $this->host && 0 === $pos);
     }
 
     /**
@@ -736,12 +692,8 @@ abstract class AbstractUri
 
         $clone = clone $this;
         $clone->scheme = $scheme;
-        if (null !== $scheme && static::$supported_schemes[$scheme] === $clone->port) {
-            $clone->port = null;
-            $clone->authority = $clone->setAuthority();
-        }
+        $clone->port = $clone->formatPort($clone->port);
         $clone->assertValidUri();
-        $clone->uri = $clone->getUriString();
 
         return $clone;
     }
@@ -774,9 +726,7 @@ abstract class AbstractUri
 
         $clone = clone $this;
         $clone->user_info = $user_info;
-        $clone->authority = $clone->setAuthority();
         $clone->assertValidUri();
-        $clone->uri = $clone->getUriString();
 
         return $clone;
     }
@@ -808,9 +758,7 @@ abstract class AbstractUri
 
         $clone = clone $this;
         $clone->host = $host;
-        $clone->authority = $clone->setAuthority();
         $clone->assertValidUri();
-        $clone->uri = $clone->getUriString();
 
         return $clone;
     }
@@ -839,15 +787,14 @@ abstract class AbstractUri
     public function withPort($port)
     {
         $port = $this->filterPort($port);
+        $port = $this->formatPort($port);
         if ($port === $this->port) {
             return $this;
         }
 
         $clone = clone $this;
         $clone->port = $port;
-        $clone->authority = $clone->setAuthority();
         $clone->assertValidUri();
-        $clone->uri = $clone->getUriString();
 
         return $clone;
     }
@@ -889,7 +836,6 @@ abstract class AbstractUri
         $clone = clone $this;
         $clone->path = $path;
         $clone->assertValidUri();
-        $clone->uri = $clone->getUriString();
 
         return $clone;
     }
@@ -916,18 +862,20 @@ abstract class AbstractUri
     public function withQuery($query)
     {
         $query = $this->validateString($query);
+        $query = $this->filterQuery($query);
         if ('' === $query) {
             $query = null;
         }
 
+        list($query, $preserve_delimiter) = $this->formatQueryAndFragment($query);
         if ($query === $this->query) {
             return $this;
         }
 
         $clone = clone $this;
-        $clone->query = $clone->filterQuery($query);
+        $clone->query = $query;
+        $clone->use_query_delimiter = $preserve_delimiter;
         $clone->assertValidUri();
-        $clone->uri = $clone->getUriString();
 
         return $clone;
     }
@@ -958,14 +906,15 @@ abstract class AbstractUri
             $fragment = null;
         }
 
+        list($fragment, $preserve_delimiter) = $this->formatQueryAndFragment($fragment);
         if ($fragment === $this->fragment) {
             return $this;
         }
 
         $clone = clone $this;
-        $clone->fragment = $clone->filterFragment($fragment);
+        $clone->fragment = $fragment;
+        $clone->use_fragment_delimiter = $preserve_delimiter;
         $clone->assertValidUri();
-        $clone->uri = $clone->getUriString();
 
         return $clone;
     }
