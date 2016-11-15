@@ -46,6 +46,20 @@ class Http extends AbstractUri implements UriInterface
     }
 
     /**
+     * Tell whether the current Authority is valid
+     *
+     * @return bool
+     */
+    protected function isAllowedAuthority()
+    {
+        if ('' != $this->scheme && null === $this->host) {
+            return false;
+        }
+
+        return '' !== $this->host;
+    }
+
+    /**
      * Create a new instance from the environment
      *
      * @param array $server the server and execution environment information array typically ($_SERVER)

@@ -34,18 +34,29 @@ class Ftp extends AbstractUri implements Uri
     ];
 
     /**
+     * Tell whether the current Authority is valid
+     *
+     * @return bool
+     */
+    protected function isAllowedAuthority()
+    {
+        if ('' != $this->scheme && null === $this->host) {
+            return false;
+        }
+
+        return '' !== $this->host;
+    }
+
+    /**
      * Tell whether the FTP URI is in valid state.
      *
      * @return bool
      */
     protected function isValidUri()
     {
-        $filter = function ($value) {
-            return $value !== null;
-        };
-
-        $res = array_filter([$this->query, $this->fragment], $filter);
-
-        return empty($res) && $this->isValidGenericUri() && $this->isAllowedAuthority();
+        return null === $this->fragment
+            && null === $this->query
+            && $this->isValidGenericUri()
+            && $this->isAllowedAuthority();
     }
 }

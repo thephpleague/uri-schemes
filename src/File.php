@@ -57,9 +57,8 @@ class File extends AbstractUri implements Uri
      */
     protected function isAllowedAuthority()
     {
-        return !('' !== $this->getScheme() && null === $this->host);
+        return !('' != $this->scheme && null === $this->host);
     }
-
 
     /**
      * Create a new instance from a Unix path string

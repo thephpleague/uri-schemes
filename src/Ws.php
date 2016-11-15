@@ -35,6 +35,20 @@ class Ws extends AbstractUri implements Uri
     ];
 
     /**
+     * Tell whether the current Authority is valid
+     *
+     * @return bool
+     */
+    protected function isAllowedAuthority()
+    {
+        if ('' != $this->scheme && null === $this->host) {
+            return false;
+        }
+
+        return '' !== $this->host;
+    }
+
+    /**
      * Tell whether the Ws(s) URI is in valid state.
      *
      * @return bool

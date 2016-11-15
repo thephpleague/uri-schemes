@@ -68,21 +68,58 @@ class UriTest extends AbstractTestCase
         $this->assertSame($normalized, (string) Http::createFromString($raw));
     }
 
-    public function testRemoveComponents()
+    public function testRemoveFragment()
     {
-        $uri = Http::createFromString('http://user:pass@example.com:42/path?query#fragment');
-
-        $this->assertSame('http://user:pass@example.com:42/path?query', (string) $uri->withFragment(''));
-        $this->assertSame('http://user:pass@example.com:42/path#fragment', (string) $uri->withQuery(''));
-        $this->assertSame('http://user:pass@example.com:42?query#fragment', (string) $uri->withPath(''));
-        $this->assertSame('//user:pass@example.com:42/path?query#fragment', (string) $uri->withScheme(''));
-        $this->assertSame('http://user:pass@example.com/path?query#fragment', (string) $uri->withPort(null));
-        $this->assertSame('http://example.com:42/path?query#fragment', (string) $uri->withUserInfo(''));
-
-        $uri_with_host = (string) $uri->withUserInfo('')->withPort(null)->withScheme('')->withHost('');
-        $this->assertSame('/path?query#fragment', $uri_with_host);
+        $this->assertSame(
+            'http://login:pass@secure.example.com:443/test/query.php?kingkong=toto',
+            (string) $this->uri->withFragment('')
+        );
     }
 
+    public function testRemoveQuery()
+    {
+        $this->assertSame(
+            'http://login:pass@secure.example.com:443/test/query.php#doc3',
+            (string) $this->uri->withQuery('')
+        );
+    }
+
+    public function testRemovePath()
+    {
+        $this->assertSame(
+            'http://login:pass@secure.example.com:443?kingkong=toto#doc3',
+            (string) $this->uri->withPath('')
+        );
+    }
+
+    public function testRemovePort()
+    {
+        $this->assertSame(
+            'http://login:pass@secure.example.com/test/query.php?kingkong=toto#doc3',
+            (string) $this->uri->withPort(null));
+    }
+
+    public function testRemoveUserInfo()
+    {
+        $this->assertSame(
+            'http://secure.example.com:443/test/query.php?kingkong=toto#doc3',
+            (string) $this->uri->withUserInfo('')
+        );
+    }
+
+    public function testRemoveScheme()
+    {
+        $this->assertSame(
+            '//login:pass@secure.example.com:443/test/query.php?kingkong=toto#doc3',
+            (string) $this->uri->withScheme('')
+        );
+    }
+
+    public function testRemoveAuthority()
+    {
+        $uri_with_host = (string) $this->uri->withUserInfo('')->withPort(null)->withScheme('')->withHost('');
+        $this->assertSame('/test/query.php?kingkong=toto#doc3', $uri_with_host);
+    }
 
     /**
      * @param $uri
