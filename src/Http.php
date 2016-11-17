@@ -12,7 +12,7 @@
  */
 namespace League\Uri\Schemes;
 
-use InvalidArgumentException;
+use League\Uri\Schemes\Exceptions\HttpUriException;
 use Psr\Http\Message\UriInterface;
 
 /**
@@ -42,21 +42,25 @@ class Http extends AbstractUri implements UriInterface
      */
     protected function isValidUri()
     {
-        return $this->isValidGenericUri() && $this->isAllowedAuthority();
-    }
+        if (!$this->isValidScheme()) {
+            return false;
+        }
 
-    /**
-     * Tell whether the current Authority is valid
-     *
-     * @return bool
-     */
-    protected function isAllowedAuthority()
-    {
         if ('' != $this->scheme && null === $this->host) {
             return false;
         }
 
         return '' !== $this->host;
+    }
+
+    /**
+     * Tell whether the current scheme is valid
+     *
+     * @return bool
+     */
+    protected function isValidScheme()
+    {
+        return null === $this->scheme || isset(static::$supported_schemes[$this->scheme]);
     }
 
     /**
@@ -156,7 +160,7 @@ class Http extends AbstractUri implements UriInterface
             return $server['SERVER_ADDR'].':'.$server['SERVER_PORT'];
         }
 
-        throw new InvalidArgumentException('Host could not be detected');
+        throw HttpUriException::createFromInvalidServer();
     }
 
     /**

@@ -35,6 +35,18 @@ class Ws extends AbstractUri implements Uri
     ];
 
     /**
+     * Tell whether the Ws(s) URI is in valid state.
+     *
+     * @return bool
+     */
+    protected function isValidUri()
+    {
+        return null === $this->fragment
+            && (null === $this->scheme || isset(static::$supported_schemes[$this->scheme]))
+            && $this->isAllowedAuthority();
+    }
+
+    /**
      * Tell whether the current Authority is valid
      *
      * @return bool
@@ -46,15 +58,5 @@ class Ws extends AbstractUri implements Uri
         }
 
         return '' !== $this->host;
-    }
-
-    /**
-     * Tell whether the Ws(s) URI is in valid state.
-     *
-     * @return bool
-     */
-    protected function isValidUri()
-    {
-        return null === $this->fragment && $this->isValidGenericUri() && $this->isAllowedAuthority();
     }
 }

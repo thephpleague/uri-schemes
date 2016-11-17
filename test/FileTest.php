@@ -146,19 +146,19 @@ class FileTest extends AbstractTestCase
             ],
             'absolute path' => [
                 'input' => 'c:\windows\My Documents 100%20\foo.txt',
-                'expected' => 'file:///c:/windows/My%20Documents%20100%20/foo.txt',
+                'expected' => 'file:///c:/windows/My%20Documents%20100%2520/foo.txt',
             ],
             'windows relative path' => [
                 'input' => 'c:My Documents 100%20\foo.txt',
-                'expected' => 'file:///c:My%20Documents%20100%20/foo.txt',
+                'expected' => 'file:///c:My%20Documents%20100%2520/foo.txt',
             ],
             'absolute path with `|`' => [
                 'input' => 'c|\windows\My Documents 100%20\foo.txt',
-                'expected' => 'file:///c:/windows/My%20Documents%20100%20/foo.txt',
+                'expected' => 'file:///c:/windows/My%20Documents%20100%2520/foo.txt',
             ],
             'windows relative path with `|`' => [
                 'input' => 'c:My Documents 100%20\foo.txt',
-                'expected' => 'file:///c:My%20Documents%20100%20/foo.txt',
+                'expected' => 'file:///c:My%20Documents%20100%2520/foo.txt',
             ],
             'absolute path with dot segments' => [
                 'input' => '\path\.\..\relative',
@@ -166,7 +166,7 @@ class FileTest extends AbstractTestCase
             ],
             'absolute UNC path' => [
                 'input' => '\\\\server\share\My Documents 100%20\foo.txt',
-                'expected' => 'file://server/share/My%20Documents%20100%20/foo.txt',
+                'expected' => 'file://server/share/My%20Documents%20100%2520/foo.txt',
             ],
         ];
     }

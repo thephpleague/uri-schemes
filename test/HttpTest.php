@@ -120,13 +120,6 @@ class HttpTest extends AbstractTestCase
         $this->assertNotEquals($this->uri, $this->uri->withFragment('doc2'));
     }
 
-    public function testAutomaticUrlNormalization()
-    {
-        $raw = 'HtTpS://MaStEr.eXaMpLe.CoM:443/%7ejohndoe/%a1/in+dex.php?foo.bar=value#fragment';
-        $normalized = 'https://master.example.com/%7Ejohndoe/%A1/in+dex.php?foo.bar=value#fragment';
-        $this->assertSame($normalized, (string) (new Http($raw)));
-    }
-
     /**
      * @param $uri
      * @param $port

@@ -38,26 +38,12 @@ class File extends AbstractUri implements Uri
      */
     protected function isValidUri()
     {
-        $filter =  function ($value) {
-            return $value !== null;
-        };
-
-        $res = array_filter([
-            $this->user_info, $this->port,
-            $this->query, $this->fragment,
-        ], $filter);
-
-        return empty($res) && $this->isValidGenericUri() && $this->isAllowedAuthority();
-    }
-
-    /**
-     * Tell whether the current Authority is valid
-     *
-     * @return bool
-     */
-    protected function isAllowedAuthority()
-    {
-        return !('' != $this->scheme && null === $this->host);
+        return null === $this->user_info
+            && null === $this->port
+            && null === $this->query
+            && null === $this->fragment
+            && in_array($this->scheme, [null, 'file'], true)
+            && !('' != $this->scheme && null === $this->host);
     }
 
     /**

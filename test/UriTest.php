@@ -63,8 +63,8 @@ class UriTest extends AbstractTestCase
 
     public function testAutomaticUrlNormalization()
     {
-        $raw = 'HtTpS://MaStEr.eXaMpLe.CoM:443/%7ejohndoe/%a1/in+dex.php?foo.bar=value#fragment';
-        $normalized = 'https://master.example.com/%7Ejohndoe/%A1/in+dex.php?foo.bar=value#fragment';
+        $raw = 'HtTpS://MaStEr.eXaMpLe.CoM:443/%7ejohndoe/%a1/in+dex.php?fào.%bar=v%61lue#fragment';
+        $normalized = 'https://master.example.com/%7ejohndoe/%a1/in+dex.php?f%C3%A0o.%bar=v%61lue#fragment';
         $this->assertSame($normalized, (string) Http::createFromString($raw));
     }
 
@@ -139,6 +139,14 @@ class UriTest extends AbstractTestCase
             ['http://www.example.com', null],
             ['//www.example.com:80/', 80],
         ];
+    }
+
+    /**
+     * @expectedException InvalidArgumentException
+     */
+    public function testWithInvalidCharacters()
+    {
+        Http::createFromString("http://example.com/path\n");
     }
 
     /**
@@ -234,6 +242,15 @@ class UriTest extends AbstractTestCase
         $this->assertSame($expected, Http::createFromString($expected)->__toString());
     }
 
+    public function testCreateFromComponents()
+    {
+        $uri = '//0:0@0/0?0#0';
+        $this->assertEquals(
+            Http::createFromComponents(parse_url($uri)),
+            Http::createFromString($uri)
+        );
+    }
+
     /**
      * @supportsDebugInfo
      */
@@ -244,38 +261,6 @@ class UriTest extends AbstractTestCase
         var_dump($this->uri);
         $res = ob_get_clean();
         $this->assertContains($this->uri->__toString(), $res);
-    }
-
-    /**
-     * @expectedException InvalidArgumentException
-     */
-    public function testThrowExceptionOnUnknowPropertyGetter()
-    {
-        $this->uri->unknownProperty;
-    }
-
-    /**
-     * @expectedException InvalidArgumentException
-     */
-    public function testThrowExceptionOnUnknowPropertySetter()
-    {
-        $this->uri->unknownProperty = true;
-    }
-
-    /**
-     * @expectedException InvalidArgumentException
-     */
-    public function testThrowExceptionOnUnknowPropertyUnset()
-    {
-        unset($this->uri->unknownProperty);
-    }
-
-    /**
-     * @expectedException InvalidArgumentException
-     */
-    public function testThrowExceptionOnUnknowPropertyIsset()
-    {
-        isset($this->uri->unknownProperty);
     }
 
     public function testSetState()

@@ -12,10 +12,9 @@
  */
 namespace League\Uri\Schemes;
 
-use InvalidArgumentException;
-use League\Uri\Components\Traits\ImmutableComponent;
 use League\Uri\HostValidation;
 use League\Uri\Parser;
+use League\Uri\Schemes\Exceptions\UriException;
 
 /**
  * common URI Object properties and methods
@@ -28,10 +27,36 @@ use League\Uri\Parser;
 abstract class AbstractUri
 {
     use HostValidation;
-    use ImmutableComponent;
 
     /**
-     * Uri Parser
+     * Invalid Characters
+     *
+     * @see http://tools.ietf.org/html/rfc3986#section-2
+     *
+     * @var string
+     */
+    const INVALID_CHARS = "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F\x7F";
+
+    /**
+     * RFC3986 Sub delimiter characters regular expression pattern
+     *
+     * @see http://tools.ietf.org/html/rfc3986#section-2.2
+     *
+     * @var string
+     */
+    const REGEXP_CHARS_SUBDELIM = "\!\$&'\(\)\*\+,;\=%";
+
+    /**
+     * RFC3986 unreserved characters regular expression pattern
+     *
+     * @see http://tools.ietf.org/html/rfc3986#section-2.3
+     *
+     * @var string
+     */
+    const REGEXP_CHARS_UNRESERVED = 'A-Za-z0-9_\-\.~';
+
+    /**
+     * RFC3986 compliant URI Parser
      *
      * @var Parser
      */
@@ -43,13 +68,6 @@ abstract class AbstractUri
      * @var string|null
      */
     protected $scheme;
-
-    /**
-     * URI authority string representation
-     *
-     * @var string|null
-     */
-    protected $authority;
 
     /**
      * URI user info part
@@ -73,11 +91,18 @@ abstract class AbstractUri
     protected $port;
 
     /**
+     * URI authority string representation
+     *
+     * @var string|null
+     */
+    protected $authority;
+
+    /**
      * URI path component
      *
      * @var string
      */
-    protected $path;
+    protected $path = '';
 
     /**
      * URI query component
@@ -92,22 +117,6 @@ abstract class AbstractUri
      * @var string|null
      */
     protected $fragment;
-
-    /**
-     * Tell whether the query delimiter should be preserved
-     * when generating the URI string representation
-     *
-     * @var bool
-     */
-    protected $use_query_delimiter;
-
-    /**
-     * Tell whether the fragment delimiter should be preserved
-     * when generating the URI string representation
-     *
-     * @var bool
-     */
-    protected $use_fragment_delimiter;
 
     /**
      * URI string representation
@@ -130,11 +139,47 @@ abstract class AbstractUri
      */
     public static function __set_state(array $properties)
     {
-        return new static($properties['uri']);
+        return new static(static::getUriString(
+            $properties['scheme'],
+            $properties['authority'],
+            $properties['path'],
+            $properties['query'],
+            $properties['fragment']
+        ));
+    }
+
+    /**
+     * Create a new instance from a hash of parse_url parts
+     *
+     * @param array $components a hash representation of the URI similar
+     *                          to PHP parse_url function result
+     *
+     * @return static
+     */
+    public static function createFromComponents(array $components)
+    {
+        $uri = new static();
+        $uri->setUriComponents($components + [
+            'scheme' => null,
+            'user' => null,
+            'pass' => null,
+            'host' => null,
+            'port' => null,
+            'path' => '',
+            'query' => null,
+            'fragment' => null,
+        ]);
+        $uri->assertValidUri();
+
+        return $uri;
     }
 
     /**
      * Create a new instance from a string
+     *
+     * DEPRECATION WARNING! This method will be removed in the next major point release (ie: 2.0.0)
+     *
+     * @deprecated deprecated since version 0.1.0
      *
      * @param string $uri
      *
@@ -152,121 +197,103 @@ abstract class AbstractUri
      */
     public function __construct($uri = '')
     {
-        static $parser;
-        if (null === $parser) {
-            $parser = new Parser();
+        if ('' !== $uri) {
+            $components = $this->getUriParser()->__invoke($this->filterString($uri));
+            $this->setUriComponents($components);
         }
 
-        $components = $parser(static::validateString($uri));
-        $this->scheme = $this->filterScheme($components['scheme']);
-        $this->user_info = $this->filterUserInfo($components['user'], $components['pass']);
-        $this->host = $this->formatHost($components['host']);
-        $this->port = $this->formatPort($this->filterPort($components['port']));
-        $this->path = $this->formatPath($this->filterPath($components['path']));
-        list($this->query, $this->use_query_delimiter) = $this->formatQueryAndFragment($components['query']);
-        list($this->fragment, $this->use_fragment_delimiter) = $this->formatQueryAndFragment($components['fragment']);
         $this->assertValidUri();
     }
 
     /**
-     * Filter the URI scheme component
+     * Initialize and access the Parser object
      *
-     * @param string|null $scheme the URI scheme component
-     *
-     * @throws InvalidArgumentException If the scheme produces an invalid URI
-     *
-     * @return string|null
+     * @return Parser
      */
-    protected function filterScheme($scheme)
+    protected function getUriParser()
     {
-        if (in_array($scheme, ['', null], true)) {
-            return null;
+        if (!static::$parser instanceof Parser) {
+            static::$parser = new Parser();
         }
 
-        $scheme = strtolower($this->validateString($scheme));
-        if (array_key_exists($scheme, static::$supported_schemes)) {
-            return $scheme;
-        }
-
-        throw new InvalidArgumentException(sprintf(
-            'The submitted scheme `%s` is not supported',
-            $scheme
-        ));
+        return static::$parser;
     }
 
     /**
-     * Filter the URI user info component
+     * filter a string.
      *
-     * @param string|null $user     the URI user component
-     * @param string|null $password the URI password component
+     * @param string $str the value to evaluate as a string
      *
-     * @return string|null
-     */
-    protected function filterUserInfo($user, $password)
-    {
-        if (in_array($user, ['', null], true)) {
-            return null;
-        }
-
-        $user_info = $this->validateString($user);
-        if (strlen($user_info) !== strcspn($user_info, ':@/?#')) {
-            throw new InvalidArgumentException(sprintf(
-                'The encoded user `%s` contains invalid characters',
-                $user_info
-            ));
-        }
-
-        if (in_array($password, ['', null], true)) {
-            return $user_info;
-        }
-
-        $password = $this->validateString($password);
-        if (strlen($password) !== strcspn($password, '@/?#')) {
-            throw new InvalidArgumentException(sprintf(
-                'The encoded password `%s` contains invalid characters',
-                $password
-            ));
-        }
-
-        return $user_info.':'.$password;
-    }
-
-    /**
-     * Format the Host component
-     *
-     * @param string $host
+     * @throws UriException if the submitted data can not be converted to string
      *
      * @return string
      */
-    protected function formatHost($host)
+    protected function filterString($str)
     {
-        if (null === $host) {
-            return $host;
+        if (!is_string($str)) {
+            throw UriException::createFromInvalidType($str);
         }
 
-        return strtolower($host);
+        if (strlen($str) !== strcspn($str, self::INVALID_CHARS)) {
+            throw UriException::createFromInvalidCharacters($str);
+        }
+
+        return $str;
     }
 
     /**
-     * Filter the URI port component
+     * Set URI components
      *
-     * @param int|null $port the URI port component
-     *
-     * @throws InvalidArgumentException If the submitted port is invalid
-     *
-     * @return int|null
+     * @param array $components an associative array containing all URI components
+     *                          similar to parse_url.
      */
-    protected function filterPort($port)
+    protected function setUriComponents(array $components)
     {
-        if (null === $port) {
-            return $port;
+        $this->scheme = $this->formatHostAndScheme($components['scheme']);
+        $this->user_info = $this->formatUserInfo($components['user'], $components['pass']);
+        $this->host = $this->formatHostAndScheme($components['host']);
+        $this->port = $this->formatPort($components['port']);
+        $this->authority = $this->setAuthority();
+        $this->path = $this->filterPath($components['path']);
+        $this->query = $this->formatQueryAndFragment($components['query']);
+        $this->fragment = $this->formatQueryAndFragment($components['fragment']);
+    }
+
+    /**
+     * Format the Host and Scheme component
+     *
+     * @param string|null $component
+     *
+     * @return string|null
+     */
+    protected function formatHostAndScheme($component)
+    {
+        if ('' == $component) {
+            return $component;
         }
 
-        if (is_int($port) && ($port >= 1 && $port <= 65535)) {
-            return $port;
+        return strtolower($component);
+    }
+
+    /**
+     * Set the UserInfo component
+     *
+     * @param string|null $user     the URI scheme component
+     * @param string|null $password the URI scheme component
+     *
+     * @return string|null
+     */
+    protected function formatUserInfo($user, $password)
+    {
+        if ('' == $user) {
+            return null;
         }
 
-        throw new InvalidArgumentException(sprintf('The submitted port is invalid %s', $port));
+        if ('' == $password) {
+            return $user;
+        }
+
+        return $user.':'.$password;
     }
 
     /**
@@ -278,99 +305,12 @@ abstract class AbstractUri
      */
     protected function formatPort($port)
     {
-        if (array_key_exists($this->scheme, static::$supported_schemes)
-            && static::$supported_schemes[$this->scheme] === $port
-        ) {
+        if (isset(static::$supported_schemes[$this->scheme])
+            && static::$supported_schemes[$this->scheme] === $port) {
             return null;
         }
 
         return $port;
-    }
-
-    /**
-     * Filter the URI path component
-     *
-     * @param string $path the URI path component
-     *
-     * @return string
-     */
-    protected function filterPath($path)
-    {
-        if (strlen($path) === strcspn($path, '?#')) {
-            return $path;
-        }
-
-        throw new InvalidArgumentException(sprintf('The encoded path `%s` contains invalid characters', $path));
-    }
-
-    /**
-     * Format the Path component
-     *
-     * @param string $path
-     *
-     * @return string
-     */
-    protected function formatPath($path)
-    {
-        static $regexp;
-        if (null === $regexp) {
-            $regexp = '/(?:[^'
-                .static::$unreservedChars
-                .static::$subdelimChars
-                .'\:\/@]+|%(?!'
-                .static::$encodedChars
-                .'))/x';
-        }
-
-        return $this->encode($this->decodePath($path), $regexp);
-    }
-
-    /**
-     * Filter the URI query component
-     *
-     * @param string|null $query the URI query component
-     *
-     * @return string|null
-     */
-    protected function filterQuery($query)
-    {
-        if (strlen($query) === strcspn($query, '#')) {
-            return $query;
-        }
-
-        throw new InvalidArgumentException(sprintf('The encoded query `%s` contains invalid characters', $query));
-    }
-
-    protected function formatQueryAndFragment($component)
-    {
-        if (null === $component) {
-            return [$component, false];
-        }
-
-        static $regexp;
-        if (null === $regexp) {
-            $regexp = '/(?:[^'.static::$unreservedChars.static::$subdelimChars.'\:\/@\?]+
-                |%(?!'.static::$encodedChars.'))/x';
-        }
-
-        return [$this->encode($this->decodeComponent($component), $regexp), true];
-    }
-
-    /**
-     * assert the URI internal state is valid
-     *
-     * @throws InvalidArgumentException if the URI is in an invalid state
-     */
-    protected function assertValidUri()
-    {
-        $this->authority = $this->setAuthority();
-        $this->uri = $this->getUriString();
-        if (!$this->isValidUri()) {
-            throw new InvalidArgumentException(sprintf(
-                'The URI components will produce an `%s` object in invalid state',
-                get_class($this)
-            ));
-        }
     }
 
     /**
@@ -379,7 +319,7 @@ abstract class AbstractUri
     protected function setAuthority()
     {
         $authority = null;
-        if (!in_array($this->user_info, ['', null], true)) {
+        if ('' != $this->user_info) {
             $authority = $this->user_info.'@';
         }
 
@@ -395,33 +335,114 @@ abstract class AbstractUri
     }
 
     /**
-     * generate the URI string representation
+     * Format the Path component
+     *
+     * @param string $path
      *
      * @return string
      */
-    protected function getUriString()
+    protected function formatPath($path)
     {
-        $scheme = $this->scheme;
-        if ('' != $scheme) {
-            $scheme = $scheme.':';
+        return preg_replace_callback(
+            '/(?:[^'.self::REGEXP_CHARS_UNRESERVED.self::REGEXP_CHARS_SUBDELIM.'%:@\/]++|%(?![A-Fa-f0-9]{2}))/',
+            [$this, 'urlEncodeMatch'],
+            $path
+        );
+    }
+
+    /**
+     * Format the Path component
+     *
+     * @param string $path
+     *
+     * @return string
+     */
+    protected function filterPath($path)
+    {
+        return $this->formatPath($path);
+    }
+
+    /**
+     * Returns the RFC3986 encoded string matched
+     *
+     * @param array $matches
+     *
+     * @return string
+     */
+    protected function urlEncodeMatch(array $matches)
+    {
+        return rawurlencode($matches[0]);
+    }
+
+    /**
+     * Format the Query or the Fragment component
+     *
+     * Returns a array containing:
+     * <ul>
+     * <li> the formatted component (a string or null)</li>
+     * <li> a boolean flag telling wether the delimiter is to be added to the component
+     * when building the URI string representation</li>
+     * </ul>
+     *
+     * @param string|null $component
+     *
+     * @return array
+     */
+    protected function formatQueryAndFragment($component)
+    {
+        if ('' == $component) {
+            return $component;
         }
 
-        $authority = '';
-        if (null !== $this->authority) {
-            $authority = '//'.$this->authority;
+        return preg_replace_callback(
+            '/(?:[^'.self::REGEXP_CHARS_UNRESERVED.self::REGEXP_CHARS_SUBDELIM.'%:@\/\?]++|%(?![A-Fa-f0-9]{2}))/',
+            [$this, 'urlEncodeMatch'],
+            $component
+        );
+    }
+
+    /**
+     * assert the URI internal state is valid
+     *
+     * @throws UriException if the URI is in an invalid state
+     */
+    protected function assertValidUri()
+    {
+        if (!$this->isValidGenericUri() || !$this->isValidUri()) {
+            throw UriException::createFromInvalidState($this->getUriString(
+                $this->scheme,
+                $this->authority,
+                $this->path,
+                $this->query,
+                $this->fragment
+            ));
+        }
+    }
+
+    /**
+     * Tell whether the current URI is a valid generic URI
+     *
+     * @return bool
+     */
+    protected function isValidGenericUri()
+    {
+        //if an authority is present the path must be empty or start with a '/'
+        if ('' != $this->authority) {
+            return '' === $this->path || strpos($this->path, '/') === 0;
         }
 
-        $query = $this->query;
-        if ($this->use_query_delimiter) {
-            $query = '?'.$query;
+        //if there's no authority the path can not start with a '//'
+        if (0 === strpos($this->path, '//')) {
+            return false;
         }
 
-        $fragment = $this->fragment;
-        if ($this->use_fragment_delimiter) {
-            $fragment = '#'.$fragment;
+        if (null !== $this->scheme || false === ($pos = strpos($this->path, ':'))) {
+            return true;
         }
 
-        return $scheme.$authority.$this->path.$query.$fragment;
+        //if there's no authority and no scheme
+        //the first '/' must occur before the first ':' in the path component
+        return false !== strpos(substr($this->path, 0, $pos), '/');
     }
 
     /**
@@ -435,25 +456,78 @@ abstract class AbstractUri
     abstract protected function isValidUri();
 
     /**
-     * Tell whether the current URI is a valid generic URI
+     * Generate the URI string representation from its components
      *
-     * @return bool
+     * @see https://tools.ietf.org/html/rfc3986#section-5.3
+     *
+     * @param string|null $scheme
+     * @param string|null $authority
+     * @param string      $path
+     * @param string|null $query
+     * @param string|null $fragment
+     *
+     * @return string
      */
-    protected function isValidGenericUri()
+    protected static function getUriString($scheme, $authority, $path, $query, $fragment)
     {
-        if ('' !== $this->getAuthority()) {
-            return '' === $this->path || strpos($this->path, '/') === 0;
+        if ('' != $scheme) {
+            $scheme = $scheme.':';
         }
 
-        if (0 === strpos($this->path, '//')) {
-            return false;
+        if (null !== $authority) {
+            $authority = '//'.$authority;
         }
 
-        if ('' !== (string) $this->scheme || false === ($pos = strpos($this->path, ':'))) {
-            return true;
+        if (null !== $query) {
+            $query = '?'.$query;
         }
 
-        return false !== strpos(substr($this->path, 0, $pos), '/');
+        if (null !== $fragment) {
+            $fragment = '#'.$fragment;
+        }
+
+        return $scheme.$authority.$path.$query.$fragment;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function __debugInfo()
+    {
+        return ['uri' => $this->__toString()];
+    }
+
+    /**
+     * Return the string representation as a URI reference.
+     *
+     * Depending on which components of the URI are present, the resulting
+     * string is either a full URI or relative reference according to RFC 3986,
+     * Section 4.1. The method concatenates the various components of the URI,
+     * using the appropriate delimiters:
+     *
+     * - If a scheme is present, it MUST be suffixed by ":".
+     * - If an authority is present, it MUST be prefixed by "//".
+     * - The path can be concatenated without delimiters.
+     * - If a query is present, it MUST be prefixed by "?".
+     * - If a fragment is present, it MUST be prefixed by "#".
+     *
+     * @see http://tools.ietf.org/html/rfc3986#section-4.1
+     *
+     * @return string
+     */
+    public function __toString()
+    {
+        if (null === $this->uri) {
+            $this->uri = $this->getUriString(
+                $this->scheme,
+                $this->authority,
+                $this->path,
+                $this->query,
+                $this->fragment
+            );
+        }
+
+        return $this->uri;
     }
 
     /**
@@ -585,7 +659,7 @@ abstract class AbstractUri
      */
     public function getPath()
     {
-        return (string) $this->path;
+        return $this->path;
     }
 
     /**
@@ -637,37 +711,6 @@ abstract class AbstractUri
     }
 
     /**
-     * @inheritdoc
-     */
-    public function __debugInfo()
-    {
-        return ['uri' => $this->uri];
-    }
-
-    /**
-     * Return the string representation as a URI reference.
-     *
-     * Depending on which components of the URI are present, the resulting
-     * string is either a full URI or relative reference according to RFC 3986,
-     * Section 4.1. The method concatenates the various components of the URI,
-     * using the appropriate delimiters:
-     *
-     * - If a scheme is present, it MUST be suffixed by ":".
-     * - If an authority is present, it MUST be prefixed by "//".
-     * - The path can be concatenated without delimiters.
-     * - If a query is present, it MUST be prefixed by "?".
-     * - If a fragment is present, it MUST be prefixed by "#".
-     *
-     * @see http://tools.ietf.org/html/rfc3986#section-4.1
-     *
-     * @return string
-     */
-    public function __toString()
-    {
-        return $this->uri;
-    }
-
-    /**
      * Return an instance with the specified scheme.
      *
      * This method MUST retain the state of the current instance, and return
@@ -677,15 +720,20 @@ abstract class AbstractUri
      *
      * @param string $scheme The scheme to use with the new instance.
      *
-     * @throws InvalidArgumentException for transformations that would result in
-     *                                  a state that cannot be represented as a
-     *                                  valid URI reference.
-     * @return static                   A new instance with the specified scheme.
+     * @throws UriException for transformations that would result in
+     *                      a state that cannot be represented as a
+     *                      valid URI reference.
+     * @return static       A new instance with the specified scheme.
      *
      */
     public function withScheme($scheme)
     {
-        $scheme = $this->filterScheme($this->validateString($scheme));
+        $scheme = $this->filterString($scheme);
+        $scheme = $this->formatHostAndScheme($scheme);
+        if ('' == $scheme) {
+            $scheme = null;
+        }
+
         if ($scheme === $this->scheme) {
             return $this;
         }
@@ -693,6 +741,7 @@ abstract class AbstractUri
         $clone = clone $this;
         $clone->scheme = $scheme;
         $clone->port = $clone->formatPort($clone->port);
+        $clone->authority = $clone->setAuthority();
         $clone->assertValidUri();
 
         return $clone;
@@ -711,27 +760,60 @@ abstract class AbstractUri
      * @param string      $user     The user name to use for authority.
      * @param null|string $password The password associated with $user.
      *
-     * @throws InvalidArgumentException for transformations that would result in
-     *                                  a state that cannot be represented as a
-     *                                  valid URI reference.
-     * @return static                   A new instance with the specified user information.
+     * @throws UriException for transformations that would result in
+     *                      a state that cannot be represented as a
+     *                      valid URI reference.
+     * @return static       A new instance with the specified user information.
      *
      */
     public function withUserInfo($user, $password = null)
     {
-        $user_info = $this->filterUserInfo($user, $password);
+        $user_info = null;
+        if ('' != $user) {
+            list($user, $password) = $this->filterUserInfo($user, $password);
+            $user_info = $this->formatUserInfo($user, $password);
+        }
+
         if ($user_info === $this->user_info) {
             return $this;
         }
 
         $clone = clone $this;
         $clone->user_info = $user_info;
+        $clone->authority = $clone->setAuthority();
         $clone->assertValidUri();
 
         return $clone;
     }
 
-    /**
+     /**
+     * Filter the URI user info component
+     *
+     * @param string|null $user     the URI user component
+     * @param string|null $password the URI password component
+     *
+     * @return string|null
+     */
+    protected function filterUserInfo($user, $password)
+    {
+        $user = $this->filterString($user);
+        if (strlen($user) !== strcspn($user, ':@/?#')) {
+            throw UriException::createFromInvalidUser($user);
+        }
+
+        if ('' == $password) {
+            return [$user, null];
+        }
+
+        $password = $this->filterString($password);
+        if (strlen($password) !== strcspn($password, '@/?#')) {
+            throw UriException::createFromInvalidPassword($password);
+        }
+
+        return [$user, $password];
+    }
+
+   /**
      * Return an instance with the specified host.
      *
      * This method MUST retain the state of the current instance, and return
@@ -741,23 +823,24 @@ abstract class AbstractUri
      *
      * @param string $host The hostname to use with the new instance.
      *
-     * @throws InvalidArgumentException for transformations that would result in
-     *                                  a state that cannot be represented as a
-     *                                  valid URI reference.
-     * @return static                   A new instance with the specified host.
+     * @throws UriException for transformations that would result in
+     *                      a state that cannot be represented as a
+     *                      valid URI reference.
+     * @return static       A new instance with the specified host.
      *
      */
     public function withHost($host)
     {
-        $host = $this->validateString($host);
+        $host = $this->filterString($host);
         $host = '' !== $host ? $this->filterHost($host) : null;
-        $host = $this->formatHost($host);
+        $host = $this->formatHostAndScheme($host);
         if ($host === $this->host) {
             return $this;
         }
 
         $clone = clone $this;
         $clone->host = $host;
+        $clone->authority = $clone->setAuthority();
         $clone->assertValidUri();
 
         return $clone;
@@ -778,15 +861,18 @@ abstract class AbstractUri
      * @param null|int $port The port to use with the new instance; a null value
      *                       removes the port information.
      *
-     * @throws InvalidArgumentException for transformations that would result in
-     *                                  a state that cannot be represented as a
-     *                                  valid URI reference.
-     * @return static                   A new instance with the specified port.
+     * @throws UriException for transformations that would result in
+     *                      a state that cannot be represented as a
+     *                      valid URI reference.
+     * @return static       A new instance with the specified port.
      *
      */
     public function withPort($port)
     {
-        $port = $this->filterPort($port);
+        if (null !== $port && (!is_int($port) || $port < 1 || $port > 65535)) {
+            throw UriException::createFromInvalidPort($port);
+        }
+
         $port = $this->formatPort($port);
         if ($port === $this->port) {
             return $this;
@@ -794,6 +880,7 @@ abstract class AbstractUri
 
         $clone = clone $this;
         $clone->port = $port;
+        $clone->authority = $clone->setAuthority();
         $clone->assertValidUri();
 
         return $clone;
@@ -819,16 +906,20 @@ abstract class AbstractUri
      *
      * @param string $path The path to use with the new instance.
      *
-     * @throws InvalidArgumentException for transformations that would result in
-     *                                  a state that cannot be represented as a
-     *                                  valid URI reference.
-     * @return static                   A new instance with the specified path.
+     * @throws UriException for transformations that would result in
+     *                      a state that cannot be represented as a
+     *                      valid URI reference.
+     * @return static       A new instance with the specified path.
      *
      */
     public function withPath($path)
     {
-        $path = $this->filterPath($this->validateString($path));
-        $path = $this->formatPath($path);
+        $path = $this->filterString($path);
+        if (strlen($path) != strcspn($path, '?#')) {
+            throw UriException::createFromInvalidPath($path);
+        }
+
+        $path = $this->filterPath($path);
         if ($path === $this->path) {
             return $this;
         }
@@ -853,28 +944,26 @@ abstract class AbstractUri
      *
      * @param string $query The query string to use with the new instance.
      *
-     * @throws InvalidArgumentException for transformations that would result in
-     *                                  a state that cannot be represented as a
-     *                                  valid URI reference.
-     * @return static                   A new instance with the specified query string.
+     * @throws UriException for transformations that would result in
+     *                      a state that cannot be represented as a
+     *                      valid URI reference.
+     * @return static       A new instance with the specified query string.
      *
      */
     public function withQuery($query)
     {
-        $query = $this->validateString($query);
-        $query = $this->filterQuery($query);
-        if ('' === $query) {
-            $query = null;
+        $query = $this->filterString($query);
+        if (strlen($query) !== strcspn($query, '#')) {
+            throw UriException::createFromInvalidQuery($query);
         }
 
-        list($query, $preserve_delimiter) = $this->formatQueryAndFragment($query);
+        $query = '' == $query ? null : $this->formatQueryAndFragment($query);
         if ($query === $this->query) {
             return $this;
         }
 
         $clone = clone $this;
         $clone->query = $query;
-        $clone->use_query_delimiter = $preserve_delimiter;
         $clone->assertValidUri();
 
         return $clone;
@@ -893,27 +982,22 @@ abstract class AbstractUri
      *
      * @param string $fragment The fragment to use with the new instance.
      *
-     * @throws InvalidArgumentException for transformations that would result in
-     *                                  a state that cannot be represented as a
-     *                                  valid URI reference.
-     * @return static                   A new instance with the specified fragment.
+     * @throws UriException for transformations that would result in
+     *                      a state that cannot be represented as a
+     *                      valid URI reference.
+     * @return static       A new instance with the specified fragment.
      *
      */
     public function withFragment($fragment)
     {
-        $fragment = $this->validateString($fragment);
-        if ('' === $fragment) {
-            $fragment = null;
-        }
-
-        list($fragment, $preserve_delimiter) = $this->formatQueryAndFragment($fragment);
+        $fragment = $this->filterString($fragment);
+        $fragment = '' == $fragment ? null : $this->formatQueryAndFragment($fragment);
         if ($fragment === $this->fragment) {
             return $this;
         }
 
         $clone = clone $this;
         $clone->fragment = $fragment;
-        $clone->use_fragment_delimiter = $preserve_delimiter;
         $clone->assertValidUri();
 
         return $clone;
