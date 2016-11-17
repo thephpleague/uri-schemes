@@ -4,7 +4,6 @@ namespace LeagueTest\Uri\Schemes;
 
 use InvalidArgumentException;
 use League\Uri\Schemes\Data;
-use RuntimeException;
 
 /**
  * @group data
@@ -32,15 +31,15 @@ class DataTest extends AbstractTestCase
         return [
             'simple string' => [
                 'uri' => 'data:text/plain;charset=us-ascii,Bonjour%20le%20monde%21',
-                'path' => 'text/plain;charset=us-ascii,Bonjour%20le%20monde!',
+                'path' => 'text/plain;charset=us-ascii,Bonjour%20le%20monde%21',
             ],
             'string without mimetype' => [
                 'uri' => 'data:,Bonjour%20le%20monde%21',
-                'path' => 'text/plain;charset=us-ascii,Bonjour%20le%20monde!',
+                'path' => 'text/plain;charset=us-ascii,Bonjour%20le%20monde%21',
             ],
             'string without parameters' => [
                 'uri' => 'data:text/plain,Bonjour%20le%20monde%21',
-                'path' => 'text/plain;charset=us-ascii,Bonjour%20le%20monde!',
+                'path' => 'text/plain;charset=us-ascii,Bonjour%20le%20monde%21',
             ],
             'empty string' => [
                 'uri' => 'data:,',
@@ -78,7 +77,7 @@ class DataTest extends AbstractTestCase
 
     /**
      * @dataProvider invalidDataPath
-     * @expectedException RuntimeException
+     * @expectedException InvalidArgumentException
      * @param $path
      */
     public function testCreateFromPathFailed($path)
@@ -114,7 +113,7 @@ class DataTest extends AbstractTestCase
     /**
      * @expectedException InvalidArgumentException
      */
-    public function testCreateFromComponentsFailedWithRuntimeException()
+    public function testCreateFromComponentsFailedWithDataException()
     {
         new Data('data:text/plain;charset=us-ascii,Bonjour%20le%20monde%21#fragment');
     }
