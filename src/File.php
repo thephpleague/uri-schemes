@@ -55,7 +55,7 @@ class File extends AbstractUri implements Uri
      */
     public static function createFromUnixPath($uri = '')
     {
-        $uri = static::formatPath($uri);
+        $uri = implode('/', array_map('rawurlencode', explode('/', $uri)));
         if (isset($uri) && '/' === $uri[0]) {
             $uri = 'file://'.$uri;
         }
@@ -78,7 +78,7 @@ class File extends AbstractUri implements Uri
             $uri = substr($uri, strlen($root));
         }
 
-        $uri = implode('/', array_map([File::class, 'formatPath'], explode('\\', $uri)));
+        $uri = implode('/', array_map('rawurlencode', explode('\\', $uri)));
 
         //Local Windows absolute path
         if ('' !== $root) {

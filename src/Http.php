@@ -12,7 +12,7 @@
  */
 namespace League\Uri\Schemes;
 
-use League\Uri\Schemes\Exceptions\HttpUriException;
+use League\Uri\Schemes\Exceptions\HttpException;
 use Psr\Http\Message\UriInterface;
 
 /**
@@ -73,7 +73,8 @@ class Http extends AbstractUri implements UriInterface
     public static function createFromServer(array $server)
     {
         return new static(
-            static::fetchScheme($server).'://'
+            static::fetchScheme($server)
+            .'//'
             .static::fetchUserInfo($server)
             .static::fetchHostname($server)
             .static::fetchRequestUri($server)
@@ -92,7 +93,7 @@ class Http extends AbstractUri implements UriInterface
         $server += ['HTTPS' => ''];
         $res = filter_var($server['HTTPS'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
 
-        return ($res !== false) ? 'https' : 'http';
+        return ($res !== false) ? 'https:' : 'http:';
     }
 
     /**
@@ -115,7 +116,12 @@ class Http extends AbstractUri implements UriInterface
             $pass = array_shift($res);
         }
 
-        return static::formatUserInfo($login, $pass).'@';
+        $user_info = static::formatUserInfo($login, $pass);
+        if ('' != $user_info) {
+            return $user_info.'@';
+        }
+
+        return $user_info;
     }
 
     /**
@@ -151,7 +157,7 @@ class Http extends AbstractUri implements UriInterface
             return $server['SERVER_ADDR'].':'.$server['SERVER_PORT'];
         }
 
-        throw HttpUriException::createFromInvalidServer();
+        throw HttpException::createFromInvalidServer();
     }
 
     /**

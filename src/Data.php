@@ -13,7 +13,7 @@
 namespace League\Uri\Schemes;
 
 use League\Uri\Interfaces\Uri;
-use League\Uri\Schemes\Exceptions\DataUriException;
+use League\Uri\Schemes\Exceptions\DataException;
 
 /**
  * Immutable Value object representing a Data Uri.
@@ -54,7 +54,7 @@ class Data extends AbstractUri implements Uri
      *
      * @see https://tools.ietf.org/html/rfc2397
      *
-     * @throws DataUriException If the path is not compliant with RFC2397
+     * @throws DataException If the path is not compliant with RFC2397
      *
      * @return string
      */
@@ -65,7 +65,7 @@ class Data extends AbstractUri implements Uri
         }
 
         if (!mb_detect_encoding($path, 'US-ASCII', true) || false === strpos($path, ',')) {
-            throw DataUriException::createFromInvalidPath($path);
+            throw DataException::createFromInvalidPath($path);
         }
 
         $parts = explode(',', $path, 2);
@@ -95,13 +95,13 @@ class Data extends AbstractUri implements Uri
      *
      * @see https://tools.ietf.org/html/rfc2397
      *
-     * @throws DataUriException If the mediatype or the data are not compliant
-     *                          with the RFC2397
+     * @throws DataException If the mediatype or the data are not compliant
+     *                       with the RFC2397
      */
     protected function assertValidPath($mimetype, $parameters, $data)
     {
         if (!preg_match(',^\w+/[-.\w]+(?:\+[-.\w]+)?$,', $mimetype)) {
-            throw DataUriException::createFromInvalidMimetype($mimetype);
+            throw DataException::createFromInvalidMimetype($mimetype);
         }
 
         $is_binary = preg_match(',(;|^)base64$,', $parameters, $matches);
@@ -111,7 +111,7 @@ class Data extends AbstractUri implements Uri
 
         $res = array_filter(array_filter(explode(';', $parameters), [$this, 'validateParameter']));
         if (!empty($res)) {
-            throw DataUriException::createFromInvalidParameters($parameters);
+            throw DataException::createFromInvalidParameters($parameters);
         }
 
         if (!$is_binary) {
@@ -120,7 +120,7 @@ class Data extends AbstractUri implements Uri
 
         $res = base64_decode($data, true);
         if (false === $res || $data !== base64_encode($res)) {
-            throw DataUriException::createFromInvalidData($data);
+            throw DataException::createFromInvalidData($data);
         }
     }
 
@@ -149,7 +149,7 @@ class Data extends AbstractUri implements Uri
     public static function createFromPath($path)
     {
         if (!file_exists($path) || !is_readable($path)) {
-            throw DataUriException::createFromInvalidFilePath($path);
+            throw DataException::createFromInvalidFilePath($path);
         }
 
         $mimetype = str_replace(' ', '', (new \finfo(FILEINFO_MIME))->file($path));
