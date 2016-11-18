@@ -249,9 +249,9 @@ abstract class AbstractUri
      */
     protected function setUriComponents(array $components)
     {
-        $this->scheme = $this->formatHostAndScheme($components['scheme']);
+        $this->scheme = $this->formatSchemeAndHost($components['scheme']);
         $this->user_info = $this->formatUserInfo($components['user'], $components['pass']);
-        $this->host = $this->formatHostAndScheme($components['host']);
+        $this->host = $this->formatSchemeAndHost($components['host']);
         $this->port = $this->formatPort($components['port']);
         $this->authority = $this->setAuthority();
         $this->path = $this->filterPath($components['path']);
@@ -266,7 +266,7 @@ abstract class AbstractUri
      *
      * @return string|null
      */
-    protected function formatHostAndScheme($component)
+    protected function formatSchemeAndHost($component)
     {
         if ('' == $component) {
             return $component;
@@ -283,17 +283,27 @@ abstract class AbstractUri
      *
      * @return string|null
      */
-    protected function formatUserInfo($user, $password)
+    protected static function formatUserInfo($user, $password)
     {
         if ('' == $user) {
             return null;
         }
 
+        $user = preg_replace_callback(
+            '/(?:[^'.self::REGEXP_CHARS_UNRESERVED.self::REGEXP_CHARS_SUBDELIM.'%]++|%(?![A-Fa-f0-9]{2}))/',
+            [AbstractUri::class, 'urlEncodeMatch'],
+            $user
+        );
+
         if ('' == $password) {
             return $user;
         }
 
-        return $user.':'.$password;
+        return $user.':'.preg_replace_callback(
+            '/(?:[^'.self::REGEXP_CHARS_UNRESERVED.self::REGEXP_CHARS_SUBDELIM.'%:]++|%(?![A-Fa-f0-9]{2}))/',
+            [AbstractUri::class, 'urlEncodeMatch'],
+            $password
+        );
     }
 
     /**
@@ -341,11 +351,11 @@ abstract class AbstractUri
      *
      * @return string
      */
-    protected function formatPath($path)
+    protected static function formatPath($path)
     {
         return preg_replace_callback(
             '/(?:[^'.self::REGEXP_CHARS_UNRESERVED.self::REGEXP_CHARS_SUBDELIM.'%:@\/]++|%(?![A-Fa-f0-9]{2}))/',
-            [$this, 'urlEncodeMatch'],
+            [AbstractUri::class, 'urlEncodeMatch'],
             $path
         );
     }
@@ -369,7 +379,7 @@ abstract class AbstractUri
      *
      * @return string
      */
-    protected function urlEncodeMatch(array $matches)
+    protected static function urlEncodeMatch(array $matches)
     {
         return rawurlencode($matches[0]);
     }
@@ -729,7 +739,7 @@ abstract class AbstractUri
     public function withScheme($scheme)
     {
         $scheme = $this->filterString($scheme);
-        $scheme = $this->formatHostAndScheme($scheme);
+        $scheme = $this->formatSchemeAndHost($scheme);
         if ('' == $scheme) {
             $scheme = null;
         }
@@ -833,7 +843,7 @@ abstract class AbstractUri
     {
         $host = $this->filterString($host);
         $host = '' !== $host ? $this->filterHost($host) : null;
-        $host = $this->formatHostAndScheme($host);
+        $host = $this->formatSchemeAndHost($host);
         if ($host === $this->host) {
             return $this;
         }

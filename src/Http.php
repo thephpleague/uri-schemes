@@ -115,16 +115,7 @@ class Http extends AbstractUri implements UriInterface
             $pass = array_shift($res);
         }
 
-        if (null === $login) {
-            return null;
-        }
-
-        $userInfo = $login;
-        if (null !== $pass) {
-            $userInfo .= ':'.$pass;
-        }
-
-        return $userInfo.'@';
+        return static::formatUserInfo($login, $pass).'@';
     }
 
     /**
