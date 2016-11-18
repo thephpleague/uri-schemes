@@ -2,7 +2,7 @@
 
 All Notable changes to `League\Uri\Components` will be documented in this file
 
-## 0.2.0 - Next
+## 0.3.0 - Next
 
 ### Added
 
@@ -13,7 +13,10 @@ exceptions.
 
 ### Fixed
 
-- None
+- userInfo encoding
+- `File::createFromUnixPath` encoding
+- `File::createFromWindowsPath` encoding
+- `Http::createFromServer` user info encoding
 
 ### Deprecated
 
