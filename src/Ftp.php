@@ -42,7 +42,7 @@ class Ftp extends AbstractUri implements Uri
     {
         return null === $this->fragment
             && null === $this->query
-            && (null === $this->scheme || isset(static::$supported_schemes[$this->scheme]))
+            && in_array($this->scheme, [null, 'ftp'], true)
             && $this->isAllowedAuthority();
     }
 

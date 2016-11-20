@@ -20,13 +20,14 @@ Dependencies
 
 - [PSR-7](http://www.php-fig.org/psr/psr-7/)
 - [uri-interfaces](https://github.com/thephpleague/uri-interfaces)
-- [uri-components](https://github.com/thephpleague/uri-components)
 - [uri-parser](https://github.com/thephpleague/uri-parser)
 
 Installation
 --------
 
-Clone this repo and use composer install
+```
+$ composer require league/uri-schemes
+```
 
 Documentation
 --------
@@ -44,7 +45,7 @@ Usage
 
 All URI objects expose the same methods.
 
-### Accessing URI parts and components
+### Accessing URI properties
 
 You can access the URI string, its individual parts and components using their respective getter methods.
 
@@ -62,7 +63,7 @@ public Uri::getQuery(void): string
 public Uri::getFragment(void): string
 ```
 
-Which will lead to the following result for a simple URI:
+Which will lead to the following result for a simple HTTP URI:
 
 ```php
 <?php
@@ -81,15 +82,11 @@ echo $uri->getQuery();     //displays "foo=baz"
 echo $uri->getFragment();  //displays "title"
 ```
 
-### Modifying URIs, URI parts and components
+### Modifying URI properties
 
-**If the modifications do not alter the current object, it is returned as is, otherwise, a new modified object is returned.**
+To replace one of the URI part you can use the modifying methods exposed by all URI object. If the modifications do not alter the current object, it is returned as is, otherwise, a new modified object is returned.
 
-**The method may trigger a `InvalidArgumentException` exception if the resulting URI is not valid for a scheme specific URI.**
-
-## Basic modifications
-
-To completely replace one of the URI part you can use the modifying methods exposed by all URI object
+**The method will trigger a `InvalidArgumentException` exception if the resulting URI is not valid. The modification validaity is scheme dependant.**
 
 ```php
 <?php
@@ -119,6 +116,68 @@ $uri = new Ws("ws://thephpleague.com/fr/")
     ->withQuery("foo=baz");
 
 echo $uri; //displays wss://foo:bar@www.example.com:81/how/are/you?foo=baz
+```
+
+### Creating new URI objects
+
+To instantiate a new URI object you can use the default constructor or two named constructors:
+
+```php
+<?php
+
+public Uri::__construct(string $uri = ''): void
+public Uri::createFromString(string $uri = ''): Uri
+public Uri::createFromComponents(array $components): Uri
+```
+
+- The `Uri::createFromString` named constructor is kept to ease transition between `League/Uri` v4 and v5.
+- The `Uri::createFromComponents` named constructor returns an new URI object from the return value of PHP’s function `parse_url`.
+
+#### Http::createFromServer
+
+The `League\Uri\Schemes\Http` class can be instantiated using the server variables using `Http::createFromServer`.
+
+```php
+<?php
+
+use League\Uri\Schemes\Http as HttpUri;
+
+//don't forget to provide the $_SERVER array
+$uri = HttpUri::createFromServer($_SERVER);
+```
+
+**The method only relies on the server's safe parameters to determine the current URI. If you are using the library behind a proxy the result may differ from your expectation as no `$_SERVER['HTTP_X_*']` header is taken into account for security reasons.**
+
+#### Data::createFromPath
+
+The `League\Uri\Schemes\Data` class can be instantiated from a filepath.
+
+```php
+<?php
+
+use League\Uri\Schemes\Data as DataUri;
+
+$uri = DataUri::createFromPath('path/to/my/png/image.png');
+echo $uri; //returns 'data:image/png;charset=binary;base64,...'
+//where '...' represent the base64 representation of the file
+```
+
+**If the file is not readable or accessible an `InvalidArgumentException` exception will be thrown. The class uses PHP’s `finfo` class to detect the required mediatype as defined in RFC2045.**
+
+#### File::createFromUnixPath and File::createFromWindowsPath
+
+The `League\Uri\Schemes\File` comes with two optionals named constructors:
+
+- The `File::createFromUnixPath` to return a new object from a Unix Path.
+- The `File::createFromWindowsPath` to return a new object from a Windows Path.
+
+```php
+<?php
+
+use League\Uri\Schemes\File as FileUri;
+
+$uri = FileUri::createFromWidowsPath(c:\windows\My Documents\my word.docx);
+echo $uri; //returns 'file:///c:My%20Documents/my%20word.docx'
 ```
 
 Contributing
