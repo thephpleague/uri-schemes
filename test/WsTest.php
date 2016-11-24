@@ -2,7 +2,7 @@
 
 namespace LeagueTest\Uri\Schemes;
 
-use League\Uri\Schemes\Exceptions\UriException;
+use League\Uri\Schemes\Exceptions\Exception;
 use League\Uri\Schemes\Ws as WsUri;
 
 /**
@@ -60,7 +60,7 @@ class WsTest extends AbstractTestCase
      */
     public function testConstructorThrowInvalidArgumentException($uri)
     {
-        $this->expectException(UriException::class);
+        $this->expectException(Exception::class);
         WsUri::createFromString($uri);
     }
 
@@ -76,7 +76,7 @@ class WsTest extends AbstractTestCase
 
     public function testModificationFailedWithEmptyAuthority()
     {
-        $this->expectException(UriException::class);
+        $this->expectException(Exception::class);
         WsUri::createFromString('wss://example.com/path')
             ->withScheme('')
             ->withHost('')

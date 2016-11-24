@@ -14,7 +14,7 @@ namespace League\Uri\Schemes;
 
 use League\Uri\HostValidation;
 use League\Uri\Parser;
-use League\Uri\Schemes\Exceptions\UriException;
+use League\Uri\Schemes\Exceptions\Exception;
 
 /**
  * common URI Object properties and methods
@@ -181,18 +181,21 @@ abstract class AbstractUri
      *
      * @param string $str the value to evaluate as a string
      *
-     * @throws UriException if the submitted data can not be converted to string
+     * @throws Exception if the submitted data can not be converted to string
      *
      * @return string
      */
     protected static function filterString($str)
     {
         if (!is_string($str)) {
-            throw UriException::createFromInvalidType($str);
+            throw new Exception(sprintf(
+                'Expected data to be a string; received "%s"',
+                (is_object($str) ? get_class($str) : gettype($str))
+            ));
         }
 
         if (strlen($str) !== strcspn($str, self::INVALID_CHARS)) {
-            throw UriException::createFromInvalidCharacters($str);
+            throw Exception::createFromInvalidCharacters($str);
         }
 
         return $str;
@@ -413,19 +416,21 @@ abstract class AbstractUri
     /**
      * assert the URI internal state is valid
      *
-     * @throws UriException if the URI is in an invalid state
+     * @throws Exception if the URI is in an invalid state
      */
     protected function assertValidUri()
     {
         $this->uri = null;
         if (!$this->isValidGenericUri() || !$this->isValidUri()) {
-            throw UriException::createFromInvalidState($this->getUriString(
-                $this->scheme,
-                $this->authority,
-                $this->path,
-                $this->query,
-                $this->fragment
-            ));
+            throw new Exception(sprintf(
+                'The submitted uri `%s` is in invalid state',
+                $this->getUriString(
+                    $this->scheme,
+                    $this->authority,
+                    $this->path,
+                    $this->query,
+                    $this->fragment
+            )));
         }
     }
 
@@ -730,10 +735,10 @@ abstract class AbstractUri
      *
      * @param string $scheme The scheme to use with the new instance.
      *
-     * @throws UriException for transformations that would result in
-     *                      a state that cannot be represented as a
-     *                      valid URI reference.
-     * @return static       A new instance with the specified scheme.
+     * @throws Exception for transformations that would result in
+     *                   a state that cannot be represented as a
+     *                   valid URI reference.
+     * @return static    A new instance with the specified scheme.
      *
      */
     public function withScheme($scheme)
@@ -770,10 +775,10 @@ abstract class AbstractUri
      * @param string      $user     The user name to use for authority.
      * @param null|string $password The password associated with $user.
      *
-     * @throws UriException for transformations that would result in
-     *                      a state that cannot be represented as a
-     *                      valid URI reference.
-     * @return static       A new instance with the specified user information.
+     * @throws Exception for transformations that would result in
+     *                   a state that cannot be represented as a
+     *                   valid URI reference.
+     * @return static    A new instance with the specified user information.
      *
      */
     public function withUserInfo($user, $password = null)
@@ -808,7 +813,7 @@ abstract class AbstractUri
     {
         $user = $this->filterString($user);
         if (strlen($user) !== strcspn($user, ':@/?#')) {
-            throw UriException::createFromInvalidUser($user);
+            throw new Exception(sprintf('The encoded user `%s` contains invalid characters', $user));
         }
 
         if ('' == $password) {
@@ -817,7 +822,7 @@ abstract class AbstractUri
 
         $password = $this->filterString($password);
         if (strlen($password) !== strcspn($password, '@/?#')) {
-            throw UriException::createFromInvalidPassword($password);
+            throw new Exception(sprintf('The encoded password `%s` contains invalid characters', $password));
         }
 
         return [$user, $password];
@@ -833,10 +838,10 @@ abstract class AbstractUri
      *
      * @param string $host The hostname to use with the new instance.
      *
-     * @throws UriException for transformations that would result in
-     *                      a state that cannot be represented as a
-     *                      valid URI reference.
-     * @return static       A new instance with the specified host.
+     * @throws Exception for transformations that would result in
+     *                   a state that cannot be represented as a
+     *                   valid URI reference.
+     * @return static    A new instance with the specified host.
      *
      */
     public function withHost($host)
@@ -871,16 +876,16 @@ abstract class AbstractUri
      * @param null|int $port The port to use with the new instance; a null value
      *                       removes the port information.
      *
-     * @throws UriException for transformations that would result in
-     *                      a state that cannot be represented as a
-     *                      valid URI reference.
-     * @return static       A new instance with the specified port.
+     * @throws Exception for transformations that would result in
+     *                   a state that cannot be represented as a
+     *                   valid URI reference.
+     * @return static    A new instance with the specified port.
      *
      */
     public function withPort($port)
     {
         if (null !== $port && (!is_int($port) || $port < 1 || $port > 65535)) {
-            throw UriException::createFromInvalidPort($port);
+            throw Exception::createFromInvalidPort($port);
         }
 
         $port = $this->formatPort($port);
@@ -916,17 +921,17 @@ abstract class AbstractUri
      *
      * @param string $path The path to use with the new instance.
      *
-     * @throws UriException for transformations that would result in
-     *                      a state that cannot be represented as a
-     *                      valid URI reference.
-     * @return static       A new instance with the specified path.
+     * @throws Exception for transformations that would result in
+     *                   a state that cannot be represented as a
+     *                   valid URI reference.
+     * @return static    A new instance with the specified path.
      *
      */
     public function withPath($path)
     {
         $path = $this->filterString($path);
         if (strlen($path) != strcspn($path, '?#')) {
-            throw UriException::createFromInvalidPath($path);
+            throw new Exception(sprintf('The encoded path `%s` contains invalid characters', $path));
         }
 
         $path = $this->filterPath($path);
@@ -954,17 +959,17 @@ abstract class AbstractUri
      *
      * @param string $query The query string to use with the new instance.
      *
-     * @throws UriException for transformations that would result in
-     *                      a state that cannot be represented as a
-     *                      valid URI reference.
-     * @return static       A new instance with the specified query string.
+     * @throws Exception for transformations that would result in
+     *                   a state that cannot be represented as a
+     *                   valid URI reference.
+     * @return static    A new instance with the specified query string.
      *
      */
     public function withQuery($query)
     {
         $query = $this->filterString($query);
         if (strlen($query) !== strcspn($query, '#')) {
-            throw UriException::createFromInvalidQuery($query);
+            throw new Exception(sprintf('The submitted query `%s` contains invalid characters', $query));
         }
 
         $query = '' == $query ? null : $this->formatQueryAndFragment($query);
@@ -992,10 +997,10 @@ abstract class AbstractUri
      *
      * @param string $fragment The fragment to use with the new instance.
      *
-     * @throws UriException for transformations that would result in
-     *                      a state that cannot be represented as a
-     *                      valid URI reference.
-     * @return static       A new instance with the specified fragment.
+     * @throws Exception for transformations that would result in
+     *                   a state that cannot be represented as a
+     *                   valid URI reference.
+     * @return static    A new instance with the specified fragment.
      *
      */
     public function withFragment($fragment)

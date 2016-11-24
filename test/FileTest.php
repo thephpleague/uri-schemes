@@ -2,7 +2,7 @@
 
 namespace LeagueTest\Uri\Schemes;
 
-use League\Uri\Schemes\Exceptions\UriException;
+use League\Uri\Schemes\Exceptions\Exception;
 use League\Uri\Schemes\File as FileUri;
 
 /**
@@ -72,7 +72,7 @@ class FileTest extends AbstractTestCase
      */
     public function testConstructorThrowInvalidArgumentException($uri)
     {
-        $this->expectException(UriException::class);
+        $this->expectException(Exception::class);
         FileUri::createFromString($uri);
     }
 

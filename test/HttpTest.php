@@ -3,8 +3,7 @@
 namespace LeagueTest\Uri\Schemes;
 
 use InvalidArgumentException;
-use League\Uri\Schemes\Exceptions\HttpException;
-use League\Uri\Schemes\Exceptions\UriException;
+use League\Uri\Schemes\Exceptions\Exception;
 use League\Uri\Schemes\Http;
 
 /**
@@ -117,7 +116,7 @@ class HttpTest extends AbstractTestCase
      */
     public function testPathIsInvalid($path)
     {
-        $this->expectException(UriException::class);
+        $this->expectException(Exception::class);
         Http::createFromString('')->withPath($path);
     }
 
@@ -282,7 +281,7 @@ class HttpTest extends AbstractTestCase
 
     public function testFailCreateFromServerWithoutHost()
     {
-        $this->expectException(HttpException::class);
+        $this->expectException(Exception::class);
         Http::createFromServer([
             'PHP_SELF' => '',
             'REQUEST_URI' => '',
@@ -293,7 +292,7 @@ class HttpTest extends AbstractTestCase
 
     public function testModificationFailedWithEmptyAuthority()
     {
-        $this->expectException(UriException::class);
+        $this->expectException(Exception::class);
         Http::createFromString('http://example.com/path')
             ->withScheme('')
             ->withHost('')

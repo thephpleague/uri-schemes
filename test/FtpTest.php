@@ -2,7 +2,7 @@
 
 namespace LeagueTest\Uri\Schemes;
 
-use League\Uri\Schemes\Exceptions\UriException;
+use League\Uri\Schemes\Exceptions\Exception;
 use League\Uri\Schemes\Ftp as FtpUri;
 
 /**
@@ -61,7 +61,7 @@ class FtpTest extends AbstractTestCase
      */
     public function testConstructorThrowInvalidArgumentException($uri)
     {
-        $this->expectException(UriException::class);
+        $this->expectException(Exception::class);
         FtpUri::createFromString($uri);
     }
 
@@ -77,7 +77,7 @@ class FtpTest extends AbstractTestCase
 
     public function testModificationFailedWithEmptyAuthority()
     {
-        $this->expectException(UriException::class);
+        $this->expectException(Exception::class);
         FtpUri::createFromString('ftp://example.com/path')
             ->withScheme('')
             ->withHost('')
