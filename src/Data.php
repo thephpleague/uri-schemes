@@ -13,7 +13,7 @@
 namespace League\Uri\Schemes;
 
 use League\Uri\Interfaces\Uri;
-use League\Uri\Schemes\Exceptions\DataException;
+use League\Uri\Schemes\Exceptions\Exception;
 
 /**
  * Immutable Value object representing a Data Uri.
@@ -54,7 +54,7 @@ class Data extends AbstractUri implements Uri
      *
      * @see https://tools.ietf.org/html/rfc2397
      *
-     * @throws DataException If the path is not compliant with RFC2397
+     * @throws Exception If the path is not compliant with RFC2397
      *
      * @return string
      */
@@ -65,7 +65,7 @@ class Data extends AbstractUri implements Uri
         }
 
         if (!mb_detect_encoding($path, 'US-ASCII', true) || false === strpos($path, ',')) {
-            throw DataException::createFromInvalidPath($path);
+            throw new Exception(sprintf('The submitted path `%s` is invalid according to RFC2937', $path));
         }
 
         $parts = explode(',', $path, 2);
@@ -95,13 +95,13 @@ class Data extends AbstractUri implements Uri
      *
      * @see https://tools.ietf.org/html/rfc2397
      *
-     * @throws DataException If the mediatype or the data are not compliant
-     *                       with the RFC2397
+     * @throws Exception If the mediatype or the data are not compliant
+     *                   with the RFC2397
      */
     protected function assertValidPath($mimetype, $parameters, $data)
     {
         if (!preg_match(',^\w+/[-.\w]+(?:\+[-.\w]+)?$,', $mimetype)) {
-            throw DataException::createFromInvalidMimetype($mimetype);
+            throw new Exception(sprintf('The path mimetype `%s` is invalid', $mimetype));
         }
 
         $is_binary = preg_match(',(;|^)base64$,', $parameters, $matches);
@@ -111,7 +111,10 @@ class Data extends AbstractUri implements Uri
 
         $res = array_filter(array_filter(explode(';', $parameters), [$this, 'validateParameter']));
         if (!empty($res)) {
-            throw DataException::createFromInvalidParameters($parameters);
+            throw new Exception(sprintf(
+                'The path paremeters `%s` contains is invalid',
+                $parameters
+            ));
         }
 
         if (!$is_binary) {
@@ -120,7 +123,7 @@ class Data extends AbstractUri implements Uri
 
         $res = base64_decode($data, true);
         if (false === $res || $data !== base64_encode($res)) {
-            throw DataException::createFromInvalidData($data);
+            throw new Exception(sprintf('The submitted path data `%s` is invalid', $data));
         }
     }
 
@@ -149,7 +152,10 @@ class Data extends AbstractUri implements Uri
     public static function createFromPath($path)
     {
         if (!file_exists($path) || !is_readable($path)) {
-            throw DataException::createFromInvalidFilePath($path);
+            throw new Exception(sprintf(
+                'The specified file `%s` does not exist or is not readable',
+                $path
+            ));
         }
 
         $mimetype = str_replace(' ', '', (new \finfo(FILEINFO_MIME))->file($path));

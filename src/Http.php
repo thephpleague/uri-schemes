@@ -12,7 +12,7 @@
  */
 namespace League\Uri\Schemes;
 
-use League\Uri\Schemes\Exceptions\HttpException;
+use League\Uri\Schemes\Exceptions\Exception;
 use Psr\Http\Message\UriInterface;
 
 /**
@@ -141,7 +141,7 @@ class Http extends AbstractUri implements UriInterface
             return $server['SERVER_ADDR'].':'.$server['SERVER_PORT'];
         }
 
-        throw HttpException::createFromInvalidServer();
+        throw new Exception('Host could not be detected');
     }
 
     /**

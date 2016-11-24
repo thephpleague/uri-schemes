@@ -3,8 +3,7 @@
 namespace LeagueTest\Uri\Schemes;
 
 use League\Uri\Schemes\Data;
-use League\Uri\Schemes\Exceptions\DataException;
-use League\Uri\Schemes\Exceptions\UriException;
+use League\Uri\Schemes\Exceptions\Exception;
 
 /**
  * @group data
@@ -62,7 +61,7 @@ class DataTest extends AbstractTestCase
      */
     public function testCreateFromStringFailed($uri)
     {
-        $this->expectException(UriException::class);
+        $this->expectException(Exception::class);
         Data::createFromString($uri);
     }
 
@@ -85,7 +84,7 @@ class DataTest extends AbstractTestCase
      */
     public function testCreateFromPathFailed($path)
     {
-        $this->expectException(DataException::class);
+        $this->expectException(Exception::class);
         Data::createFromPath($path);
     }
 
@@ -100,19 +99,19 @@ class DataTest extends AbstractTestCase
 
     public function testCreateFromComponentsFailedWithInvalidArgumentException()
     {
-        $this->expectException(DataException::class);
+        $this->expectException(Exception::class);
         Data::createFromString('data:image/png;base64,°28');
     }
 
     public function testCreateFromComponentsFailedInvalidMediatype()
     {
-        $this->expectException(DataException::class);
+        $this->expectException(Exception::class);
         Data::createFromString('data:image/png;base64=toto;base64,dsqdfqfd');
     }
 
-    public function testCreateFromComponentsFailedWithDataException()
+    public function testCreateFromComponentsFailedWithException()
     {
-        $this->expectException(UriException::class);
+        $this->expectException(Exception::class);
         Data::createFromString('data:text/plain;charset=us-ascii,Bonjour%20le%20monde%21#fragment');
     }
 
@@ -144,7 +143,7 @@ class DataTest extends AbstractTestCase
 
     public function testInvalidUri()
     {
-        $this->expectException(UriException::class);
+        $this->expectException(Exception::class);
         Data::createFromString('http:text/plain;charset=us-ascii,Bonjour%20le%20monde%21');
     }
 }

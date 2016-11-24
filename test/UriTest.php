@@ -3,7 +3,7 @@
 namespace LeagueTest\Uri\Schemes;
 
 use League\Uri\ParserException;
-use League\Uri\Schemes\Exceptions\UriException;
+use League\Uri\Schemes\Exceptions\Exception;
 use League\Uri\Schemes\Http;
 
 /**
@@ -146,37 +146,37 @@ class UriTest extends AbstractTestCase
 
     public function testWithInvalidCharacters()
     {
-        $this->expectException(UriException::class);
+        $this->expectException(ParserException::class);
         Http::createFromString("http://example.com/path\n");
     }
 
     public function testWithSchemeFailedWithUnsupportedScheme()
     {
-        $this->expectException(UriException::class);
+        $this->expectException(Exception::class);
         Http::createFromString('http://example.com')->withScheme('telnet');
     }
 
     public function testWithPathFailedWithInvalidChars()
     {
-        $this->expectException(UriException::class);
+        $this->expectException(Exception::class);
         Http::createFromString('http://example.com')->withPath('#24');
     }
 
     public function testWithQueryFailedWithInvalidChars()
     {
-        $this->expectException(UriException::class);
+        $this->expectException(Exception::class);
         Http::createFromString('http://example.com')->withQuery('?#');
     }
 
     public function testModificationFailedWithUnsupportedType()
     {
-        $this->expectException(UriException::class);
+        $this->expectException(Exception::class);
         Http::createFromString('http://example.com/path')->withQuery(null);
     }
 
     public function testModificationFailedWithUnsupportedPort()
     {
-        $this->expectException(UriException::class);
+        $this->expectException(ParserException::class);
         Http::createFromString('http://example.com/path')->withPort(12365894);
     }
 
@@ -185,7 +185,7 @@ class UriTest extends AbstractTestCase
      */
     public function testModificationFailedWithInvalidUserInfo($user, $password)
     {
-        $this->expectException(UriException::class);
+        $this->expectException(Exception::class);
         Http::createFromString('http://example.com/path')->withUserInfo($user, $password);
     }
 
@@ -217,7 +217,7 @@ class UriTest extends AbstractTestCase
 
     public function testModificationFailed()
     {
-        $this->expectException(UriException::class);
+        $this->expectException(Exception::class);
         Http::createFromString('http://example.com/path')
             ->withScheme('')
             ->withHost('')

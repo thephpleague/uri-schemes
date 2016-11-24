@@ -12,22 +12,15 @@
  */
 namespace League\Uri\Schemes\Exceptions;
 
+use League\Uri\ParserException;
+
 /**
- * Exception class for Http(s) Uri
+ * Base Exception class for League Uri Schemes
  *
  * @package League\Uri
  * @author  Ignace Nyamagana Butera <nyamsprod@gmail.com>
  * @since   0.3.0
  */
-class HttpException extends UriException
+class Exception extends ParserException
 {
-    /**
-     * Returns a new Instance from an error in server configuration
-     *
-     * @return self
-     */
-    public static function createFromInvalidServer()
-    {
-        return new self('Host could not be detected');
-    }
 }
