@@ -42,25 +42,9 @@ class Http extends AbstractUri implements UriInterface
      */
     protected function isValidUri()
     {
-        if (!$this->isValidScheme()) {
-            return false;
-        }
-
-        if ('' != $this->scheme && null === $this->host) {
-            return false;
-        }
-
-        return '' !== $this->host;
-    }
-
-    /**
-     * Tell whether the current scheme is valid
-     *
-     * @return bool
-     */
-    protected function isValidScheme()
-    {
-        return null === $this->scheme || isset(static::$supported_schemes[$this->scheme]);
+        return '' !== $this->host
+            && (null === $this->scheme || isset(static::$supported_schemes[$this->scheme]))
+            && !('' != $this->scheme && null === $this->host);
     }
 
     /**
@@ -72,7 +56,7 @@ class Http extends AbstractUri implements UriInterface
      */
     public static function createFromServer(array $server)
     {
-        return new static(
+        return static::createFromString(
             static::fetchScheme($server)
             .'//'
             .static::fetchUserInfo($server)

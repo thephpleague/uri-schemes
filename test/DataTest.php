@@ -2,8 +2,9 @@
 
 namespace LeagueTest\Uri\Schemes;
 
-use InvalidArgumentException;
 use League\Uri\Schemes\Data;
+use League\Uri\Schemes\Exceptions\DataException;
+use League\Uri\Schemes\Exceptions\UriException;
 
 /**
  * @group data
@@ -12,7 +13,10 @@ class DataTest extends AbstractTestCase
 {
     public function testDefaultConstructor()
     {
-        $this->assertSame('data:text/plain;charset=us-ascii,', (new Data('data:'))->__toString());
+        $this->assertSame(
+            'data:text/plain;charset=us-ascii,',
+            (string) Data::createFromString('data:')
+        );
     }
 
     /**
@@ -23,7 +27,7 @@ class DataTest extends AbstractTestCase
      */
     public function testCreateFromString($uri, $path)
     {
-        $this->assertSame($path, (new Data($uri))->getPath());
+        $this->assertSame($path, Data::createFromString($uri)->getPath());
     }
 
     public function validStringUri()
@@ -54,12 +58,12 @@ class DataTest extends AbstractTestCase
 
     /**
      * @dataProvider invalidDataString
-     * @expectedException InvalidArgumentException
-     * @param $str
+     * @param $uri
      */
-    public function testCreateFromStringFailed($str)
+    public function testCreateFromStringFailed($uri)
     {
-        new Data($str);
+        $this->expectException(UriException::class);
+        Data::createFromString($uri);
     }
 
     public function invalidDataString()
@@ -77,11 +81,11 @@ class DataTest extends AbstractTestCase
 
     /**
      * @dataProvider invalidDataPath
-     * @expectedException InvalidArgumentException
      * @param $path
      */
     public function testCreateFromPathFailed($path)
     {
+        $this->expectException(DataException::class);
         Data::createFromPath($path);
     }
 
@@ -94,34 +98,28 @@ class DataTest extends AbstractTestCase
         ];
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testCreateFromComponentsFailedWithInvalidArgumentException()
     {
-        new Data('data:image/png;base64,°28');
+        $this->expectException(DataException::class);
+        Data::createFromString('data:image/png;base64,°28');
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testCreateFromComponentsFailedInvalidMediatype()
     {
-        new Data('data:image/png;base64,dsqdfqfd#fragment');
+        $this->expectException(DataException::class);
+        Data::createFromString('data:image/png;base64=toto;base64,dsqdfqfd');
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testCreateFromComponentsFailedWithDataException()
     {
-        new Data('data:text/plain;charset=us-ascii,Bonjour%20le%20monde%21#fragment');
+        $this->expectException(UriException::class);
+        Data::createFromString('data:text/plain;charset=us-ascii,Bonjour%20le%20monde%21#fragment');
     }
 
     public function testWithPath()
     {
         $path = 'text/plain;charset=us-ascii,Bonjour%20le%20monde%21';
-        $uri = new Data('data:'.$path);
+        $uri = Data::createFromString('data:'.$path);
         $this->assertSame($uri, $uri->withPath($path));
     }
 
@@ -144,18 +142,9 @@ class DataTest extends AbstractTestCase
         ];
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     */
     public function testInvalidUri()
     {
-        new Data('http:text/plain;charset=us-ascii,Bonjour%20le%20monde%21');
-    }
-
-    public function testSetState()
-    {
-        $uri = Data::createFromPath(__DIR__.'/data/red-nose.gif');
-        $generateUri = eval('return '.var_export($uri, true).';');
-        $this->assertEquals($uri, $generateUri);
+        $this->expectException(UriException::class);
+        Data::createFromString('http:text/plain;charset=us-ascii,Bonjour%20le%20monde%21');
     }
 }

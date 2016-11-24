@@ -3,6 +3,8 @@
 namespace LeagueTest\Uri\Schemes;
 
 use InvalidArgumentException;
+use League\Uri\Schemes\Exceptions\HttpException;
+use League\Uri\Schemes\Exceptions\UriException;
 use League\Uri\Schemes\Http;
 
 /**
@@ -17,7 +19,7 @@ class HttpTest extends AbstractTestCase
 
     protected function setUp()
     {
-        $this->uri = new Http(
+        $this->uri = Http::createFromString(
             'http://login:pass@secure.example.com:443/test/query.php?kingkong=toto#doc3'
         );
     }
@@ -29,17 +31,17 @@ class HttpTest extends AbstractTestCase
 
     public function testDefaultConstructor()
     {
-        $this->assertSame('', (new Http())->__toString());
+        $this->assertSame('', Http::createFromString()->__toString());
     }
 
     /**
      * @dataProvider validUriArray
      * @param $expected
-     * @param $input
+     * @param $uri
      */
-    public function testCreateFromString($expected, $input)
+    public function testCreateFromString($expected, $uri)
     {
-        $this->assertSame($expected, (string) (new Http($input)));
+        $this->assertSame($expected, (string) Http::createFromString($uri));
     }
 
     public function validUriArray()
@@ -70,54 +72,24 @@ class HttpTest extends AbstractTestCase
 
     /**
      * @dataProvider isValidProvider
-     * @expectedException InvalidArgumentException
-     * @param $input
      */
-    public function testIsValid($input)
+    public function testIsValid($uri)
     {
-        new Http($input);
+        $this->expectException(InvalidArgumentException::class);
+        Http::createFromString($uri);
     }
 
     public function isValidProvider()
     {
         return [
-            ['ftp:example.com'],
-            ['wss:/example.com'],
+            ['wss://example.com'],
+            ['http:example.com'],
+            ['https:/example.com'],
+            ['http://user@:80'],
+            ['//user@:80'],
+            ['http:///path'],
+            ['http:path'],
         ];
-    }
-
-    public function testGetterAccess()
-    {
-        $this->assertSame('http', $this->uri->getScheme());
-        $this->assertSame('login:pass', $this->uri->getUserInfo());
-        $this->assertSame('secure.example.com', $this->uri->getHost());
-        $this->assertSame(443, $this->uri->getPort());
-        $this->assertSame('login:pass@secure.example.com:443', $this->uri->getAuthority());
-        $this->assertSame('/test/query.php', $this->uri->getPath());
-        $this->assertSame('kingkong=toto', $this->uri->getQuery());
-        $this->assertSame('doc3', $this->uri->getFragment());
-    }
-
-    public function testKeepSameInstanceIfPropertyDoesNotChange()
-    {
-        $this->assertSame($this->uri, $this->uri->withScheme('http'));
-        $this->assertSame($this->uri, $this->uri->withUserInfo('login', 'pass'));
-        $this->assertSame($this->uri, $this->uri->withHost('secure.example.com'));
-        $this->assertSame($this->uri, $this->uri->withPort(443));
-        $this->assertSame($this->uri, $this->uri->withPath('/test/query.php'));
-        $this->assertSame($this->uri, $this->uri->withQuery('kingkong=toto'));
-        $this->assertSame($this->uri, $this->uri->withFragment('doc3'));
-    }
-
-    public function testCreateANewInstanceWhenPropertyChanges()
-    {
-        $this->assertNotEquals($this->uri, $this->uri->withScheme('https'));
-        $this->assertNotEquals($this->uri, $this->uri->withUserInfo('login', null));
-        $this->assertNotEquals($this->uri, $this->uri->withHost('shop.example.com'));
-        $this->assertNotEquals($this->uri, $this->uri->withPort(81));
-        $this->assertNotEquals($this->uri, $this->uri->withPath('/test/file.php'));
-        $this->assertNotEquals($this->uri, $this->uri->withQuery('kingkong=tata'));
-        $this->assertNotEquals($this->uri, $this->uri->withFragment('doc2'));
     }
 
     /**
@@ -127,7 +99,7 @@ class HttpTest extends AbstractTestCase
      */
     public function testPort($uri, $port)
     {
-        $this->assertSame($port, (new Http($uri))->getPort());
+        $this->assertSame($port, Http::createFromString($uri)->getPort());
     }
 
     public function portProvider()
@@ -141,63 +113,11 @@ class HttpTest extends AbstractTestCase
     }
 
     /**
-     * @expectedException InvalidArgumentException
-     */
-    public function testWithSchemeFailedScheme()
-    {
-        (new Http('http://example.com'))->withScheme('0scheme');
-    }
-
-    /**
-     * @expectedException InvalidArgumentException
-     */
-    public function testWithSchemeFailedWithUnsupportedScheme()
-    {
-        Http::createFromString('http://example.com')->withScheme('telnet');
-    }
-
-    /**
-     * @expectedException InvalidArgumentException
-     */
-    public function testWithPortFailedWithUnsupportedPort()
-    {
-        Http::createFromString('http://example.com')->withPort(-23);
-    }
-
-    /**
-     * @dataProvider invalidURI
-     * @expectedException InvalidArgumentException
-     * @param $input
-     */
-    public function testCreateFromInvalidUrlKO($input)
-    {
-        Http::createFromString($input);
-    }
-
-    public function invalidURI()
-    {
-        return [
-            ['http://user@:80'],
-            ['//user@:80'],
-            ['http:///path'],
-            ['http:path'],
-        ];
-    }
-
-    /**
-     * @expectedException InvalidArgumentException
-     */
-    public function testModificationFailedWithUnsupportedType()
-    {
-        Http::createFromString('http://example.com/path')->withQuery(null);
-    }
-
-    /**
-     * @expectedException InvalidArgumentException
      * @dataProvider invalidPathProvider
      */
     public function testPathIsInvalid($path)
     {
+        $this->expectException(UriException::class);
         Http::createFromString('')->withPath($path);
     }
 
@@ -360,26 +280,20 @@ class HttpTest extends AbstractTestCase
         ];
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testFailCreateFromServerWithoutHost()
     {
-        $server = [
+        $this->expectException(HttpException::class);
+        Http::createFromServer([
             'PHP_SELF' => '',
             'REQUEST_URI' => '',
             'HTTPS' => 'on',
             'SERVER_PORT' => 23,
-        ];
-
-        Http::createFromServer($server);
+        ]);
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testModificationFailedWithEmptyAuthority()
     {
+        $this->expectException(UriException::class);
         Http::createFromString('http://example.com/path')
             ->withScheme('')
             ->withHost('')

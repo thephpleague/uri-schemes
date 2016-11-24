@@ -57,10 +57,10 @@ class File extends AbstractUri implements Uri
     {
         $uri = implode('/', array_map('rawurlencode', explode('/', $uri)));
         if (isset($uri) && '/' === $uri[0]) {
-            $uri = 'file://'.$uri;
+            return new static('file', null,  null, '', null, $uri);
         }
 
-        return new static($uri);
+        return new static(null, null,  null, null, null, $uri);
     }
 
     /**
@@ -90,6 +90,6 @@ class File extends AbstractUri implements Uri
             $uri = 'file:'.$uri;
         }
 
-        return new static($uri);
+        return static::createFromString($uri);
     }
 }

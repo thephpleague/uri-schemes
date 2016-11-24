@@ -2,7 +2,7 @@
 
 namespace LeagueTest\Uri\Schemes;
 
-use InvalidArgumentException;
+use League\Uri\Schemes\Exceptions\UriException;
 use League\Uri\Schemes\Ftp as FtpUri;
 
 /**
@@ -12,17 +12,18 @@ class FtpTest extends AbstractTestCase
 {
     public function testDefaultConstructor()
     {
-        $this->assertSame('', (new FtpUri())->__toString());
+        $this->assertSame('', (string) FtpUri::createFromString());
     }
 
     /**
      * @dataProvider validArray
+     *
+     * @param $uri
      * @param $expected
-     * @param $input
      */
-    public function testCreateFromString($input, $expected)
+    public function testCreateFromString($uri, $expected)
     {
-        $this->assertSame($expected, (string) (new FtpUri($input)));
+        $this->assertSame($expected, (string) FtpUri::createFromString($uri));
     }
 
     public function validArray()
@@ -57,37 +58,27 @@ class FtpTest extends AbstractTestCase
 
     /**
      * @dataProvider invalidArgumentExceptionProvider
-     * @expectedException InvalidArgumentException
-     * @param $input
      */
-    public function testConstructorThrowInvalidArgumentException($input)
+    public function testConstructorThrowInvalidArgumentException($uri)
     {
-        new FtpUri($input);
+        $this->expectException(UriException::class);
+        FtpUri::createFromString($uri);
     }
 
     public function invalidArgumentExceptionProvider()
     {
         return [
-            ['wss:/example.com'],
             ['http://example.com'],
+            ['ftp:/example.com'],
             ['ftp:example.com'],
             ['ftp://example.com?query#fragment'],
         ];
     }
 
-    public function testSetState()
-    {
-        $uri = new FtpUri('ftp://a:b@c:442/d');
-        $generateUri = eval('return '.var_export($uri, true).';');
-        $this->assertEquals($uri, $generateUri);
-    }
-
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testModificationFailedWithEmptyAuthority()
     {
-        (new FtpUri('ftp://example.com/path'))
+        $this->expectException(UriException::class);
+        FtpUri::createFromString('ftp://example.com/path')
             ->withScheme('')
             ->withHost('')
             ->withPath('//toto');
