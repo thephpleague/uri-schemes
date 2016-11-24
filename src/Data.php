@@ -154,6 +154,13 @@ class Data extends AbstractUri implements Uri
 
         $mimetype = str_replace(' ', '', (new \finfo(FILEINFO_MIME))->file($path));
 
-        return new static('data:'.$mimetype.';base64,'.base64_encode(file_get_contents($path)));
+        return new static(
+            'data',
+            null,
+            null,
+            null,
+            null,
+            $mimetype.';base64,'.base64_encode(file_get_contents($path))
+        );
     }
 }

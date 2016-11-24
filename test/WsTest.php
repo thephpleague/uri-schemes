@@ -2,7 +2,7 @@
 
 namespace LeagueTest\Uri\Schemes;
 
-use InvalidArgumentException;
+use League\Uri\Schemes\Exceptions\UriException;
 use League\Uri\Schemes\Ws as WsUri;
 
 /**
@@ -12,7 +12,7 @@ class WsTest extends AbstractTestCase
 {
     public function testDefaultConstructor()
     {
-        $this->assertSame('', (new WsUri())->__toString());
+        $this->assertSame('', WsUri::createFromString()->__toString());
     }
 
     /**
@@ -57,36 +57,26 @@ class WsTest extends AbstractTestCase
 
     /**
      * @dataProvider invalidArgumentExceptionProvider
-     * @expectedException InvalidArgumentException
-     * @param $input
      */
-    public function testConstructorThrowInvalidArgumentException($input)
+    public function testConstructorThrowInvalidArgumentException($uri)
     {
-        WsUri::createFromString($input);
+        $this->expectException(UriException::class);
+        WsUri::createFromString($uri);
     }
 
     public function invalidArgumentExceptionProvider()
     {
         return [
-            ['ftp:example.com'],
             ['http://example.com'],
+            ['wss:example.com'],
             ['wss:/example.com'],
             ['//example.com:80/foo/bar?foo=bar#content'],
         ];
     }
 
-    public function testSetState()
-    {
-        $uri = WsUri::createFromString('wss://a:b@c:442/d');
-        $generateUri = eval('return '.var_export($uri, true).';');
-        $this->assertEquals($uri, $generateUri);
-    }
-
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testModificationFailedWithEmptyAuthority()
     {
+        $this->expectException(UriException::class);
         WsUri::createFromString('wss://example.com/path')
             ->withScheme('')
             ->withHost('')

@@ -2,7 +2,7 @@
 
 namespace LeagueTest\Uri\Schemes;
 
-use InvalidArgumentException;
+use League\Uri\Schemes\Exceptions\UriException;
 use League\Uri\Schemes\File as FileUri;
 
 /**
@@ -12,7 +12,7 @@ class FileTest extends AbstractTestCase
 {
     public function testDefaultConstructor()
     {
-        $this->assertSame('', (new FileUri())->__toString());
+        $this->assertSame('', (string) FileUri::createFromString());
     }
 
     /**
@@ -20,9 +20,9 @@ class FileTest extends AbstractTestCase
      * @param $expected
      * @param $input
      */
-    public function testCreateFromString($input, $expected)
+    public function testCreateFromString($uri, $expected)
     {
-        $this->assertSame($expected, (string) (new FileUri($input)));
+        $this->assertSame($expected, (string) FileUri::createFromString($uri));
     }
 
     public function validUri()
@@ -69,12 +69,11 @@ class FileTest extends AbstractTestCase
 
     /**
      * @dataProvider invalidArgumentExceptionProvider
-     * @expectedException InvalidArgumentException
-     * @param $input
      */
-    public function testConstructorThrowInvalidArgumentException($input)
+    public function testConstructorThrowInvalidArgumentException($uri)
     {
-        new FileUri($input);
+        $this->expectException(UriException::class);
+        FileUri::createFromString($uri);
     }
 
     public function invalidArgumentExceptionProvider()
@@ -93,9 +92,9 @@ class FileTest extends AbstractTestCase
      * @dataProvider unixpathProvider
      * @param $input
      */
-    public function testCreateFromUnixPath($input, $expected)
+    public function testCreateFromUnixPath($uri, $expected)
     {
-        $this->assertSame($expected, (string) FileUri::createFromUnixPath($input));
+        $this->assertSame($expected, (string) FileUri::createFromUnixPath($uri));
     }
 
     public function unixpathProvider()
@@ -128,9 +127,9 @@ class FileTest extends AbstractTestCase
      * @dataProvider windowLocalPathProvider
      * @param $input
      */
-    public function testCreateFromWindowsLocalPath($input, $expected)
+    public function testCreateFromWindowsLocalPath($uri, $expected)
     {
-        $this->assertSame($expected, (string) FileUri::createFromWindowsPath($input));
+        $this->assertSame($expected, (string) FileUri::createFromWindowsPath($uri));
     }
 
     public function windowLocalPathProvider()

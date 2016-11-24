@@ -12,7 +12,7 @@
  */
 namespace League\Uri\Schemes\Exceptions;
 
-use InvalidArgumentException;
+use League\Uri\ParserException;
 
 /**
  * Base Exception class for League Uri Schemes
@@ -21,7 +21,7 @@ use InvalidArgumentException;
  * @author  Ignace Nyamagana Butera <nyamsprod@gmail.com>
  * @since   0.3.0
  */
-class UriException extends InvalidArgumentException
+class UriException extends ParserException
 {
     /**
      * Returns a new Instance from an error in URI characters
@@ -113,7 +113,7 @@ class UriException extends InvalidArgumentException
     /**
      * Returns a new Instance from an error in port validation
      *
-     * @param string $port
+     * @param string $query
      *
      * @return self
      */

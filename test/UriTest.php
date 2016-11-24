@@ -2,7 +2,8 @@
 
 namespace LeagueTest\Uri\Schemes;
 
-use InvalidArgumentException;
+use League\Uri\ParserException;
+use League\Uri\Schemes\Exceptions\UriException;
 use League\Uri\Schemes\Http;
 
 /**
@@ -117,13 +118,15 @@ class UriTest extends AbstractTestCase
 
     public function testRemoveAuthority()
     {
-        $uri_with_host = (string) $this->uri->withUserInfo('')->withPort(null)->withScheme('')->withHost('');
+        $uri_with_host = (string) $this->uri
+            ->withUserInfo('')
+            ->withPort(null)
+            ->withScheme('')
+            ->withHost('');
         $this->assertSame('/test/query.php?kingkong=toto#doc3', $uri_with_host);
     }
 
     /**
-     * @param $uri
-     * @param $port
      * @dataProvider portProvider
      */
     public function testPort($uri, $port)
@@ -141,60 +144,48 @@ class UriTest extends AbstractTestCase
         ];
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testWithInvalidCharacters()
     {
+        $this->expectException(UriException::class);
         Http::createFromString("http://example.com/path\n");
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testWithSchemeFailedWithUnsupportedScheme()
     {
+        $this->expectException(UriException::class);
         Http::createFromString('http://example.com')->withScheme('telnet');
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testWithPathFailedWithInvalidChars()
     {
+        $this->expectException(UriException::class);
         Http::createFromString('http://example.com')->withPath('#24');
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testWithQueryFailedWithInvalidChars()
     {
+        $this->expectException(UriException::class);
         Http::createFromString('http://example.com')->withQuery('?#');
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testModificationFailedWithUnsupportedType()
     {
+        $this->expectException(UriException::class);
         Http::createFromString('http://example.com/path')->withQuery(null);
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testModificationFailedWithUnsupportedPort()
     {
+        $this->expectException(UriException::class);
         Http::createFromString('http://example.com/path')->withPort(12365894);
     }
 
     /**
-     * @expectedException InvalidArgumentException
      * @dataProvider invalidUserInfoProvider
      */
     public function testModificationFailedWithInvalidUserInfo($user, $password)
     {
+        $this->expectException(UriException::class);
         Http::createFromString('http://example.com/path')->withUserInfo($user, $password);
     }
 
@@ -209,12 +200,11 @@ class UriTest extends AbstractTestCase
 
     /**
      * @dataProvider invalidURI
-     * @expectedException InvalidArgumentException
-     * @param $input
      */
-    public function testCreateFromInvalidUrlKO($input)
+    public function testCreateFromInvalidUrlKO($uri)
     {
-        Http::createFromString($input);
+        $this->expectException(ParserException::class);
+        Http::createFromString($uri);
     }
 
     public function invalidURI()
@@ -225,11 +215,9 @@ class UriTest extends AbstractTestCase
         ];
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testModificationFailed()
     {
+        $this->expectException(UriException::class);
         Http::createFromString('http://example.com/path')
             ->withScheme('')
             ->withHost('')
