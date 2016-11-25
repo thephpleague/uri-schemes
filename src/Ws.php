@@ -35,7 +35,17 @@ class Ws extends AbstractUri implements Uri
     ];
 
     /**
-     * Tell whether the Ws(s) URI is in valid state.
+     * Tell whether the Ws(s) URI is in valid state according to RFC6455.
+     *
+     * A valid Ws(s) URI:
+     *
+     * <ul>
+     * <li>can be schemeless or supports only 'ws' and 'wss' schemes
+     * <li>can not contain a fragment component
+     * <li>has the same validation rules as an HTTP(s) URI
+     * </ul>
+     *
+     * @see https://tools.ietf.org/html/rfc6455#section-3
      *
      * @return bool
      */

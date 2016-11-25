@@ -34,6 +34,19 @@ class File extends AbstractUri implements Uri
     /**
      * Tell whether the File URI is in valid state.
      *
+     * A valid Data URI:
+     *
+     * <ul>
+     * <li>can not contain a userinfo component
+     * <li>can not contain a port component
+     * <li>can not contain a query component
+     * <li>can not contain a fragment component
+     * <li>only support the 'file' scheme or no scheme
+     * <li>if the scheme is present, the host must be defined
+     * </ul>
+     *
+     * @see https://tools.ietf.org/html/rfc2397#section-3
+     *
      * @return bool
      */
     protected function isValidUri()

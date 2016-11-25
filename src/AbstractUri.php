@@ -287,8 +287,8 @@ abstract class AbstractUri
      */
     protected static function formatUserInfo($user, $password)
     {
-        if ('' == $user) {
-            return null;
+        if (null === $user) {
+            return $user;
         }
 
         $user = preg_replace_callback(
@@ -297,7 +297,7 @@ abstract class AbstractUri
             $user
         );
 
-        if ('' == $password) {
+        if (null === $password) {
             return $user;
         }
 
@@ -343,7 +343,7 @@ abstract class AbstractUri
     protected function setAuthority()
     {
         $authority = null;
-        if ('' != $this->user_info) {
+        if (null !== $this->user_info) {
             $authority = $this->user_info.'@';
         }
 
