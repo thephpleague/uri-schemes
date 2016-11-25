@@ -38,6 +38,15 @@ class Http extends AbstractUri implements UriInterface
     /**
      * Tell whether the Http(s) URI is in valid state.
      *
+     * A valid HTTP(S) URI:
+     *
+     * <ul>
+     * <li>can be schemeless or supports only 'http' and 'https' schemes
+     * <li>Host can not be an empty string
+     * <li>If a scheme is defined an authority must be present
+     * </ul>
+     *
+     * @see https://tools.ietf.org/html/rfc6455#section-3
      * @return bool
      */
     protected function isValidUri()

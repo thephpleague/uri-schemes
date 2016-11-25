@@ -37,6 +37,15 @@ class Data extends AbstractUri implements Uri
     /**
      * Tell whether the Data URI is in valid state.
      *
+     * A valid Data URI:
+     *
+     * <ul>
+     * <li>scheme is 'data'
+     * <li>only contains a scheme and a path component
+     * </ul>
+     *
+     * @see https://tools.ietf.org/html/rfc2397#section-3
+     *
      * @return bool
      */
     protected function isValidUri()

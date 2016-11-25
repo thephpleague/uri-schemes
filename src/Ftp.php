@@ -36,6 +36,17 @@ class Ftp extends AbstractUri implements Uri
     /**
      * Tell whether the FTP URI is in valid state.
      *
+     * A valid FTP URI:
+     *
+     * <ul>
+     * <li>can be schemeless or supports only 'ftp' scheme
+     * <li>can not contain a fragment component
+     * <li>can not contain a query component
+     * <li>has the same validation rules as an HTTP(s) URI
+     * </ul>
+     *
+     * @see https://tools.ietf.org/html/rfc1738#section-3.2
+     *
      * @return bool
      */
     protected function isValidUri()
