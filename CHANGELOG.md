@@ -17,6 +17,7 @@ exceptions.
 - `File::createFromUnixPath` encoding
 - `File::createFromWindowsPath` encoding
 - `Http::createFromServer` user info encoding
+- Host normalisation now convert host into RFC3986 encoding using punycode if needed
 
 ### Deprecated
 

@@ -250,9 +250,9 @@ abstract class AbstractUri
         $query = null,
         $fragment = null
     ) {
-        $this->scheme = $this->formatSchemeAndHost($scheme);
+        $this->scheme = $this->formatScheme($scheme);
         $this->user_info = $this->formatUserInfo($user, $pass);
-        $this->host = $this->formatSchemeAndHost($host);
+        $this->host = $this->formatHost($host);
         $this->port = $this->formatPort($port);
         $this->authority = $this->setAuthority();
         $this->path = $this->filterPath($path);
@@ -268,13 +268,34 @@ abstract class AbstractUri
      *
      * @return string|null
      */
-    protected function formatSchemeAndHost($component)
+    protected function formatScheme($component)
     {
         if ('' == $component) {
             return $component;
         }
 
         return strtolower($component);
+    }
+
+    /**
+     * Format the Scheme and Host component
+     *
+     * @param string|null $component
+     *
+     * @return string|null
+     */
+    protected function formatHost($component)
+    {
+        if ('' == $component) {
+            return $component;
+        }
+
+        $component = strtolower($component);
+        if (false !== strpos($component, ']')) {
+            return $component;
+        }
+
+        return implode('.', array_map('idn_to_ascii', explode('.', $component)));
     }
 
     /**
@@ -744,7 +765,7 @@ abstract class AbstractUri
     public function withScheme($scheme)
     {
         $scheme = $this->filterString($scheme);
-        $scheme = $this->formatSchemeAndHost($scheme);
+        $scheme = $this->formatScheme($scheme);
         if ('' == $scheme) {
             $scheme = null;
         }
@@ -848,7 +869,7 @@ abstract class AbstractUri
     {
         $host = $this->filterString($host);
         $host = '' !== $host ? $this->filterHost($host) : null;
-        $host = $this->formatSchemeAndHost($host);
+        $host = $this->formatHost($host);
         if ($host === $this->host) {
             return $this;
         }

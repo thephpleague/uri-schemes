@@ -69,6 +69,13 @@ class UriTest extends AbstractTestCase
         $this->assertSame($normalized, (string) Http::createFromString($raw));
     }
 
+    public function testAutomaticUrlNormalizationBis()
+    {
+        $raw = 'http://Bébé.BE./path';
+        $normalized = 'http://xn--bb-bjab.be./path';
+        $this->assertSame($normalized, (string) Http::createFromString($raw));
+    }
+
     public function testPreserveComponentsOnInstantiation()
     {
         $uri = 'http://:@example.com?#';
