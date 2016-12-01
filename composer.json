@@ -36,7 +36,7 @@
         "ext-fileinfo": "*",
         "psr/http-message": "^1.0",
         "league/uri-parser": "~0.2",
-        "league/uri-interfaces": "~0.1"
+        "league/uri-interfaces": "dev-master"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^1.0",
