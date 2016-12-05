@@ -13,6 +13,7 @@
 namespace League\Uri\Schemes;
 
 use League\Uri\HostValidation;
+use League\Uri\Interfaces\Uri;
 use League\Uri\Parser;
 use League\Uri\Schemes\Exceptions\Exception;
 
@@ -24,7 +25,7 @@ use League\Uri\Schemes\Exceptions\Exception;
  * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
  * @since      1.0.0
  */
-abstract class AbstractUri
+abstract class AbstractUri implements Uri
 {
     use HostValidation;
 

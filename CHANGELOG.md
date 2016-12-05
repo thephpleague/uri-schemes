@@ -2,6 +2,24 @@
 
 All Notable changes to `League\Uri\Components` will be documented in this file
 
+## Next
+
+### Added
+
+- None
+
+### Fixed
+
+- Adding `League\Uri\Interfaces\Uri` to `League\Uri\Schemes\AbstractUri`
+
+### Deprecated
+
+- None
+
+### Removed
+
+- None
+
 ## 0.3.0 - 2016-12-01
 
 ### Added

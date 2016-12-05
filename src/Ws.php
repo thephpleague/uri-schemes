@@ -12,8 +12,6 @@
  */
 namespace League\Uri\Schemes;
 
-use League\Uri\Interfaces\Uri;
-
 /**
  * Immutable Value object representing a Ws(s) Uri.
  *
@@ -22,7 +20,7 @@ use League\Uri\Interfaces\Uri;
  * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
  * @since      1.0.0
  */
-class Ws extends AbstractUri implements Uri
+class Ws extends AbstractUri
 {
     /**
      * Supported schemes and corresponding default port
