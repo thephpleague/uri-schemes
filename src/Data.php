@@ -12,7 +12,6 @@
  */
 namespace League\Uri\Schemes;
 
-use League\Uri\Interfaces\Uri;
 use League\Uri\Schemes\Exceptions\Exception;
 
 /**
@@ -23,7 +22,7 @@ use League\Uri\Schemes\Exceptions\Exception;
  * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
  * @since      1.0.0
  */
-class Data extends AbstractUri implements Uri
+class Data extends AbstractUri
 {
     /**
      * Supported schemes and corresponding default port

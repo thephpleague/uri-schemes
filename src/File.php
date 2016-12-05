@@ -12,8 +12,6 @@
  */
 namespace League\Uri\Schemes;
 
-use League\Uri\Interfaces\Uri;
-
 /**
  * Immutable Value object representing a File Uri.
  *
@@ -22,7 +20,7 @@ use League\Uri\Interfaces\Uri;
  * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
  * @since      1.0.0
  */
-class File extends AbstractUri implements Uri
+class File extends AbstractUri
 {
     /**
      * @inheritdoc
