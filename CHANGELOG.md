@@ -6,7 +6,7 @@ All Notable changes to `League\Uri\Components` will be documented in this file
 
 ### Added
 
-- None
+- Added `League\Uri\Schemes\UriException` to replace `League\Uri\Schemes\Exceptions\Exception`
 
 ### Fixed
 
@@ -18,7 +18,7 @@ All Notable changes to `League\Uri\Components` will be documented in this file
 
 ### Removed
 
-- None
+- `League\Uri\Schemes\Exceptions\Exception`
 
 ## 0.3.0 - 2016-12-01
 

@@ -10,9 +10,9 @@
  * @version    0.3.0
  * @link       https://github.com/thephpleague/uri-parser/
  */
-namespace League\Uri\Schemes\Exceptions;
+namespace League\Uri\Schemes;
 
-use League\Uri\ParserException;
+use League\Uri\Exception as BaseException;
 
 /**
  * Base Exception class for League Uri Schemes
@@ -21,6 +21,6 @@ use League\Uri\ParserException;
  * @author  Ignace Nyamagana Butera <nyamsprod@gmail.com>
  * @since   0.3.0
  */
-class Exception extends ParserException
+class UriException extends BaseException
 {
 }

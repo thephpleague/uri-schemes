@@ -2,17 +2,18 @@
 
 namespace LeagueTest\Uri\Schemes;
 
-use League\Uri\Schemes\Exceptions\Exception;
-use League\Uri\Schemes\Ftp as FtpUri;
+use League\Uri\Schemes\Ftp;
+use League\Uri\Schemes\UriException;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @group ftp
  */
-class FtpTest extends AbstractTestCase
+class FtpTest extends TestCase
 {
     public function testDefaultConstructor()
     {
-        $this->assertSame('', (string) FtpUri::createFromString());
+        $this->assertSame('', (string) Ftp::createFromString());
     }
 
     /**
@@ -23,7 +24,7 @@ class FtpTest extends AbstractTestCase
      */
     public function testCreateFromString($uri, $expected)
     {
-        $this->assertSame($expected, (string) FtpUri::createFromString($uri));
+        $this->assertSame($expected, (string) Ftp::createFromString($uri));
     }
 
     public function validArray()
@@ -61,8 +62,8 @@ class FtpTest extends AbstractTestCase
      */
     public function testConstructorThrowInvalidArgumentException($uri)
     {
-        $this->expectException(Exception::class);
-        FtpUri::createFromString($uri);
+        $this->expectException(UriException::class);
+        Ftp::createFromString($uri);
     }
 
     public function invalidArgumentExceptionProvider()
@@ -77,8 +78,8 @@ class FtpTest extends AbstractTestCase
 
     public function testModificationFailedWithEmptyAuthority()
     {
-        $this->expectException(Exception::class);
-        FtpUri::createFromString('ftp://example.com/path')
+        $this->expectException(UriException::class);
+        Ftp::createFromString('ftp://example.com/path')
             ->withScheme('')
             ->withHost('')
             ->withPath('//toto');

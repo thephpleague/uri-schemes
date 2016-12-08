@@ -2,17 +2,18 @@
 
 namespace LeagueTest\Uri\Schemes;
 
-use League\Uri\Schemes\Exceptions\Exception;
-use League\Uri\Schemes\Ws as WsUri;
+use League\Uri\Schemes\UriException;
+use League\Uri\Schemes\Ws;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @group ws
  */
-class WsTest extends AbstractTestCase
+class WsTest extends TestCase
 {
     public function testDefaultConstructor()
     {
-        $this->assertSame('', WsUri::createFromString()->__toString());
+        $this->assertSame('', Ws::createFromString()->__toString());
     }
 
     /**
@@ -22,7 +23,7 @@ class WsTest extends AbstractTestCase
      */
     public function testCreateFromString($input, $expected)
     {
-        $this->assertSame($expected, WsUri::createFromString($input)->__toString());
+        $this->assertSame($expected, Ws::createFromString($input)->__toString());
     }
 
     public function validUrlArray()
@@ -60,8 +61,8 @@ class WsTest extends AbstractTestCase
      */
     public function testConstructorThrowInvalidArgumentException($uri)
     {
-        $this->expectException(Exception::class);
-        WsUri::createFromString($uri);
+        $this->expectException(UriException::class);
+        Ws::createFromString($uri);
     }
 
     public function invalidArgumentExceptionProvider()
@@ -76,8 +77,8 @@ class WsTest extends AbstractTestCase
 
     public function testModificationFailedWithEmptyAuthority()
     {
-        $this->expectException(Exception::class);
-        WsUri::createFromString('wss://example.com/path')
+        $this->expectException(UriException::class);
+        Ws::createFromString('wss://example.com/path')
             ->withScheme('')
             ->withHost('')
             ->withPath('//toto');

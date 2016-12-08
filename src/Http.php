@@ -12,7 +12,6 @@
  */
 namespace League\Uri\Schemes;
 
-use League\Uri\Schemes\Exceptions\Exception;
 use Psr\Http\Message\UriInterface;
 
 /**
@@ -122,7 +121,7 @@ class Http extends AbstractUri implements UriInterface
      *
      * @param array $server the environment server typically $_SERVER
      *
-     * @throws InvalidArgumentException If the host can not be detected
+     * @throws InvalidArgumentUriException If the host can not be detected
      *
      * @return string
      */
@@ -150,7 +149,7 @@ class Http extends AbstractUri implements UriInterface
             return $server['SERVER_ADDR'].':'.$server['SERVER_PORT'];
         }
 
-        throw new Exception('Host could not be detected');
+        throw new UriException('Host could not be detected');
     }
 
     /**

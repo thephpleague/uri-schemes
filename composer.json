@@ -35,7 +35,7 @@
         "ext-intl" : "*",
         "ext-fileinfo": "*",
         "psr/http-message": "^1.0",
-        "league/uri-parser": "~0.2",
+        "league/uri-parser": "dev-master",
         "league/uri-interfaces": "~0.3"
     },
     "require-dev": {
