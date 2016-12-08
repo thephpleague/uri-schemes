@@ -3,12 +3,13 @@
 namespace LeagueTest\Uri\Schemes;
 
 use League\Uri\Schemes\Data;
-use League\Uri\Schemes\Exceptions\Exception;
+use League\Uri\Schemes\UriException;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @group data
  */
-class DataTest extends AbstractTestCase
+class DataTest extends TestCase
 {
     public function testDefaultConstructor()
     {
@@ -61,7 +62,7 @@ class DataTest extends AbstractTestCase
      */
     public function testCreateFromStringFailed($uri)
     {
-        $this->expectException(Exception::class);
+        $this->expectException(UriException::class);
         Data::createFromString($uri);
     }
 
@@ -84,7 +85,7 @@ class DataTest extends AbstractTestCase
      */
     public function testCreateFromPathFailed($path)
     {
-        $this->expectException(Exception::class);
+        $this->expectException(UriException::class);
         Data::createFromPath($path);
     }
 
@@ -99,19 +100,19 @@ class DataTest extends AbstractTestCase
 
     public function testCreateFromComponentsFailedWithInvalidArgumentException()
     {
-        $this->expectException(Exception::class);
+        $this->expectException(UriException::class);
         Data::createFromString('data:image/png;base64,°28');
     }
 
     public function testCreateFromComponentsFailedInvalidMediatype()
     {
-        $this->expectException(Exception::class);
+        $this->expectException(UriException::class);
         Data::createFromString('data:image/png;base64=toto;base64,dsqdfqfd');
     }
 
     public function testCreateFromComponentsFailedWithException()
     {
-        $this->expectException(Exception::class);
+        $this->expectException(UriException::class);
         Data::createFromString('data:text/plain;charset=us-ascii,Bonjour%20le%20monde%21#fragment');
     }
 
@@ -143,7 +144,7 @@ class DataTest extends AbstractTestCase
 
     public function testInvalidUri()
     {
-        $this->expectException(Exception::class);
+        $this->expectException(UriException::class);
         Data::createFromString('http:text/plain;charset=us-ascii,Bonjour%20le%20monde%21');
     }
 }

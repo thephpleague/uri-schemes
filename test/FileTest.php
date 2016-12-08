@@ -2,17 +2,18 @@
 
 namespace LeagueTest\Uri\Schemes;
 
-use League\Uri\Schemes\Exceptions\Exception;
-use League\Uri\Schemes\File as FileUri;
+use League\Uri\Schemes\File;
+use League\Uri\Schemes\UriException;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @group file
  */
-class FileTest extends AbstractTestCase
+class FileTest extends TestCase
 {
     public function testDefaultConstructor()
     {
-        $this->assertSame('', (string) FileUri::createFromString());
+        $this->assertSame('', (string) File::createFromString());
     }
 
     /**
@@ -22,7 +23,7 @@ class FileTest extends AbstractTestCase
      */
     public function testCreateFromString($uri, $expected)
     {
-        $this->assertSame($expected, (string) FileUri::createFromString($uri));
+        $this->assertSame($expected, (string) File::createFromString($uri));
     }
 
     public function validUri()
@@ -72,8 +73,8 @@ class FileTest extends AbstractTestCase
      */
     public function testConstructorThrowInvalidArgumentException($uri)
     {
-        $this->expectException(Exception::class);
-        FileUri::createFromString($uri);
+        $this->expectException(UriException::class);
+        File::createFromString($uri);
     }
 
     public function invalidArgumentExceptionProvider()
@@ -94,7 +95,7 @@ class FileTest extends AbstractTestCase
      */
     public function testCreateFromUnixPath($uri, $expected)
     {
-        $this->assertSame($expected, (string) FileUri::createFromUnixPath($uri));
+        $this->assertSame($expected, (string) File::createFromUnixPath($uri));
     }
 
     public function unixpathProvider()
@@ -129,7 +130,7 @@ class FileTest extends AbstractTestCase
      */
     public function testCreateFromWindowsLocalPath($uri, $expected)
     {
-        $this->assertSame($expected, (string) FileUri::createFromWindowsPath($uri));
+        $this->assertSame($expected, (string) File::createFromWindowsPath($uri));
     }
 
     public function windowLocalPathProvider()

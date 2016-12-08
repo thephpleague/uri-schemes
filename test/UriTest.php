@@ -2,14 +2,15 @@
 
 namespace LeagueTest\Uri\Schemes;
 
-use League\Uri\ParserException;
-use League\Uri\Schemes\Exceptions\Exception;
+use League\Uri\Exception as ParserException;
 use League\Uri\Schemes\Http;
+use League\Uri\Schemes\UriException;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @group uri
  */
-class UriTest extends AbstractTestCase
+class UriTest extends TestCase
 {
     /**
      * @var Http
@@ -165,32 +166,44 @@ class UriTest extends AbstractTestCase
 
     public function testWithSchemeFailedWithUnsupportedScheme()
     {
-        $this->expectException(Exception::class);
+        $this->expectException(UriException::class);
         Http::createFromString('http://example.com')->withScheme('telnet');
     }
 
     public function testWithPathFailedWithInvalidChars()
     {
-        $this->expectException(Exception::class);
+        $this->expectException(UriException::class);
         Http::createFromString('http://example.com')->withPath('#24');
+    }
+
+    public function testWithPathFailedWithInvalidPathRelativeToTheAuthority()
+    {
+        $this->expectException(UriException::class);
+        Http::createFromString('http://example.com')->withPath('foo/bar');
     }
 
     public function testWithQueryFailedWithInvalidChars()
     {
-        $this->expectException(Exception::class);
+        $this->expectException(UriException::class);
         Http::createFromString('http://example.com')->withQuery('?#');
     }
 
     public function testModificationFailedWithUnsupportedType()
     {
-        $this->expectException(Exception::class);
+        $this->expectException(UriException::class);
         Http::createFromString('http://example.com/path')->withQuery(null);
     }
 
     public function testModificationFailedWithUnsupportedPort()
     {
-        $this->expectException(ParserException::class);
+        $this->expectException(UriException::class);
         Http::createFromString('http://example.com/path')->withPort(12365894);
+    }
+
+    public function testModificationFailedWithInvalidHost()
+    {
+        $this->expectException(UriException::class);
+        Http::createFromString('http://example.com/path')->withHost('%23');
     }
 
     /**
@@ -198,7 +211,7 @@ class UriTest extends AbstractTestCase
      */
     public function testModificationFailedWithInvalidUserInfo($user, $password)
     {
-        $this->expectException(Exception::class);
+        $this->expectException(UriException::class);
         Http::createFromString('http://example.com/path')->withUserInfo($user, $password);
     }
 
@@ -216,7 +229,7 @@ class UriTest extends AbstractTestCase
      */
     public function testCreateFromInvalidUrlKO($uri)
     {
-        $this->expectException(ParserException::class);
+        $this->expectException(UriException::class);
         Http::createFromString($uri);
     }
 
@@ -230,7 +243,7 @@ class UriTest extends AbstractTestCase
 
     public function testModificationFailed()
     {
-        $this->expectException(Exception::class);
+        $this->expectException(UriException::class);
         Http::createFromString('http://example.com/path')
             ->withScheme('')
             ->withHost('')
@@ -243,25 +256,10 @@ class UriTest extends AbstractTestCase
         $this->assertSame($expected, Http::createFromString($expected)->__toString());
     }
 
-    public function testCreateFromComponents()
+    public function testPathDetection()
     {
-        $uri = '//0:0@0/0?0#0';
-        $this->assertEquals(
-            Http::createFromComponents(parse_url($uri)),
-            Http::createFromString($uri)
-        );
-    }
-
-    /**
-     * @supportsDebugInfo
-     */
-    public function testDebugInfo()
-    {
-        $this->assertInternalType('array', $this->uri->__debugInfo());
-        ob_start();
-        var_dump($this->uri);
-        $res = ob_get_clean();
-        $this->assertContains($this->uri->__toString(), $res);
+        $expected = 'foo/bar:';
+        $this->assertSame($expected, Http::createFromString($expected)->getPath());
     }
 
     public function testSetState()
@@ -269,5 +267,14 @@ class UriTest extends AbstractTestCase
         $uri = Http::createFromString('https://a:b@c:442/d?q=r#f');
         $generateUri = eval('return '.var_export($uri, true).';');
         $this->assertEquals($uri, $generateUri);
+    }
+
+    public function testCreateFromComponents()
+    {
+        $uri = '//0:0@0/0?0#0';
+        $this->assertEquals(
+            Http::createFromComponents(parse_url($uri)),
+            Http::createFromString($uri)
+        );
     }
 }
