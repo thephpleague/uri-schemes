@@ -389,7 +389,7 @@ abstract class AbstractUri implements Uri
     }
 
     /**
-     * Format the Scheme and Host component
+     * Format the Host component
      *
      * @param string|null $component
      *
@@ -883,7 +883,7 @@ abstract class AbstractUri implements Uri
             $host = null;
         }
 
-        if (!self::getParser()->isValidHost($host)) {
+        if (!self::getParser()->isHost($host)) {
             throw UriException::createFromInvalidHost($host);
         }
         $host = $this->formatHost($host);

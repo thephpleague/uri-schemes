@@ -68,10 +68,32 @@ class File extends AbstractUri
     {
         $uri = implode('/', array_map('rawurlencode', explode('/', $uri)));
         if (isset($uri) && '/' === $uri[0]) {
-            return new static('file', null,  null, '', null, $uri);
+            return new static('file', null,  null, 'localhost', null, $uri);
         }
 
         return new static(null, null,  null, null, null, $uri);
+    }
+
+    /**
+     * Format the Host component
+     *
+     * @see https://tools.ietf.org/html/rfc1738#section-3.10
+     *
+     *  As a special case, <host> can be the string "localhost" or the empty
+     *  string; this is interpreted as `the machine from which the URL is
+     *  being interpreted'.
+     *
+     * @param string|null $host
+     *
+     * @return string|null
+     */
+    protected function formatHost($host)
+    {
+        if ('' === $host) {
+            $host = 'localhost';
+        }
+
+        return parent::formatHost($host);
     }
 
     /**
@@ -93,14 +115,14 @@ class File extends AbstractUri
 
         //Local Windows absolute path
         if ('' !== $root) {
-            $uri = 'file:///'.$root.$uri;
+            return new static('file', null, null, 'localhost', null, '/'.$root.$uri);
         }
 
         //UNC Windows Path
         if ('//' === substr($uri, 0, 2)) {
-            $uri = 'file:'.$uri;
+            return static::createFromString('file:'.$uri);
         }
 
-        return static::createFromString($uri);
+        return new static(null, null, null, null, null, $uri);
     }
 }

@@ -117,10 +117,7 @@ class Data extends AbstractUri
 
         $res = array_filter(array_filter(explode(';', $parameters), [$this, 'validateParameter']));
         if (!empty($res)) {
-            throw new UriException(sprintf(
-                'The path paremeters `%s` contains is invalid',
-                $parameters
-            ));
+            throw new UriException(sprintf('The path paremeters `%s` contains is invalid', $parameters));
         }
 
         if (!$is_binary) {
@@ -158,10 +155,7 @@ class Data extends AbstractUri
     public static function createFromPath($path)
     {
         if (!file_exists($path) || !is_readable($path)) {
-            throw new UriException(sprintf(
-                'The specified file `%s` does not exist or is not readable',
-                $path
-            ));
+            throw new UriException(sprintf('The specified file `%s` does not exist or is not readable', $path));
         }
 
         $mimetype = str_replace(' ', '', (new \finfo(FILEINFO_MIME))->file($path));

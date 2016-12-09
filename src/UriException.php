@@ -12,7 +12,7 @@
  */
 namespace League\Uri\Schemes;
 
-use League\Uri\Exception as BaseException;
+use League\Uri\Exception as ParserException;
 
 /**
  * Base Exception class for League Uri Schemes
@@ -21,6 +21,6 @@ use League\Uri\Exception as BaseException;
  * @author  Ignace Nyamagana Butera <nyamsprod@gmail.com>
  * @since   0.3.0
  */
-class UriException extends BaseException
+class UriException extends ParserException
 {
 }

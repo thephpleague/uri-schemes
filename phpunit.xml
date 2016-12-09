@@ -20,9 +20,6 @@
     <filter>
         <whitelist>
             <directory suffix=".php">src</directory>
-            <exclude>
-                <directory suffix="include.php">src</directory>
-            </exclude>
         </whitelist>
     </filter>
 
