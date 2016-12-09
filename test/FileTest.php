@@ -51,7 +51,7 @@ class FileTest extends TestCase
             ],
             'with empty host' => [
                 '///path',
-                '///path',
+                '//localhost/path',
             ],
             'with scheme' => [
                 'file://localhost/path',
@@ -63,7 +63,7 @@ class FileTest extends TestCase
             ],
             'with empty host and scheme' => [
                 'FiLe:///path',
-                'file:///path',
+                'file://localhost/path',
             ],
         ];
     }
@@ -107,11 +107,11 @@ class FileTest extends TestCase
             ],
             'absolute path' => [
                 'input' => '/path',
-                'expected' => 'file:///path',
+                'expected' => 'file://localhost/path',
             ],
             'path with empty char' => [
                 'input' => '/path empty/bar',
-                'expected' => 'file:///path%20empty/bar',
+                'expected' => 'file://localhost/path%20empty/bar',
             ],
             'relative path with dot segments' => [
                 'input' => 'path/./relative',
@@ -119,7 +119,7 @@ class FileTest extends TestCase
             ],
             'absolute path with dot segments' => [
                 'input' => '/path/./../relative',
-                'expected' => 'file:///path/./../relative',
+                'expected' => 'file://localhost/path/./../relative',
             ],
         ];
     }
@@ -146,19 +146,19 @@ class FileTest extends TestCase
             ],
             'absolute path' => [
                 'input' => 'c:\windows\My Documents 100%20\foo.txt',
-                'expected' => 'file:///c:/windows/My%20Documents%20100%2520/foo.txt',
+                'expected' => 'file://localhost/c:/windows/My%20Documents%20100%2520/foo.txt',
             ],
             'windows relative path' => [
                 'input' => 'c:My Documents 100%20\foo.txt',
-                'expected' => 'file:///c:My%20Documents%20100%2520/foo.txt',
+                'expected' => 'file://localhost/c:My%20Documents%20100%2520/foo.txt',
             ],
             'absolute path with `|`' => [
                 'input' => 'c|\windows\My Documents 100%20\foo.txt',
-                'expected' => 'file:///c:/windows/My%20Documents%20100%2520/foo.txt',
+                'expected' => 'file://localhost/c:/windows/My%20Documents%20100%2520/foo.txt',
             ],
             'windows relative path with `|`' => [
                 'input' => 'c:My Documents 100%20\foo.txt',
-                'expected' => 'file:///c:My%20Documents%20100%2520/foo.txt',
+                'expected' => 'file://localhost/c:My%20Documents%20100%2520/foo.txt',
             ],
             'absolute path with dot segments' => [
                 'input' => '\path\.\..\relative',

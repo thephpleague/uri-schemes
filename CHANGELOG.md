@@ -2,7 +2,7 @@
 
 All Notable changes to `League\Uri\Components` will be documented in this file
 
-## Next
+## 0.4.0 - 2016-12-09
 
 ### Added
 
@@ -10,7 +10,8 @@ All Notable changes to `League\Uri\Components` will be documented in this file
 
 ### Fixed
 
-- Adding `League\Uri\Interfaces\Uri` to `League\Uri\Schemes\AbstractUri`
+- `League\Uri\Schemes\AbstractUri` implements `League\Uri\Interfaces\Uri`
+- `League\Uri\Schemes\File` host normalization is done when the host is empty
 
 ### Deprecated
 
