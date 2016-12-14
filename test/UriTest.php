@@ -2,6 +2,7 @@
 
 namespace LeagueTest\Uri\Schemes;
 
+use BadMethodCallException;
 use League\Uri\Exception as ParserException;
 use League\Uri\Schemes\Http;
 use League\Uri\Schemes\UriException;
@@ -276,5 +277,28 @@ class UriTest extends TestCase
             Http::createFromComponents(parse_url($uri)),
             Http::createFromString($uri)
         );
+    }
+    public function testInvalidSetterThrowException()
+    {
+        $this->expectException(BadMethodCallException::class);
+        Http::createFromString()->host = 'thephpleague.com';
+    }
+
+    public function testInvalidGetterThrowException()
+    {
+        $this->expectException(BadMethodCallException::class);
+        Http::createFromString()->path;
+    }
+
+    public function testInvalidIssetThrowException()
+    {
+        $this->expectException(BadMethodCallException::class);
+        isset(Http::createFromString()->path);
+    }
+
+    public function testInvalidUnssetThrowException()
+    {
+        $this->expectException(BadMethodCallException::class);
+        unset(Http::createFromString()->path);
     }
 }
