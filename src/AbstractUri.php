@@ -12,6 +12,7 @@
  */
 namespace League\Uri\Schemes;
 
+use BadMethodCallException;
 use League\Uri\Interfaces\Uri;
 use League\Uri\Parser;
 
@@ -1046,5 +1047,37 @@ abstract class AbstractUri implements Uri
         $clone->assertValidState();
 
         return $clone;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function __set($property, $value)
+    {
+        throw new BadMethodCallException(sprintf('"%s" is an undefined or inaccessible property', $property));
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function __isset($property)
+    {
+        throw new BadMethodCallException(sprintf('"%s" is an undefined or inaccessible property', $property));
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function __unset($property)
+    {
+        throw new BadMethodCallException(sprintf('"%s" is an undefined or inaccessible property', $property));
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function __get($property)
+    {
+        throw new BadMethodCallException(sprintf('"%s" is an undefined or inaccessible property', $property));
     }
 }
