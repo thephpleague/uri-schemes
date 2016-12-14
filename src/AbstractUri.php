@@ -883,7 +883,7 @@ abstract class AbstractUri implements Uri
             $host = null;
         }
 
-        if (!self::getParser()->isHost($host)) {
+        if ('' != $host && !self::getParser()->isHost($host)) {
             throw UriException::createFromInvalidHost($host);
         }
         $host = $this->formatHost($host);
