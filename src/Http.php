@@ -48,7 +48,7 @@ class Http extends AbstractUri implements UriInterface
      * @see https://tools.ietf.org/html/rfc6455#section-3
      * @return bool
      */
-    protected function isValidUri()
+    protected function isValidUri(): bool
     {
         return '' !== $this->host
             && (null === $this->scheme || isset(static::$supported_schemes[$this->scheme]))
@@ -62,7 +62,7 @@ class Http extends AbstractUri implements UriInterface
      *
      * @return static
      */
-    public static function createFromServer(array $server)
+    public static function createFromServer(array $server): self
     {
         return static::createFromString(
             static::fetchScheme($server)
@@ -80,7 +80,7 @@ class Http extends AbstractUri implements UriInterface
      *
      * @return string
      */
-    protected static function fetchScheme(array $server)
+    protected static function fetchScheme(array $server): string
     {
         $server += ['HTTPS' => ''];
         $res = filter_var($server['HTTPS'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
@@ -95,7 +95,7 @@ class Http extends AbstractUri implements UriInterface
      *
      * @return string
      */
-    protected static function fetchUserInfo(array $server)
+    protected static function fetchUserInfo(array $server): string
     {
         $server += ['PHP_AUTH_USER' => null, 'PHP_AUTH_PW' => null, 'HTTP_AUTHORIZATION' => null];
         $login = $server['PHP_AUTH_USER'];
@@ -113,7 +113,7 @@ class Http extends AbstractUri implements UriInterface
             return $user_info.'@';
         }
 
-        return $user_info;
+        return '';
     }
 
     /**
@@ -121,11 +121,11 @@ class Http extends AbstractUri implements UriInterface
      *
      * @param array $server the environment server typically $_SERVER
      *
-     * @throws InvalidArgumentUriException If the host can not be detected
+     * @throws UriException If the host can not be detected
      *
      * @return string
      */
-    protected static function fetchHostname(array $server)
+    protected static function fetchHostname(array $server): string
     {
         if (isset($server['HTTP_HOST'])) {
             preg_match(
@@ -159,7 +159,7 @@ class Http extends AbstractUri implements UriInterface
      *
      * @return string
      */
-    protected static function fetchRequestUri(array $server)
+    protected static function fetchRequestUri(array $server): string
     {
         if (isset($server['REQUEST_URI'])) {
             return $server['REQUEST_URI'];

@@ -73,9 +73,10 @@ class UriTest extends TestCase
 
     public function testAutomaticUrlNormalizationBis()
     {
-        $raw = 'http://Bébé.BE./path';
-        $normalized = 'http://xn--bb-bjab.be./path';
-        $this->assertSame($normalized, (string) Http::createFromString($raw));
+        $this->assertSame(
+            'http://xn--bb-bjab.be./path',
+            (string) Http::createFromString('http://Bébé.BE./path')
+        );
     }
 
     public function testPreserveComponentsOnInstantiation()
@@ -189,12 +190,6 @@ class UriTest extends TestCase
         Http::createFromString('http://example.com')->withQuery('?#');
     }
 
-    public function testModificationFailedWithUnsupportedType()
-    {
-        $this->expectException(UriException::class);
-        Http::createFromString('http://example.com/path')->withQuery(null);
-    }
-
     public function testModificationFailedWithUnsupportedPort()
     {
         $this->expectException(UriException::class);
@@ -221,7 +216,6 @@ class UriTest extends TestCase
         return [
             ['login:', null],
             ['login', 'password@'],
-            [['login'], null],
         ];
     }
 

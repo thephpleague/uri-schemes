@@ -47,7 +47,7 @@ class File extends AbstractUri
      *
      * @return bool
      */
-    protected function isValidUri()
+    protected function isValidUri(): bool
     {
         return null === $this->user_info
             && null === $this->port
@@ -64,7 +64,7 @@ class File extends AbstractUri
      *
      * @return static
      */
-    public static function createFromUnixPath($uri = '')
+    public static function createFromUnixPath(string $uri = ''): self
     {
         $uri = implode('/', array_map('rawurlencode', explode('/', $uri)));
         if (isset($uri) && '/' === $uri[0]) {
@@ -103,7 +103,7 @@ class File extends AbstractUri
      *
      * @return static
      */
-    public static function createFromWindowsPath($uri = '')
+    public static function createFromWindowsPath(string $uri = ''): self
     {
         $root = '';
         if (preg_match(',^(?<root>[a-zA-Z][:|\|]),', $uri, $matches)) {

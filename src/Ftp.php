@@ -47,7 +47,7 @@ class Ftp extends AbstractUri
      *
      * @return bool
      */
-    protected function isValidUri()
+    protected function isValidUri(): bool
     {
         return null === $this->query
             && null === $this->fragment

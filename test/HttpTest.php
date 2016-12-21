@@ -30,7 +30,7 @@ class HttpTest extends TestCase
 
     public function testDefaultConstructor()
     {
-        $this->assertSame('', Http::createFromString()->__toString());
+        $this->assertSame('', (string) Http::createFromString());
     }
 
     /**
@@ -129,12 +129,6 @@ class HttpTest extends TestCase
         ];
     }
 
-    public function testEmptyValueDetection()
-    {
-        $expected = '//0:0@0/0?0#0';
-        $this->assertSame($expected, Http::createFromString($expected)->__toString());
-    }
-
     /**
      * @param $expected
      * @param $input
@@ -142,7 +136,7 @@ class HttpTest extends TestCase
      */
     public function testCreateFromServer($expected, $input)
     {
-        $this->assertSame($expected, Http::createFromServer($input)->__toString());
+        $this->assertSame($expected, (string) Http::createFromServer($input));
     }
 
     public function validServerArray()

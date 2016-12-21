@@ -45,7 +45,7 @@ class Data extends AbstractUri
      *
      * @return bool
      */
-    protected function isValidUri()
+    protected function isValidUri(): bool
     {
         return 'data' === $this->scheme
             && null === $this->authority
@@ -64,7 +64,7 @@ class Data extends AbstractUri
      *
      * @return string
      */
-    protected function filterPath($path)
+    protected function filterPath(string $path): string
     {
         if ('' == $path) {
             return 'text/plain;charset=us-ascii,';
@@ -104,7 +104,7 @@ class Data extends AbstractUri
      * @throws UriException If the mediatype or the data are not compliant
      *                      with the RFC2397
      */
-    protected function assertValidPath($mimetype, $parameters, $data)
+    protected function assertValidPath(string $mimetype, string $parameters, string $data)
     {
         if (!preg_match(',^\w+/[-.\w]+(?:\+[-.\w]+)?$,', $mimetype)) {
             throw new UriException(sprintf('The path mimetype `%s` is invalid', $mimetype));
@@ -137,7 +137,7 @@ class Data extends AbstractUri
      *
      * @return bool
      */
-    protected function validateParameter($parameter)
+    protected function validateParameter(string $parameter): bool
     {
         $properties = explode('=', $parameter);
 
@@ -152,7 +152,7 @@ class Data extends AbstractUri
      *
      * @return static
      */
-    public static function createFromPath($path)
+    public static function createFromPath(string $path): self
     {
         if (!file_exists($path) || !is_readable($path)) {
             throw new UriException(sprintf('The specified file `%s` does not exist or is not readable', $path));
