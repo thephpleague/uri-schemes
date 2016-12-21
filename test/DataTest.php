@@ -69,8 +69,6 @@ class DataTest extends TestCase
     public function invalidDataString()
     {
         return [
-            'boolean' => [true],
-            'integer' => [23],
             'invalid format' => ['foo:bar'],
             'invalid data' => ['data:image/png;base64,°28'],
             'invalid data 2' => ['data:image/png;base64,zzz28'],
@@ -92,8 +90,6 @@ class DataTest extends TestCase
     public function invalidDataPath()
     {
         return [
-            'boolean' => [true],
-            'integer' => [23],
             'invalid format' => ['/usr/bin/yeah'],
         ];
     }

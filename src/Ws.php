@@ -47,7 +47,7 @@ class Ws extends AbstractUri
      *
      * @return bool
      */
-    protected function isValidUri()
+    protected function isValidUri(): bool
     {
         return null === $this->fragment
             && '' !== $this->host

@@ -11,11 +11,6 @@ use PHPUnit\Framework\TestCase;
  */
 class WsTest extends TestCase
 {
-    public function testDefaultConstructor()
-    {
-        $this->assertSame('', Ws::createFromString()->__toString());
-    }
-
     /**
      * @dataProvider validUrlArray
      * @param $expected
@@ -23,7 +18,7 @@ class WsTest extends TestCase
      */
     public function testCreateFromString($input, $expected)
     {
-        $this->assertSame($expected, Ws::createFromString($input)->__toString());
+        $this->assertSame($expected, (string) Ws::createFromString($input));
     }
 
     public function validUrlArray()

@@ -128,7 +128,7 @@ abstract class AbstractUri implements Uri
      *
      * @return static
      */
-    public static function __set_state(array $components)
+    public static function __set_state(array $components): self
     {
         $user_info = explode(':', $components['user_info'], 2);
         $components['user'] = array_shift($user_info);
@@ -159,8 +159,13 @@ abstract class AbstractUri implements Uri
      *
      * @return string
      */
-    protected static function getUriString($scheme, $authority, $path, $query, $fragment)
-    {
+    protected static function getUriString(
+        string $scheme = null,
+        string $authority = null,
+        string $path,
+        string $query = null,
+        string $fragment = null
+    ): string {
         if (null !== $scheme) {
             $scheme = $scheme.':';
         }
@@ -187,7 +192,7 @@ abstract class AbstractUri implements Uri
      *
      * @return static
      */
-    public static function createFromString($uri = '')
+    public static function createFromString(string $uri = ''): self
     {
         $components = self::getParser()->__invoke(self::filterString($uri));
 
@@ -211,7 +216,7 @@ abstract class AbstractUri implements Uri
      *
      * @return static
      */
-    public static function createFromComponents(array $components)
+    public static function createFromComponents(array $components): self
     {
         $components = $components + [
             'scheme' => null, 'user' => null, 'pass' => null, 'host' => null,
@@ -243,14 +248,14 @@ abstract class AbstractUri implements Uri
      * @param string|null $fragment fragment component
      */
     protected function __construct(
-        $scheme = null,
-        $user = null,
-        $pass = null,
-        $host = null,
-        $port = null,
-        $path = '',
-        $query = null,
-        $fragment = null
+        string $scheme = null,
+        string $user = null,
+        string $pass = null,
+        string $host = null,
+        int $port = null,
+        string $path = '',
+        string $query = null,
+        string $fragment = null
     ) {
         $this->scheme = $this->formatScheme($scheme);
         $this->user_info = $this->formatUserInfo($user, $pass);
@@ -272,15 +277,8 @@ abstract class AbstractUri implements Uri
      *
      * @return string
      */
-    protected static function filterString($str)
+    protected static function filterString(string $str): string
     {
-        if (!is_string($str)) {
-            throw new UriException(sprintf(
-                'Expected data to be a string; received "%s"',
-                (is_object($str) ? get_class($str) : gettype($str))
-            ));
-        }
-
         if (strlen($str) !== strcspn($str, self::INVALID_CHARS)) {
             throw UriException::createFromInvalidCharacters($str);
         }
@@ -293,7 +291,7 @@ abstract class AbstractUri implements Uri
      *
      * @return Parser
      */
-    protected static function getParser()
+    protected static function getParser(): Parser
     {
         static $parser;
         if (!$parser instanceof Parser) {
@@ -311,7 +309,7 @@ abstract class AbstractUri implements Uri
      *
      * @return string|null
      */
-    protected function filterUserInfo($user, $password)
+    protected function filterUserInfo($user = null, $password = null)
     {
         $user = $this->filterString($user);
         if (strlen($user) !== strcspn($user, ':@/?#')) {
@@ -337,7 +335,7 @@ abstract class AbstractUri implements Uri
      *
      * @return string|null
      */
-    protected function formatScheme($component)
+    protected function formatScheme(string $component = null)
     {
         if ('' == $component) {
             return $component;
@@ -354,7 +352,7 @@ abstract class AbstractUri implements Uri
      *
      * @return string|null
      */
-    protected static function formatUserInfo($user, $password)
+    protected static function formatUserInfo(string $user = null, string $password = null)
     {
         if (null === $user) {
             return $user;
@@ -384,7 +382,7 @@ abstract class AbstractUri implements Uri
      *
      * @return string
      */
-    protected static function urlEncodeMatch(array $matches)
+    protected static function urlEncodeMatch(array $matches): string
     {
         return rawurlencode($matches[0]);
     }
@@ -473,7 +471,7 @@ abstract class AbstractUri implements Uri
      *
      * @return string
      */
-    protected function formatPath($path)
+    protected function formatPath(string $path): string
     {
         return preg_replace_callback(
             '/(?:[^'.self::REGEXP_CHARS_UNRESERVED.self::REGEXP_CHARS_SUBDELIM.'%:@\/]++|%(?![A-Fa-f0-9]{2}))/',
@@ -489,7 +487,7 @@ abstract class AbstractUri implements Uri
      *
      * @return string
      */
-    protected function filterPath($path)
+    protected function filterPath(string $path): string
     {
         return $this->formatPath($path);
     }
@@ -506,7 +504,7 @@ abstract class AbstractUri implements Uri
      *
      * @param string|null $component
      *
-     * @return array
+     * @return string|null
      */
     protected function formatQueryAndFragment($component)
     {
@@ -573,7 +571,7 @@ abstract class AbstractUri implements Uri
      *
      * @return bool
      */
-    abstract protected function isValidUri();
+    abstract protected function isValidUri(): bool;
 
     /**
      * Return the string representation as a URI reference.
@@ -593,7 +591,7 @@ abstract class AbstractUri implements Uri
      *
      * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
         if (null === $this->uri) {
             $this->uri = $this->getUriString(
@@ -623,7 +621,7 @@ abstract class AbstractUri implements Uri
      *
      * @return string The URI scheme.
      */
-    public function getScheme()
+    public function getScheme(): string
     {
         return (string) $this->scheme;
     }
@@ -647,7 +645,7 @@ abstract class AbstractUri implements Uri
      *
      * @return string The URI authority, in "[user-info@]host[:port]" format.
      */
-    public function getAuthority()
+    public function getAuthority(): string
     {
         return (string) $this->authority;
     }
@@ -667,7 +665,7 @@ abstract class AbstractUri implements Uri
      *
      * @return string The URI user information, in "username[:password]" format.
      */
-    public function getUserInfo()
+    public function getUserInfo(): string
     {
         return (string) $this->user_info;
     }
@@ -684,7 +682,7 @@ abstract class AbstractUri implements Uri
      *
      * @return string The URI host.
      */
-    public function getHost()
+    public function getHost(): string
     {
         return (string) $this->host;
     }
@@ -735,7 +733,7 @@ abstract class AbstractUri implements Uri
      *
      * @return string The URI path.
      */
-    public function getPath()
+    public function getPath(): string
     {
         return $this->path;
     }
@@ -761,7 +759,7 @@ abstract class AbstractUri implements Uri
      *
      * @return string The URI query string.
      */
-    public function getQuery()
+    public function getQuery(): string
     {
         return (string) $this->query;
     }
@@ -783,7 +781,7 @@ abstract class AbstractUri implements Uri
      *
      * @return string The URI fragment.
      */
-    public function getFragment()
+    public function getFragment(): string
     {
         return (string) $this->fragment;
     }
@@ -803,7 +801,7 @@ abstract class AbstractUri implements Uri
      *                      valid URI reference.
      * @return static       A new instance with the specified scheme.
      */
-    public function withScheme($scheme)
+    public function withScheme($scheme): self
     {
         $scheme = $this->filterString($scheme);
         $scheme = $this->formatScheme($scheme);
@@ -842,7 +840,7 @@ abstract class AbstractUri implements Uri
      *                      valid URI reference.
      * @return static       A new instance with the specified user information.
      */
-    public function withUserInfo($user, $password = null)
+    public function withUserInfo($user, $password = null): self
     {
         $user_info = null;
         if ('' != $user) {
@@ -877,7 +875,7 @@ abstract class AbstractUri implements Uri
      *                      valid URI reference.
      * @return static       A new instance with the specified host.
      */
-    public function withHost($host)
+    public function withHost($host): self
     {
         $host = $this->filterString($host);
         if ('' == $host) {
@@ -920,7 +918,7 @@ abstract class AbstractUri implements Uri
      *                      valid URI reference.
      * @return static       A new instance with the specified port.
      */
-    public function withPort($port)
+    public function withPort($port): self
     {
         $port = $this->formatPort($this->filterPort($port));
         if ($port === $this->port) {
@@ -960,7 +958,7 @@ abstract class AbstractUri implements Uri
      *                      valid URI reference.
      * @return static       A new instance with the specified path.
      */
-    public function withPath($path)
+    public function withPath($path): self
     {
         $path = $this->filterString($path);
         if (strlen($path) != strcspn($path, '?#')) {
@@ -997,7 +995,7 @@ abstract class AbstractUri implements Uri
      *                      valid URI reference.
      * @return static       A new instance with the specified query string.
      */
-    public function withQuery($query)
+    public function withQuery($query):self
     {
         $query = $this->filterString($query);
         if (strlen($query) !== strcspn($query, '#')) {
@@ -1034,7 +1032,7 @@ abstract class AbstractUri implements Uri
      *                      valid URI reference.
      * @return static       A new instance with the specified fragment.
      */
-    public function withFragment($fragment)
+    public function withFragment($fragment): self
     {
         $fragment = $this->filterString($fragment);
         $fragment = '' == $fragment ? null : $this->formatQueryAndFragment($fragment);
@@ -1052,7 +1050,7 @@ abstract class AbstractUri implements Uri
     /**
      * @inheritdoc
      */
-    public function __set($property, $value)
+    public function __set(string $property, $value)
     {
         throw new BadMethodCallException(sprintf('"%s" is an undefined or inaccessible property', $property));
     }
@@ -1060,7 +1058,7 @@ abstract class AbstractUri implements Uri
     /**
      * @inheritdoc
      */
-    public function __isset($property)
+    public function __isset(string $property)
     {
         throw new BadMethodCallException(sprintf('"%s" is an undefined or inaccessible property', $property));
     }
@@ -1068,7 +1066,7 @@ abstract class AbstractUri implements Uri
     /**
      * @inheritdoc
      */
-    public function __unset($property)
+    public function __unset(string $property)
     {
         throw new BadMethodCallException(sprintf('"%s" is an undefined or inaccessible property', $property));
     }
@@ -1076,7 +1074,7 @@ abstract class AbstractUri implements Uri
     /**
      * @inheritdoc
      */
-    public function __get($property)
+    public function __get(string $property)
     {
         throw new BadMethodCallException(sprintf('"%s" is an undefined or inaccessible property', $property));
     }

@@ -11,11 +11,6 @@ use PHPUnit\Framework\TestCase;
  */
 class FtpTest extends TestCase
 {
-    public function testDefaultConstructor()
-    {
-        $this->assertSame('', (string) Ftp::createFromString());
-    }
-
     /**
      * @dataProvider validArray
      *

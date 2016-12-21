@@ -30,12 +30,12 @@
         "issues": "https://github.com/thephpleague/uri/issues"
     },
     "require": {
-        "php": ">=5.6.0",
+        "php": ">=7.0",
         "ext-mbstring" : "*",
         "ext-intl" : "*",
         "ext-fileinfo": "*",
         "psr/http-message": "^1.0",
-        "league/uri-parser": "~0.3",
+        "league/uri-parser": "dev-master",
         "league/uri-interfaces": "~0.4"
     },
     "require-dev": {
