@@ -43,7 +43,7 @@ Contributions are welcome and will be fully credited. Please see [CONTRIBUTING](
 Testing
 -------
 
-`uri-schemes` has a [PHPUnit](https://phpunit.de) test suite and a coding style compliance test suite using [PHP CS Fixer](http://cs.sensiolabs.org/). To run the tests, run the following command from the project folder.
+`League Uri Schemes` has a [PHPUnit](https://phpunit.de) test suite and a coding style compliance test suite using [PHP CS Fixer](http://cs.sensiolabs.org/). To run the tests, run the following command from the project folder.
 
 ``` bash
 $ composer test

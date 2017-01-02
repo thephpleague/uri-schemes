@@ -49,7 +49,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "LeagueTest\\Uri\\Schemes\\": "test"
+            "LeagueTest\\Uri\\Schemes\\": "tests"
         }
     },
     "scripts": {
