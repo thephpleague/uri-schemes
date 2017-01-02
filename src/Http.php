@@ -10,6 +10,8 @@
  * @version    1.0.0
  * @link       https://github.com/thephpleague/uri-components
  */
+declare(strict_types=1);
+
 namespace League\Uri\Schemes;
 
 use Psr\Http\Message\UriInterface;
@@ -46,6 +48,7 @@ class Http extends AbstractUri implements UriInterface
      * </ul>
      *
      * @see https://tools.ietf.org/html/rfc6455#section-3
+     *
      * @return bool
      */
     protected function isValidUri(): bool
@@ -64,13 +67,11 @@ class Http extends AbstractUri implements UriInterface
      */
     public static function createFromServer(array $server): self
     {
-        return static::createFromString(
-            static::fetchScheme($server)
-            .'//'
-            .static::fetchUserInfo($server)
-            .static::fetchHostname($server)
-            .static::fetchRequestUri($server)
-        );
+        list($user, $pass) = static::fetchUserInfo($server);
+        list($host, $port) = static::fetchHostname($server);
+        list($path, $query) = static::fetchRequestUri($server);
+
+        return new static(static::fetchScheme($server), $user, $pass, $host, $port, $path, $query);
     }
 
     /**
@@ -85,7 +86,7 @@ class Http extends AbstractUri implements UriInterface
         $server += ['HTTPS' => ''];
         $res = filter_var($server['HTTPS'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
 
-        return ($res !== false) ? 'https:' : 'http:';
+        return $res !== false ? 'https' : 'http';
     }
 
     /**
@@ -93,27 +94,28 @@ class Http extends AbstractUri implements UriInterface
      *
      * @param array $server the environment server typically $_SERVER
      *
-     * @return string
+     * @return array
      */
-    protected static function fetchUserInfo(array $server): string
+    protected static function fetchUserInfo(array $server): array
     {
-        $server += ['PHP_AUTH_USER' => null, 'PHP_AUTH_PW' => null, 'HTTP_AUTHORIZATION' => null];
-        $login = $server['PHP_AUTH_USER'];
+        $server += ['PHP_AUTH_USER' => null, 'PHP_AUTH_PW' => null, 'HTTP_AUTHORIZATION' => ''];
+        $user = $server['PHP_AUTH_USER'];
         $pass = $server['PHP_AUTH_PW'];
-        if ('' !== $server['HTTP_AUTHORIZATION']
-            && 0 === strpos(strtolower($server['HTTP_AUTHORIZATION']), 'basic')
-        ) {
+        if (0 === strpos(strtolower($server['HTTP_AUTHORIZATION']), 'basic')) {
             $res = explode(':', base64_decode(substr($server['HTTP_AUTHORIZATION'], 6)), 2);
-            $login = array_shift($res);
+            $user = array_shift($res);
             $pass = array_shift($res);
         }
 
-        $user_info = static::formatUserInfo($login, $pass);
-        if ('' != $user_info) {
-            return $user_info.'@';
+        if (null !== $user) {
+            $user = rawurlencode($user);
         }
 
-        return '';
+        if (null !== $pass) {
+            $pass = rawurlencode($pass);
+        }
+
+        return [$user, $pass];
     }
 
     /**
@@ -123,33 +125,29 @@ class Http extends AbstractUri implements UriInterface
      *
      * @throws UriException If the host can not be detected
      *
-     * @return string
+     * @return array
      */
-    protected static function fetchHostname(array $server): string
+    protected static function fetchHostname(array $server): array
     {
+        $server += ['SERVER_PORT' => null];
         if (isset($server['HTTP_HOST'])) {
-            preg_match(
-                ',^(?<host>(\[.*\]|[^:])*)(\:(?<port>[^/?\#]*))?$,x',
-                $server['HTTP_HOST'],
-                $matches
-            );
+            preg_match(',^(?<host>(\[.*\]|[^:])*)(\:(?<port>[^/?\#]*))?$,x', $server['HTTP_HOST'], $matches);
 
-            if (!isset($matches['port']) && isset($server['SERVER_PORT'])) {
-                return $server['HTTP_HOST'].':'.$server['SERVER_PORT'];
-            }
-
-            return $server['HTTP_HOST'];
+            return [
+                $matches['host'],
+                isset($matches['port']) ? (int) $matches['port'] : $server['SERVER_PORT'],
+            ];
         }
 
-        if (isset($server['SERVER_ADDR'])) {
-            if (!filter_var($server['SERVER_ADDR'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
-                $server['SERVER_ADDR'] = '['.$server['SERVER_ADDR'].']';
-            }
-
-            return $server['SERVER_ADDR'].':'.$server['SERVER_PORT'];
+        if (!isset($server['SERVER_ADDR'])) {
+            throw new UriException('Hostname could not be detected');
         }
 
-        throw new UriException('Host could not be detected');
+        if (!filter_var($server['SERVER_ADDR'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+            $server['SERVER_ADDR'] = '['.$server['SERVER_ADDR'].']';
+        }
+
+        return [$server['SERVER_ADDR'], $server['SERVER_PORT']];
     }
 
     /**
@@ -157,19 +155,18 @@ class Http extends AbstractUri implements UriInterface
      *
      * @param array $server the environment server typically $_SERVER
      *
-     * @return string
+     * @return array
      */
-    protected static function fetchRequestUri(array $server): string
+    protected static function fetchRequestUri(array $server): array
     {
         if (isset($server['REQUEST_URI'])) {
-            return $server['REQUEST_URI'];
+            $parts = explode('?', $server['REQUEST_URI'], 2);
+
+            return [array_shift($parts), array_shift($parts)];
         }
 
-        $server += ['PHP_SELF' => '', 'QUERY_STRING' => ''];
-        if ('' !== $server['QUERY_STRING']) {
-            $server['QUERY_STRING'] = '?'.$server['QUERY_STRING'];
-        }
+        $server += ['PHP_SELF' => '', 'QUERY_STRING' => null];
 
-        return $server['PHP_SELF'].$server['QUERY_STRING'];
+        return [$server['PHP_SELF'], $server['QUERY_STRING']];
     }
 }

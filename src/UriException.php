@@ -10,6 +10,8 @@
  * @version    0.3.0
  * @link       https://github.com/thephpleague/uri-parser/
  */
+declare(strict_types=1);
+
 namespace League\Uri\Schemes;
 
 use League\Uri\Exception as ParserException;

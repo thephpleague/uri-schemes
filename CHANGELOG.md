@@ -10,7 +10,7 @@ All Notable changes to `League\Uri\Components` will be documented in this file
 
 ### Fixed
 
-- None
+- Improve `League\Uri\Schemes\Http::createFromServer` static method
 
 ### Deprecated
 
