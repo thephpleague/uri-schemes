@@ -60,23 +60,6 @@ class File extends AbstractUri
     }
 
     /**
-     * Create a new instance from a Unix path string
-     *
-     * @param string $uri
-     *
-     * @return static
-     */
-    public static function createFromUnixPath(string $uri = ''): self
-    {
-        $uri = implode('/', array_map('rawurlencode', explode('/', $uri)));
-        if (isset($uri) && '/' === $uri[0]) {
-            return new static('file', null,  null, 'localhost', null, $uri);
-        }
-
-        return new static(null, null,  null, null, null, $uri);
-    }
-
-    /**
      * Format the Host component
      *
      * @see https://tools.ietf.org/html/rfc1738#section-3.10
@@ -96,6 +79,23 @@ class File extends AbstractUri
         }
 
         return parent::formatHost($host);
+    }
+
+    /**
+     * Create a new instance from a Unix path string
+     *
+     * @param string $uri
+     *
+     * @return static
+     */
+    public static function createFromUnixPath(string $uri = ''): self
+    {
+        $uri = implode('/', array_map('rawurlencode', explode('/', $uri)));
+        if (isset($uri) && '/' === $uri[0]) {
+            return new static('file', null,  null, 'localhost', null, $uri);
+        }
+
+        return new static(null, null,  null, null, null, $uri);
     }
 
     /**
@@ -122,7 +122,8 @@ class File extends AbstractUri
 
         //UNC Windows Path
         if ('//' === substr($uri, 0, 2)) {
-            return static::createFromString('file:'.$uri);
+            $parts = explode('/', substr($uri, 2), 2);
+            return new static('file', null, null, array_shift($parts), null, '/'.array_shift($parts));
         }
 
         return new static(null, null, null, null, null, $uri);

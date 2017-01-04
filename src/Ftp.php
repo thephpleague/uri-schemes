@@ -25,9 +25,7 @@ namespace League\Uri\Schemes;
 class Ftp extends AbstractUri
 {
     /**
-     * Supported schemes and corresponding default port
-     *
-     * @var array
+     * @inheritdoc
      */
     protected static $supported_schemes = [
         'ftp' => 21,

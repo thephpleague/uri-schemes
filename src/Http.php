@@ -27,9 +27,7 @@ use Psr\Http\Message\UriInterface;
 class Http extends AbstractUri implements UriInterface
 {
     /**
-     * Supported schemes and corresponding default port
-     *
-     * @var array
+     * @inheritdoc
      */
     protected static $supported_schemes = [
         'http' => 80,
