@@ -25,9 +25,7 @@ namespace League\Uri\Schemes;
 class Ws extends AbstractUri
 {
     /**
-     * Supported schemes and corresponding default port
-     *
-     * @var array
+     * @inheritdoc
      */
     protected static $supported_schemes = [
         'ws' => 80,

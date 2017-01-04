@@ -149,45 +149,6 @@ abstract class AbstractUri implements Uri
     }
 
     /**
-     * Generate the URI string representation from its components
-     *
-     * @see https://tools.ietf.org/html/rfc3986#section-5.3
-     *
-     * @param string|null $scheme
-     * @param string|null $authority
-     * @param string      $path
-     * @param string|null $query
-     * @param string|null $fragment
-     *
-     * @return string
-     */
-    protected static function getUriString(
-        string $scheme = null,
-        string $authority = null,
-        string $path,
-        string $query = null,
-        string $fragment = null
-    ): string {
-        if (null !== $scheme) {
-            $scheme = $scheme.':';
-        }
-
-        if (null !== $authority) {
-            $authority = '//'.$authority;
-        }
-
-        if (null !== $query) {
-            $query = '?'.$query;
-        }
-
-        if (null !== $fragment) {
-            $fragment = '#'.$fragment;
-        }
-
-        return $scheme.$authority.$path.$query.$fragment;
-    }
-
-    /**
      * Create a new instance from a string
      *
      * @param string $uri
@@ -196,7 +157,7 @@ abstract class AbstractUri implements Uri
      */
     public static function createFromString(string $uri = ''): self
     {
-        $components = self::getParser()->__invoke(self::filterString($uri));
+        $components = self::getParser()(self::filterString($uri));
 
         return new static(
             $components['scheme'],
@@ -211,6 +172,39 @@ abstract class AbstractUri implements Uri
     }
 
     /**
+     * Filter a string.
+     *
+     * @param string $str the value to evaluate as a string
+     *
+     * @throws UriException if the submitted data can not be converted to string
+     *
+     * @return string
+     */
+    protected static function filterString(string $str): string
+    {
+        if (strlen($str) !== strcspn($str, self::INVALID_CHARS)) {
+            throw UriException::createFromInvalidCharacters($str);
+        }
+
+        return $str;
+    }
+
+    /**
+     * Returns the League URI Parser
+     *
+     * @return Parser
+     */
+    protected static function getParser(): Parser
+    {
+        static $parser;
+        if (!$parser instanceof Parser) {
+            $parser = new Parser();
+        }
+
+        return $parser;
+    }
+
+    /**
      * Create a new instance from a hash of parse_url parts
      *
      * @param array $components a hash representation of the URI similar
@@ -220,7 +214,7 @@ abstract class AbstractUri implements Uri
      */
     public static function createFromComponents(array $components): self
     {
-        $components = $components + [
+        $components += [
             'scheme' => null, 'user' => null, 'pass' => null, 'host' => null,
             'port' => null, 'path' => '', 'query' => null, 'fragment' => null,
         ];
@@ -268,66 +262,6 @@ abstract class AbstractUri implements Uri
         $this->query = $this->formatQueryAndFragment($query);
         $this->fragment = $this->formatQueryAndFragment($fragment);
         $this->assertValidState();
-    }
-
-    /**
-     * Filter a string.
-     *
-     * @param string $str the value to evaluate as a string
-     *
-     * @throws UriException if the submitted data can not be converted to string
-     *
-     * @return string
-     */
-    protected static function filterString(string $str): string
-    {
-        if (strlen($str) !== strcspn($str, self::INVALID_CHARS)) {
-            throw UriException::createFromInvalidCharacters($str);
-        }
-
-        return $str;
-    }
-
-    /**
-     * Returns a URI Parser
-     *
-     * @return Parser
-     */
-    protected static function getParser(): Parser
-    {
-        static $parser;
-        if (!$parser instanceof Parser) {
-            $parser = new Parser();
-        }
-
-        return $parser;
-    }
-
-    /**
-     * Filter the URI user info component
-     *
-     * @param string|null $user     the URI user component
-     * @param string|null $password the URI password component
-     *
-     * @return string|null
-     */
-    protected function filterUserInfo($user = null, $password = null)
-    {
-        $user = $this->filterString($user);
-        if (strlen($user) !== strcspn($user, ':@/?#')) {
-            throw new UriException(sprintf('The encoded user `%s` contains invalid characters', $user));
-        }
-
-        if ('' == $password) {
-            return [$user, null];
-        }
-
-        $password = $this->filterString($password);
-        if (strlen($password) !== strcspn($password, '@/?#')) {
-            throw new UriException(sprintf('The encoded password `%s` contains invalid characters', $password));
-        }
-
-        return [$user, $password];
     }
 
     /**
@@ -411,24 +345,6 @@ abstract class AbstractUri implements Uri
     }
 
     /**
-     * Filter the Port component
-     *
-     * @param int|null $port
-     *
-     * @throws UriException if the port is invalid
-     *
-     * @return int|null
-     */
-    protected static function filterPort($port)
-    {
-        if (null !== $port && (!is_int($port) || $port < 1 || $port > 65535)) {
-            throw UriException::createFromInvalidPort($port);
-        }
-
-        return $port;
-    }
-
-    /**
      * Format the Port component
      *
      * @param int|null $port
@@ -447,6 +363,8 @@ abstract class AbstractUri implements Uri
 
     /**
      * Generate the URI authority part
+     *
+     * @return string|null
      */
     protected function setAuthority()
     {
@@ -467,6 +385,18 @@ abstract class AbstractUri implements Uri
     }
 
     /**
+     * Filter the Path component
+     *
+     * @param string $path
+     *
+     * @return string
+     */
+    protected function filterPath(string $path): string
+    {
+        return $this->formatPath($path);
+    }
+
+    /**
      * Format the Path component
      *
      * @param string $path
@@ -480,18 +410,6 @@ abstract class AbstractUri implements Uri
             [AbstractUri::class, 'urlEncodeMatch'],
             $path
         );
-    }
-
-    /**
-     * Filter the Path component
-     *
-     * @param string $path
-     *
-     * @return string
-     */
-    protected function filterPath(string $path): string
-    {
-        return $this->formatPath($path);
     }
 
     /**
@@ -574,6 +492,45 @@ abstract class AbstractUri implements Uri
      * @return bool
      */
     abstract protected function isValidUri(): bool;
+
+    /**
+     * Generate the URI string representation from its components
+     *
+     * @see https://tools.ietf.org/html/rfc3986#section-5.3
+     *
+     * @param string|null $scheme
+     * @param string|null $authority
+     * @param string      $path
+     * @param string|null $query
+     * @param string|null $fragment
+     *
+     * @return string
+     */
+    protected function getUriString(
+        string $scheme = null,
+        string $authority = null,
+        string $path = '',
+        string $query = null,
+        string $fragment = null
+    ): string {
+        if (null !== $scheme) {
+            $scheme = $scheme.':';
+        }
+
+        if (null !== $authority) {
+            $authority = '//'.$authority;
+        }
+
+        if (null !== $query) {
+            $query = '?'.$query;
+        }
+
+        if (null !== $fragment) {
+            $fragment = '#'.$fragment;
+        }
+
+        return $scheme.$authority.$path.$query.$fragment;
+    }
 
     /**
      * Return the string representation as a URI reference.
@@ -862,7 +819,34 @@ abstract class AbstractUri implements Uri
         return $clone;
     }
 
-   /**
+    /**
+     * Filter the URI user info component
+     *
+     * @param string|null $user     the URI user component
+     * @param string|null $password the URI password component
+     *
+     * @return string|null
+     */
+    protected function filterUserInfo($user = null, $password = null)
+    {
+        $user = $this->filterString($user);
+        if (strlen($user) !== strcspn($user, ':@/?#')) {
+            throw new UriException(sprintf('The encoded user `%s` contains invalid characters', $user));
+        }
+
+        if ('' == $password) {
+            return [$user, null];
+        }
+
+        $password = $this->filterString($password);
+        if (strlen($password) !== strcspn($password, '@/?#')) {
+            throw new UriException(sprintf('The encoded password `%s` contains invalid characters', $password));
+        }
+
+        return [$user, $password];
+    }
+
+    /**
      * Return an instance with the specified host.
      *
      * This method MUST retain the state of the current instance, and return
@@ -884,9 +868,10 @@ abstract class AbstractUri implements Uri
             $host = null;
         }
 
-        if ('' != $host && !self::getParser()->isHost($host)) {
+        if (null !== $host && !self::getParser()->isHost($host)) {
             throw UriException::createFromInvalidHost($host);
         }
+
         $host = $this->formatHost($host);
         if ($host === $this->host) {
             return $this;
@@ -933,6 +918,24 @@ abstract class AbstractUri implements Uri
         $clone->assertValidState();
 
         return $clone;
+    }
+
+    /**
+     * Filter the Port component
+     *
+     * @param int|null $port
+     *
+     * @throws UriException if the port is invalid
+     *
+     * @return int|null
+     */
+    protected static function filterPort($port)
+    {
+        if (null !== $port && (!is_int($port) || $port < 1 || $port > 65535)) {
+            throw UriException::createFromInvalidPort($port);
+        }
+
+        return $port;
     }
 
     /**
@@ -997,10 +1000,10 @@ abstract class AbstractUri implements Uri
      *                      valid URI reference.
      * @return static       A new instance with the specified query string.
      */
-    public function withQuery($query):self
+    public function withQuery($query): self
     {
         $query = $this->filterString($query);
-        if (strlen($query) !== strcspn($query, '#')) {
+        if (false !== strpos($query, '#')) {
             throw new UriException(sprintf('The submitted query `%s` contains invalid characters', $query));
         }
 
