@@ -219,6 +219,10 @@ abstract class AbstractUri implements Uri
             'port' => null, 'path' => '', 'query' => null, 'fragment' => null,
         ];
 
+        if (null !== $components['host'] && !self::getParser()->isHost($components['host'])) {
+            throw UriException::createFromInvalidHost($components['host']);
+        }
+
         return new static(
             $components['scheme'],
             $components['user'],
