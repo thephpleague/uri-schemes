@@ -2,6 +2,24 @@
 
 All Notable changes to `League\Uri\Components` will be documented in this file
 
+## 1.0.1 - 2017-01-16
+
+### Added
+
+- None
+
+### Fixed
+
+- `League\Uri\Schemes\Http::createFromComponents` with invalid Host
+
+### Deprecated
+
+- None
+
+### Removed
+
+- None
+
 ## 1.0.0 - 2017-01-04
 
 ### Added

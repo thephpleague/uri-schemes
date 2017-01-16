@@ -272,6 +272,13 @@ class UriTest extends TestCase
             Http::createFromString($uri)
         );
     }
+
+    public function testCreateFromComponentsTrowsException()
+    {
+        $this->expectException(ParserException::class);
+        Http::createFromComponents(['host' => '[127.0.0.1]']);
+    }
+
     public function testInvalidSetterThrowException()
     {
         $this->expectException(BadMethodCallException::class);
