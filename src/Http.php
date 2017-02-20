@@ -157,13 +157,13 @@ class Http extends AbstractUri implements UriInterface
      */
     protected static function fetchRequestUri(array $server): array
     {
+        $server += ['PHP_SELF' => '', 'QUERY_STRING' => null];
+
         if (isset($server['REQUEST_URI'])) {
             $parts = explode('?', $server['REQUEST_URI'], 2);
 
-            return [array_shift($parts), array_shift($parts)];
+            return [array_shift($parts), $server['QUERY_STRING']];
         }
-
-        $server += ['PHP_SELF' => '', 'QUERY_STRING' => null];
 
         return [$server['PHP_SELF'], $server['QUERY_STRING']];
     }
