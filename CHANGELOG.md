@@ -2,6 +2,24 @@
 
 All Notable changes to `League\Uri\Components` will be documented in this file
 
+## 1.0.2 - 2017-03-01
+
+### Added
+
+- None
+
+### Fixed
+
+- Improved `League\Uri\Schemes\Http::createFromServer` with `$_SERVER['REQUEST_URI']`
+
+### Deprecated
+
+- None
+
+### Removed
+
+- None
+
 ## 1.0.1 - 2017-01-16
 
 ### Added
