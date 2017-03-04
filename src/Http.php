@@ -133,7 +133,7 @@ class Http extends AbstractUri implements UriInterface
 
             return [
                 $matches['host'],
-                isset($matches['port']) ? (int) $matches['port'] : $server['SERVER_PORT'],
+                isset($matches['port']) ? (int) $matches['port'] : (int) $server['SERVER_PORT'],
             ];
         }
 
@@ -145,7 +145,7 @@ class Http extends AbstractUri implements UriInterface
             $server['SERVER_ADDR'] = '['.$server['SERVER_ADDR'].']';
         }
 
-        return [$server['SERVER_ADDR'], $server['SERVER_PORT']];
+        return [$server['SERVER_ADDR'], (int) $server['SERVER_PORT']];
     }
 
     /**
