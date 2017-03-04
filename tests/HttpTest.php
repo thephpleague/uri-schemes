@@ -149,7 +149,7 @@ class HttpTest extends TestCase
                     'REQUEST_URI' => '',
                     'SERVER_ADDR' => '127.0.0.1',
                     'HTTPS' => 'on',
-                    'SERVER_PORT' => 23,
+                    'SERVER_PORT' => '23',
                     'HTTP_HOST' => 'example.com',
                 ],
             ],
