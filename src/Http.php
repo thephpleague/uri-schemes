@@ -69,6 +69,8 @@ class Http extends AbstractUri implements UriInterface
         list($host, $port) = static::fetchHostname($server);
         list($path, $query) = static::fetchRequestUri($server);
 
+        $port = $port !== null ? (int) $port : $port;
+
         return new static(static::fetchScheme($server), $user, $pass, $host, $port, $path, $query);
     }
 
