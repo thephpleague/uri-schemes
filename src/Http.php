@@ -69,8 +69,6 @@ class Http extends AbstractUri implements UriInterface
         list($host, $port) = static::fetchHostname($server);
         list($path, $query) = static::fetchRequestUri($server);
 
-        $port = $port !== null ? (int) $port : $port;
-
         return new static(static::fetchScheme($server), $user, $pass, $host, $port, $path, $query);
     }
 
@@ -130,6 +128,10 @@ class Http extends AbstractUri implements UriInterface
     protected static function fetchHostname(array $server): array
     {
         $server += ['SERVER_PORT' => null];
+        if (null !== $server['SERVER_PORT']) {
+            $server['SERVER_PORT'] = (int) $server['SERVER_PORT'];
+        }
+
         if (isset($server['HTTP_HOST'])) {
             preg_match(',^(?<host>(\[.*\]|[^:])*)(\:(?<port>[^/?\#]*))?$,x', $server['HTTP_HOST'], $matches);
 
