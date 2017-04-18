@@ -330,22 +330,30 @@ abstract class AbstractUri implements Uri
     /**
      * Format the Host component
      *
-     * @param string|null $component
+     * - convert each registered name label to its IDNA ASCII form only if it contains none valid label characters
+     * - convert each label to its lower case representation for normalization
+     *
+     * @param string|null $host
      *
      * @return string|null
      */
-    protected function formatHost($component)
+    protected function formatHost($host)
     {
-        if ('' == $component) {
-            return $component;
+        if ('' == $host || false !== strpos($host, ']')) {
+            return $host;
         }
 
-        $component = strtolower($component);
-        if (false !== strpos($component, ']')) {
-            return $component;
+        $component = '';
+        $valid_ascii_label_characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-';
+        foreach (explode('.', strtolower($host)) as $label) {
+            if (strlen($label) !== strspn($label, $valid_ascii_label_characters)) {
+                $label = (string) idn_to_ascii($label, IDNA_NONTRANSITIONAL_TO_ASCII, INTL_IDNA_VARIANT_UTS46);
+            }
+
+            $component .= $label.'.';
         }
 
-        return implode('.', array_map('idn_to_ascii', explode('.', $component)));
+        return substr($component, 0, -1);
     }
 
     /**

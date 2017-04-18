@@ -2,6 +2,24 @@
 
 All Notable changes to `League\Uri\Components` will be documented in this file
 
+## Next
+
+### Added
+
+- None
+
+### Fixed
+
+- Bug fix Host normalization `League\Uri\Schemes\AbstractUri::formatHost` see [issue #5](https://github.com/thephpleague/uri-parser/issue/5)
+
+### Deprecated
+
+- None
+
+### Removed
+
+- None
+
 ## 1.0.3 - 2017-03-06
 
 ### Added
@@ -10,7 +28,7 @@ All Notable changes to `League\Uri\Components` will be documented in this file
 
 ### Fixed
 
-- Bug fix `$_SERVER['SERVER_PORT']` valui with `League\Uri\Schemes\Http::createFromServer` see [#PR1](https://github.com/thephpleague/uri-schemes/pull/1)
+- Bug fix `$_SERVER['SERVER_PORT']` value with `League\Uri\Schemes\Http::createFromServer` see [#PR1](https://github.com/thephpleague/uri-schemes/pull/1)
 
 ### Deprecated
 
