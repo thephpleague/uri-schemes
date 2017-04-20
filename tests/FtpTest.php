@@ -14,8 +14,8 @@ class FtpTest extends TestCase
     /**
      * @dataProvider validArray
      *
-     * @param $uri
-     * @param $expected
+     * @param string $uri
+     * @param string $expected
      */
     public function testCreateFromString($uri, $expected)
     {
@@ -54,6 +54,7 @@ class FtpTest extends TestCase
 
     /**
      * @dataProvider invalidArgumentExceptionProvider
+     * @param string $uri
      */
     public function testConstructorThrowInvalidArgumentException($uri)
     {

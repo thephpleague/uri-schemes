@@ -94,10 +94,10 @@ class File extends AbstractUri
     {
         $uri = implode('/', array_map('rawurlencode', explode('/', $uri)));
         if (isset($uri) && '/' === $uri[0]) {
-            return new static('file', null,  null, 'localhost', null, $uri);
+            return new static('file', null, null, 'localhost', null, $uri);
         }
 
-        return new static(null, null,  null, null, null, $uri);
+        return new static(null, null, null, null, null, $uri);
     }
 
     /**

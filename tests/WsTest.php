@@ -13,8 +13,8 @@ class WsTest extends TestCase
 {
     /**
      * @dataProvider validUrlArray
-     * @param $expected
-     * @param $input
+     * @param string $expected
+     * @param string $input
      */
     public function testCreateFromString($input, $expected)
     {
@@ -53,6 +53,7 @@ class WsTest extends TestCase
 
     /**
      * @dataProvider invalidArgumentExceptionProvider
+     * @param string $uri
      */
     public function testConstructorThrowInvalidArgumentException($uri)
     {

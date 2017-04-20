@@ -142,24 +142,6 @@ class UriTest extends TestCase
         $this->assertSame('/test/query.php?kingkong=toto#doc3', $uri_with_host);
     }
 
-    /**
-     * @dataProvider portProvider
-     */
-    public function testPort($uri, $port)
-    {
-        $this->assertSame($port, Http::createFromString($uri)->getPort());
-    }
-
-    public function portProvider()
-    {
-        return [
-            ['http://www.example.com:443/', 443],
-            ['http://www.example.com:80/', null],
-            ['http://www.example.com', null],
-            ['//www.example.com:80/', 80],
-        ];
-    }
-
     public function testWithInvalidCharacters()
     {
         $this->expectException(ParserException::class);
@@ -204,6 +186,8 @@ class UriTest extends TestCase
 
     /**
      * @dataProvider invalidUserInfoProvider
+     * @param mixed $user
+     * @param mixed $password
      */
     public function testModificationFailedWithInvalidUserInfo($user, $password)
     {
@@ -221,6 +205,7 @@ class UriTest extends TestCase
 
     /**
      * @dataProvider invalidURI
+     * @param mixed $uri
      */
     public function testCreateFromInvalidUrlKO($uri)
     {

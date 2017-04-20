@@ -35,8 +35,8 @@ class HttpTest extends TestCase
 
     /**
      * @dataProvider validUriArray
-     * @param $expected
-     * @param $uri
+     * @param string $expected
+     * @param string $uri
      */
     public function testCreateFromString($expected, $uri)
     {
@@ -71,6 +71,7 @@ class HttpTest extends TestCase
 
     /**
      * @dataProvider isValidProvider
+     * @param string $uri
      */
     public function testIsValid($uri)
     {
@@ -92,9 +93,10 @@ class HttpTest extends TestCase
     }
 
     /**
-     * @param $uri
-     * @param $port
      * @dataProvider portProvider
+     *
+     * @param string   $uri
+     * @param int|null $port
      */
     public function testPort($uri, $port)
     {
@@ -113,6 +115,7 @@ class HttpTest extends TestCase
 
     /**
      * @dataProvider invalidPathProvider
+     * @param string $path
      */
     public function testPathIsInvalid($path)
     {
@@ -130,8 +133,8 @@ class HttpTest extends TestCase
     }
 
     /**
-     * @param $expected
-     * @param $input
+     * @param string $expected
+     * @param string $input
      * @dataProvider validServerArray
      */
     public function testCreateFromServer($expected, $input)
