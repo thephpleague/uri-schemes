@@ -39,7 +39,7 @@
         "league/uri-interfaces": "^1.0"
     },
     "require-dev": {
-        "friendsofphp/php-cs-fixer": "^1.0",
+        "friendsofphp/php-cs-fixer": "^2.0",
         "phpunit/phpunit" : "^6.0"
     },
     "autoload": {
@@ -53,9 +53,12 @@
         }
     },
     "scripts": {
-        "test": "phpunit --coverage-text; php-cs-fixer fix -v --diff --dry-run;",
+        "test": "phpunit --coverage-text; php-cs-fixer fix -v --diff --dry-run --allow-risky=yes;",
         "phpunit": "phpunit --coverage-text",
-        "phpcs": "php-cs-fixer fix -v --diff --dry-run;"
+        "phpcs": "php-cs-fixer fix -v --diff --dry-run --allow-risky=yes;"
+    },
+    "suggest": {
+        "league/uri-manipulations" : "Needed to easily manipulate URI objects"
     },
     "extra": {
         "branch-alias": {

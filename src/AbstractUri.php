@@ -130,6 +130,8 @@ abstract class AbstractUri implements Uri
     /**
      * Static method called by PHP's var export
      *
+     * @param array $components
+     *
      * @return static
      */
     public static function __set_state(array $components): self
@@ -616,7 +618,7 @@ abstract class AbstractUri implements Uri
      *
      * @see https://tools.ietf.org/html/rfc3986#section-3.2
      *
-     * @return string The URI authority, in "[user-info@]host[:port]" format.
+     * @return string
      */
     public function getAuthority(): string
     {
@@ -629,6 +631,12 @@ abstract class AbstractUri implements Uri
      * If no user information is present, this method MUST return an empty
      * string.
      *
+     * The userinfo syntax of the URI is:
+     *
+     * <pre>
+     * username[:password]
+     * </pre>
+     *
      * If a user is present in the URI, this will return that value;
      * additionally, if the password is also present, it will be appended to the
      * user value, with a colon (":") separating the values.
@@ -636,7 +644,7 @@ abstract class AbstractUri implements Uri
      * The trailing "@" character is not part of the user information and MUST
      * NOT be added.
      *
-     * @return string The URI user information, in "username[:password]" format.
+     * @return string
      */
     public function getUserInfo(): string
     {
@@ -653,7 +661,7 @@ abstract class AbstractUri implements Uri
      *
      * @see http://tools.ietf.org/html/rfc3986#section-3.2.2
      *
-     * @return string The URI host.
+     * @return string
      */
     public function getHost(): string
     {
@@ -673,7 +681,7 @@ abstract class AbstractUri implements Uri
      * If no port is present, but a scheme is present, this method MAY return
      * the standard port for that scheme, but SHOULD return null.
      *
-     * @return null|int The URI port.
+     * @return null|int
      */
     public function getPort()
     {
@@ -704,7 +712,7 @@ abstract class AbstractUri implements Uri
      * @see https://tools.ietf.org/html/rfc3986#section-2
      * @see https://tools.ietf.org/html/rfc3986#section-3.3
      *
-     * @return string The URI path.
+     * @return string
      */
     public function getPath(): string
     {
@@ -730,7 +738,7 @@ abstract class AbstractUri implements Uri
      * @see https://tools.ietf.org/html/rfc3986#section-2
      * @see https://tools.ietf.org/html/rfc3986#section-3.4
      *
-     * @return string The URI query string.
+     * @return string
      */
     public function getQuery(): string
     {
@@ -752,7 +760,7 @@ abstract class AbstractUri implements Uri
      * @see https://tools.ietf.org/html/rfc3986#section-2
      * @see https://tools.ietf.org/html/rfc3986#section-3.5
      *
-     * @return string The URI fragment.
+     * @return string
      */
     public function getFragment(): string
     {
@@ -772,7 +780,7 @@ abstract class AbstractUri implements Uri
      * @throws UriException for transformations that would result in
      *                      a state that cannot be represented as a
      *                      valid URI reference.
-     * @return static       A new instance with the specified scheme.
+     * @return static
      */
     public function withScheme($scheme): self
     {
@@ -811,7 +819,7 @@ abstract class AbstractUri implements Uri
      * @throws UriException for transformations that would result in
      *                      a state that cannot be represented as a
      *                      valid URI reference.
-     * @return static       A new instance with the specified user information.
+     * @return static
      */
     public function withUserInfo($user, $password = null): self
     {
@@ -873,7 +881,7 @@ abstract class AbstractUri implements Uri
      * @throws UriException for transformations that would result in
      *                      a state that cannot be represented as a
      *                      valid URI reference.
-     * @return static       A new instance with the specified host.
+     * @return static
      */
     public function withHost($host): self
     {
@@ -917,7 +925,7 @@ abstract class AbstractUri implements Uri
      * @throws UriException for transformations that would result in
      *                      a state that cannot be represented as a
      *                      valid URI reference.
-     * @return static       A new instance with the specified port.
+     * @return static
      */
     public function withPort($port): self
     {
@@ -975,7 +983,7 @@ abstract class AbstractUri implements Uri
      * @throws UriException for transformations that would result in
      *                      a state that cannot be represented as a
      *                      valid URI reference.
-     * @return static       A new instance with the specified path.
+     * @return static
      */
     public function withPath($path): self
     {
@@ -1012,7 +1020,7 @@ abstract class AbstractUri implements Uri
      * @throws UriException for transformations that would result in
      *                      a state that cannot be represented as a
      *                      valid URI reference.
-     * @return static       A new instance with the specified query string.
+     * @return static
      */
     public function withQuery($query): self
     {
@@ -1049,7 +1057,7 @@ abstract class AbstractUri implements Uri
      * @throws UriException for transformations that would result in
      *                      a state that cannot be represented as a
      *                      valid URI reference.
-     * @return static       A new instance with the specified fragment.
+     * @return static
      */
     public function withFragment($fragment): self
     {

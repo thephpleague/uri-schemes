@@ -18,8 +18,8 @@ class FileTest extends TestCase
 
     /**
      * @dataProvider validUri
-     * @param $expected
-     * @param $input
+     * @param string $uri
+     * @param string $expected
      */
     public function testCreateFromString($uri, $expected)
     {
@@ -70,6 +70,7 @@ class FileTest extends TestCase
 
     /**
      * @dataProvider invalidArgumentExceptionProvider
+     * @param string $uri
      */
     public function testConstructorThrowInvalidArgumentException($uri)
     {
@@ -91,7 +92,8 @@ class FileTest extends TestCase
 
     /**
      * @dataProvider unixpathProvider
-     * @param $input
+     * @param string $uri
+     * @param string $expected
      */
     public function testCreateFromUnixPath($uri, $expected)
     {
@@ -126,7 +128,8 @@ class FileTest extends TestCase
 
     /**
      * @dataProvider windowLocalPathProvider
-     * @param $input
+     * @param string $uri
+     * @param string $expected
      */
     public function testCreateFromWindowsLocalPath($uri, $expected)
     {
