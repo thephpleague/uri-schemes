@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * @group http
+ * @coversDefaultClass League\Uri\Schemes\Http
  */
 class HttpTest extends TestCase
 {
@@ -28,13 +29,18 @@ class HttpTest extends TestCase
         $this->uri = null;
     }
 
+    /**
+     * @covers ::getParser
+     */
     public function testDefaultConstructor()
     {
         $this->assertSame('', (string) Http::createFromString());
     }
 
     /**
-     * @dataProvider validUriArray
+     * @covers ::isValidUri
+     * @dataProvider validUrlProvider
+     *
      * @param string $expected
      * @param string $uri
      */
@@ -43,7 +49,7 @@ class HttpTest extends TestCase
         $this->assertSame($expected, (string) Http::createFromString($uri));
     }
 
-    public function validUriArray()
+    public function validUrlProvider()
     {
         return [
             'with default port' => [
@@ -70,7 +76,9 @@ class HttpTest extends TestCase
     }
 
     /**
-     * @dataProvider isValidProvider
+     * @covers ::isValidUri
+     * @dataProvider invalidUrlProvider
+     *
      * @param string $uri
      */
     public function testIsValid($uri)
@@ -79,7 +87,7 @@ class HttpTest extends TestCase
         Http::createFromString($uri);
     }
 
-    public function isValidProvider()
+    public function invalidUrlProvider()
     {
         return [
             ['wss://example.com'],
@@ -114,7 +122,9 @@ class HttpTest extends TestCase
     }
 
     /**
+     * @covers ::isValidUri
      * @dataProvider invalidPathProvider
+     *
      * @param string $path
      */
     public function testPathIsInvalid($path)
@@ -133,9 +143,15 @@ class HttpTest extends TestCase
     }
 
     /**
+     * @covers ::createFromServer
+     * @covers ::fetchScheme
+     * @covers ::fetchUserInfo
+     * @covers ::fetchHostname
+     * @covers ::fetchRequestUri
+     * @dataProvider validServerArray
+     *
      * @param string $expected
      * @param string $input
-     * @dataProvider validServerArray
      */
     public function testCreateFromServer($expected, $input)
     {
@@ -209,6 +225,17 @@ class HttpTest extends TestCase
                     'HTTP_HOST' => 'localhost:23',
                 ],
             ],
+            'with IIS Rewritting server' => [
+                'http://localhost:23/foo/bar?foo=bar',
+                [
+                    'PHP_SELF' => '',
+                    'IIS_WasUrlRewritten' => '1',
+                    'UNENCODED_URL' => '/foo/bar?foo=bar',
+                    'REQUEST_URI' => 'toto',
+                    'SERVER_PORT' => 23,
+                    'HTTP_HOST' => 'localhost',
+                ],
+            ],
             'with standard port setting' => [
                 'https://localhost:23',
                 [
@@ -276,6 +303,9 @@ class HttpTest extends TestCase
         ];
     }
 
+    /**
+     * @covers ::fetchHostname
+     */
     public function testFailCreateFromServerWithoutHost()
     {
         $this->expectException(UriException::class);
@@ -287,6 +317,9 @@ class HttpTest extends TestCase
         ]);
     }
 
+    /**
+     * @covers ::isValidUri
+     */
     public function testModificationFailedWithEmptyAuthority()
     {
         $this->expectException(UriException::class);
