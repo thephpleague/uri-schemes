@@ -8,16 +8,24 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * @group file
+ * @coversDefaultClass League\Uri\Schemes\File
  */
 class FileTest extends TestCase
 {
+    /**
+     * @covers ::getParser
+     * @covers ::formatHost
+     */
     public function testDefaultConstructor()
     {
         $this->assertSame('', (string) File::createFromString());
     }
 
     /**
-     * @dataProvider validUri
+     * @covers ::isValidUri
+     * @covers ::formatHost
+     * @dataProvider validUrlProvider
+     *
      * @param string $uri
      * @param string $expected
      */
@@ -26,7 +34,7 @@ class FileTest extends TestCase
         $this->assertSame($expected, (string) File::createFromString($uri));
     }
 
-    public function validUri()
+    public function validUrlProvider()
     {
         return [
             'relative path' => [
@@ -69,16 +77,18 @@ class FileTest extends TestCase
     }
 
     /**
-     * @dataProvider invalidArgumentExceptionProvider
+     * @covers ::isValidUri
+     * @dataProvider invalidUrlProvider
+     *
      * @param string $uri
      */
-    public function testConstructorThrowInvalidArgumentException($uri)
+    public function testConstructorThrowsException($uri)
     {
         $this->expectException(UriException::class);
         File::createFromString($uri);
     }
 
-    public function invalidArgumentExceptionProvider()
+    public function invalidUrlProvider()
     {
         return [
             'no authority 1' => ['file:example.com'],
@@ -91,7 +101,9 @@ class FileTest extends TestCase
     }
 
     /**
+     * @covers ::createFromUnixPath
      * @dataProvider unixpathProvider
+     *
      * @param string $uri
      * @param string $expected
      */
@@ -127,7 +139,9 @@ class FileTest extends TestCase
     }
 
     /**
+     * @covers ::createFromWindowsPath
      * @dataProvider windowLocalPathProvider
+     *
      * @param string $uri
      * @param string $expected
      */
