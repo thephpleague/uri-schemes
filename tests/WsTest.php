@@ -8,11 +8,15 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * @group ws
+ * @coversDefaultClass League\Uri\Schemes\Ws
  */
 class WsTest extends TestCase
 {
     /**
-     * @dataProvider validUrlArray
+     * @covers ::getParser
+     * @covers ::isValidUri
+     * @dataProvider validUrlProvider
+     *
      * @param string $expected
      * @param string $input
      */
@@ -21,7 +25,7 @@ class WsTest extends TestCase
         $this->assertSame($expected, (string) Ws::createFromString($input));
     }
 
-    public function validUrlArray()
+    public function validUrlProvider()
     {
         return [
             'with default port' => [
@@ -52,7 +56,8 @@ class WsTest extends TestCase
     }
 
     /**
-     * @dataProvider invalidArgumentExceptionProvider
+     * @covers ::isValidUri
+     * @dataProvider invalidUrlProvider
      * @param string $uri
      */
     public function testConstructorThrowInvalidArgumentException($uri)
@@ -61,7 +66,7 @@ class WsTest extends TestCase
         Ws::createFromString($uri);
     }
 
-    public function invalidArgumentExceptionProvider()
+    public function invalidUrlProvider()
     {
         return [
             ['http://example.com'],
@@ -71,6 +76,9 @@ class WsTest extends TestCase
         ];
     }
 
+    /**
+     * @covers ::isValidUri
+     */
     public function testModificationFailedWithEmptyAuthority()
     {
         $this->expectException(UriException::class);
@@ -78,5 +86,26 @@ class WsTest extends TestCase
             ->withScheme('')
             ->withHost('')
             ->withPath('//toto');
+    }
+
+    /**
+     * @dataProvider portProvider
+     *
+     * @param string   $uri
+     * @param int|null $port
+     */
+    public function testPort($uri, $port)
+    {
+        $this->assertSame($port, Ws::createFromString($uri)->getPort());
+    }
+
+    public function portProvider()
+    {
+        return [
+            ['ws://www.example.com:443/', 443],
+            ['ws://www.example.com:80/', null],
+            ['ws://www.example.com', null],
+            ['//www.example.com:80/', 80],
+        ];
     }
 }

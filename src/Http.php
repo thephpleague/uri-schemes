@@ -163,7 +163,18 @@ class Http extends AbstractUri implements UriInterface
      */
     protected static function fetchRequestUri(array $server): array
     {
-        $server += ['PHP_SELF' => '', 'QUERY_STRING' => null];
+        $server += [
+            'IIS_WasUrlRewritten' => null,
+            'UNENCODED_URL' => '',
+            'PHP_SELF' => '',
+            'QUERY_STRING' => null,
+        ];
+
+        if ('1' === $server['IIS_WasUrlRewritten'] && '' !== $server['UNENCODED_URL']) {
+            $parts = explode('?', $server['UNENCODED_URL'], 2);
+
+            return [array_shift($parts), array_shift($parts)];
+        }
 
         if (isset($server['REQUEST_URI'])) {
             $parts = explode('?', $server['REQUEST_URI'], 2);

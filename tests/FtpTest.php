@@ -8,11 +8,14 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * @group ftp
+ * @coversDefaultClass League\Uri\Schemes\Ftp
  */
 class FtpTest extends TestCase
 {
     /**
-     * @dataProvider validArray
+     * @covers ::getParser
+     * @covers ::isValidUri
+     * @dataProvider validUrlProvider
      *
      * @param string $uri
      * @param string $expected
@@ -22,7 +25,7 @@ class FtpTest extends TestCase
         $this->assertSame($expected, (string) Ftp::createFromString($uri));
     }
 
-    public function validArray()
+    public function validUrlProvider()
     {
         return [
             'with default port' => [
@@ -53,7 +56,9 @@ class FtpTest extends TestCase
     }
 
     /**
-     * @dataProvider invalidArgumentExceptionProvider
+     * @covers ::isValidUri
+     * @dataProvider invalidUrlProvider
+     *
      * @param string $uri
      */
     public function testConstructorThrowInvalidArgumentException($uri)
@@ -62,7 +67,7 @@ class FtpTest extends TestCase
         Ftp::createFromString($uri);
     }
 
-    public function invalidArgumentExceptionProvider()
+    public function invalidUrlProvider()
     {
         return [
             ['http://example.com'],
@@ -72,6 +77,9 @@ class FtpTest extends TestCase
         ];
     }
 
+    /**
+     * @covers ::isValidUri
+     */
     public function testModificationFailedWithEmptyAuthority()
     {
         $this->expectException(UriException::class);
@@ -79,5 +87,26 @@ class FtpTest extends TestCase
             ->withScheme('')
             ->withHost('')
             ->withPath('//toto');
+    }
+
+    /**
+     * @dataProvider portProvider
+     *
+     * @param string   $uri
+     * @param int|null $port
+     */
+    public function testPort($uri, $port)
+    {
+        $this->assertSame($port, Ftp::createFromString($uri)->getPort());
+    }
+
+    public function portProvider()
+    {
+        return [
+            ['ftp://www.example.com:443/', 443],
+            ['ftp://www.example.com:21/', null],
+            ['ftp://www.example.com', null],
+            ['//www.example.com:21/', 21],
+        ];
     }
 }
