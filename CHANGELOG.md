@@ -1,6 +1,6 @@
 # Changelog
 
-All Notable changes to `League\Uri\Components` will be documented in this file
+All Notable changes to `League\Uri\Schemes` will be documented in this file
 
 ## 1.0.5 - 2017-06-12
 
