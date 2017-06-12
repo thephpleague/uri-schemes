@@ -2,6 +2,24 @@
 
 All Notable changes to `League\Uri\Components` will be documented in this file
 
+## 1.0.5 - 2017-06-12
+
+### Added
+
+- None
+
+### Fixed
+
+- Improve `Http::createFromServer` to handle IIS servers see [PR #3](https://github.com/thephpleague/uri-schemes/pull/3) and [issue #101](https://github.com/thephpleague/uri/issues/101)
+
+### Deprecated
+
+- None
+
+### Removed
+
+- None
+
 ## 1.0.4 - 2017-04-19
 
 ### Added
