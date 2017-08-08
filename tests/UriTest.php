@@ -149,7 +149,8 @@ class UriTest extends TestCase
         $this->assertNotEquals($this->uri, $this->uri->withPort(81));
         $this->assertSame(
             'http://login:pass@secure.example.com/test/query.php?kingkong=toto#doc3',
-            (string) $this->uri->withPort(null));
+            (string) $this->uri->withPort(null)
+        );
     }
 
     /**

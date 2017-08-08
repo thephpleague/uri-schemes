@@ -6,7 +6,7 @@
  * @subpackage League\Uri\Schemes
  * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
  * @license    https://github.com/thephpleague/uri-components/blob/master/LICENSE (MIT License)
- * @version    1.0.5
+ * @version    1.0.6
  * @link       https://github.com/thephpleague/uri-components
  *
  * For the full copyright and license information, please view the LICENSE
@@ -349,7 +349,7 @@ abstract class AbstractUri implements Uri
 
         $component = '';
         $valid_ascii_label_characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-';
-        foreach (explode('.', strtolower($host)) as $label) {
+        foreach (explode('.', mb_strtolower($host, 'UTF-8')) as $label) {
             if (strlen($label) !== strspn($label, $valid_ascii_label_characters)) {
                 $label = (string) idn_to_ascii($label, IDNA_NONTRANSITIONAL_TO_ASCII, INTL_IDNA_VARIANT_UTS46);
             }
