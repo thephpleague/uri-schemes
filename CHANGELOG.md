@@ -2,6 +2,24 @@
 
 All Notable changes to `League\Uri\Schemes` will be documented in this file
 
+## 1.0.6 - 2017-08-10
+
+### Added
+
+- None
+
+### Fixed
+
+- Bug fix label conversion depending on locale [issue #102](https://github.com/thephpleague/uri/issues/102)
+
+### Deprecated
+
+- None
+
+### Remove
+
+- None
+
 ## 1.0.5 - 2017-06-12
 
 ### Added
