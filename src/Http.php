@@ -6,7 +6,7 @@
  * @subpackage League\Uri\Schemes
  * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
  * @license    https://github.com/thephpleague/uri-components/blob/master/LICENSE (MIT License)
- * @version    1.0.5
+ * @version    1.0.6
  * @link       https://github.com/thephpleague/uri-components
  *
  * For the full copyright and license information, please view the LICENSE
@@ -14,7 +14,7 @@
  */
 declare(strict_types=1);
 
-namespace League\Uri\Schemes;
+namespace League\Uri;
 
 use Psr\Http\Message\UriInterface;
 
@@ -163,13 +163,7 @@ class Http extends AbstractUri implements UriInterface
      */
     protected static function fetchRequestUri(array $server): array
     {
-        $server += [
-            'IIS_WasUrlRewritten' => null,
-            'UNENCODED_URL' => '',
-            'PHP_SELF' => '',
-            'QUERY_STRING' => null,
-        ];
-
+        $server += ['IIS_WasUrlRewritten' => null, 'UNENCODED_URL' => '', 'PHP_SELF' => '', 'QUERY_STRING' => null];
         if ('1' === $server['IIS_WasUrlRewritten'] && '' !== $server['UNENCODED_URL']) {
             $parts = explode('?', $server['UNENCODED_URL'], 2);
 
@@ -177,9 +171,10 @@ class Http extends AbstractUri implements UriInterface
         }
 
         if (isset($server['REQUEST_URI'])) {
-            $parts = explode('?', $server['REQUEST_URI'], 2);
+            list($path, ) = explode('?', $server['REQUEST_URI'], 2);
+            $query = ('' !== $server['QUERY_STRING']) ? $server['QUERY_STRING'] : null;
 
-            return [array_shift($parts), $server['QUERY_STRING']];
+            return [$path, $query];
         }
 
         return [$server['PHP_SELF'], $server['QUERY_STRING']];

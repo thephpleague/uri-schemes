@@ -1,11 +1,11 @@
 <?php
 
-namespace LeagueTest\Uri\Schemes;
+namespace LeagueTest\Uri;
 
 use BadMethodCallException;
 use League\Uri\Exception as ParserException;
-use League\Uri\Schemes\Http;
-use League\Uri\Schemes\UriException;
+use League\Uri\Http;
+use League\Uri\UriException;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -149,7 +149,8 @@ class UriTest extends TestCase
         $this->assertNotEquals($this->uri, $this->uri->withPort(81));
         $this->assertSame(
             'http://login:pass@secure.example.com/test/query.php?kingkong=toto#doc3',
-            (string) $this->uri->withPort(null));
+            (string) $this->uri->withPort(null)
+        );
     }
 
     /**

@@ -6,7 +6,7 @@
  * @subpackage League\Uri\Schemes
  * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
  * @license    https://github.com/thephpleague/uri-parser/blob/master/LICENSE (MIT License)
- * @version    1.0.5
+ * @version    1.0.6
  * @link       https://github.com/thephpleague/uri-parser/
  *
  * For the full copyright and license information, please view the LICENSE
@@ -14,9 +14,7 @@
  */
 declare(strict_types=1);
 
-namespace League\Uri\Schemes;
-
-use League\Uri\Exception as ParserException;
+namespace League\Uri;
 
 /**
  * Base Exception class for League Uri Schemes
@@ -25,6 +23,6 @@ use League\Uri\Exception as ParserException;
  * @author  Ignace Nyamagana Butera <nyamsprod@gmail.com>
  * @since   0.3.0
  */
-class UriException extends ParserException
+class UriException extends Exception
 {
 }

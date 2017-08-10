@@ -20,6 +20,10 @@
     <filter>
         <whitelist>
             <directory suffix=".php">src</directory>
+            <exclude>
+                <directory suffix="include.php">src</directory>
+                <directory suffix=".php">src/Schemes</directory>
+            </exclude>
         </whitelist>
     </filter>
 

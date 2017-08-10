@@ -1,14 +1,14 @@
 <?php
 
-namespace LeagueTest\Uri\Schemes;
+namespace LeagueTest\Uri;
 
-use League\Uri\Schemes\Data;
-use League\Uri\Schemes\UriException;
+use League\Uri\Data;
+use League\Uri\UriException;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @group data
- * @coversDefaultClass League\Uri\Schemes\Data
+ * @coversDefaultClass League\Uri\Data
  */
 class DataTest extends TestCase
 {
