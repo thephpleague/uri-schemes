@@ -1,14 +1,14 @@
 <?php
 
-namespace LeagueTest\Uri\Schemes;
+namespace LeagueTest\Uri;
 
-use League\Uri\Schemes\Http;
-use League\Uri\Schemes\UriException;
+use League\Uri\Http;
+use League\Uri\UriException;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @group http
- * @coversDefaultClass League\Uri\Schemes\Http
+ * @coversDefaultClass League\Uri\Http
  */
 class HttpTest extends TestCase
 {

@@ -14,7 +14,7 @@
  */
 declare(strict_types=1);
 
-namespace League\Uri\Schemes;
+namespace League\Uri;
 
 /**
  * Immutable Value object representing a Ws(s) Uri.

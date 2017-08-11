@@ -1,14 +1,14 @@
 <?php
 
-namespace LeagueTest\Uri\Schemes;
+namespace LeagueTest\Uri;
 
-use League\Uri\Schemes\Ftp;
-use League\Uri\Schemes\UriException;
+use League\Uri\Ftp;
+use League\Uri\UriException;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @group ftp
- * @coversDefaultClass League\Uri\Schemes\Ftp
+ * @coversDefaultClass League\Uri\Ftp
  */
 class FtpTest extends TestCase
 {

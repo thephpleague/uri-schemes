@@ -14,11 +14,10 @@
  */
 declare(strict_types=1);
 
-namespace League\Uri\Schemes;
+namespace League\Uri;
 
 use BadMethodCallException;
 use League\Uri\Interfaces\Uri;
-use League\Uri\Parser;
 
 /**
  * common URI Object properties and methods
@@ -201,9 +200,7 @@ abstract class AbstractUri implements Uri
     protected static function getParser(): Parser
     {
         static $parser;
-        if (!$parser instanceof Parser) {
-            $parser = new Parser();
-        }
+        $parser = $parser ?? new Parser();
 
         return $parser;
     }
@@ -270,6 +267,38 @@ abstract class AbstractUri implements Uri
         $this->query = $this->formatQueryAndFragment($query);
         $this->fragment = $this->formatQueryAndFragment($fragment);
         $this->assertValidState();
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function __set(string $property, $value)
+    {
+        throw new BadMethodCallException(sprintf('"%s" is an undefined or inaccessible property', $property));
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function __isset(string $property)
+    {
+        throw new BadMethodCallException(sprintf('"%s" is an undefined or inaccessible property', $property));
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function __unset(string $property)
+    {
+        throw new BadMethodCallException(sprintf('"%s" is an undefined or inaccessible property', $property));
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function __get(string $property)
+    {
+        throw new BadMethodCallException(sprintf('"%s" is an undefined or inaccessible property', $property));
     }
 
     /**
@@ -1072,37 +1101,5 @@ abstract class AbstractUri implements Uri
         $clone->assertValidState();
 
         return $clone;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function __set(string $property, $value)
-    {
-        throw new BadMethodCallException(sprintf('"%s" is an undefined or inaccessible property', $property));
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function __isset(string $property)
-    {
-        throw new BadMethodCallException(sprintf('"%s" is an undefined or inaccessible property', $property));
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function __unset(string $property)
-    {
-        throw new BadMethodCallException(sprintf('"%s" is an undefined or inaccessible property', $property));
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function __get(string $property)
-    {
-        throw new BadMethodCallException(sprintf('"%s" is an undefined or inaccessible property', $property));
     }
 }

@@ -44,12 +44,13 @@
     },
     "autoload": {
         "psr-4": {
-            "League\\Uri\\Schemes\\": "src"
-        }
+            "League\\Uri\\": "src"
+        },
+        "files": ["src/Schemes/deprecated.php"]
     },
     "autoload-dev": {
         "psr-4": {
-            "LeagueTest\\Uri\\Schemes\\": "tests"
+            "LeagueTest\\Uri\\": "tests"
         }
     },
     "scripts": {

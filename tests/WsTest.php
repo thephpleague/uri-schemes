@@ -1,14 +1,14 @@
 <?php
 
-namespace LeagueTest\Uri\Schemes;
+namespace LeagueTest\Uri;
 
-use League\Uri\Schemes\UriException;
-use League\Uri\Schemes\Ws;
+use League\Uri\UriException;
+use League\Uri\Ws;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @group ws
- * @coversDefaultClass League\Uri\Schemes\Ws
+ * @coversDefaultClass League\Uri\Ws
  */
 class WsTest extends TestCase
 {

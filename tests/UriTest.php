@@ -1,11 +1,11 @@
 <?php
 
-namespace LeagueTest\Uri\Schemes;
+namespace LeagueTest\Uri;
 
 use BadMethodCallException;
 use League\Uri\Exception as ParserException;
-use League\Uri\Schemes\Http;
-use League\Uri\Schemes\UriException;
+use League\Uri\Http;
+use League\Uri\UriException;
 use PHPUnit\Framework\TestCase;
 
 /**

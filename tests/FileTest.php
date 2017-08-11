@@ -1,14 +1,14 @@
 <?php
 
-namespace LeagueTest\Uri\Schemes;
+namespace LeagueTest\Uri;
 
-use League\Uri\Schemes\File;
-use League\Uri\Schemes\UriException;
+use League\Uri\File;
+use League\Uri\UriException;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @group file
- * @coversDefaultClass League\Uri\Schemes\File
+ * @coversDefaultClass League\Uri\File
  */
 class FileTest extends TestCase
 {
