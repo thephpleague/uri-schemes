@@ -29,9 +29,6 @@ class HttpTest extends TestCase
         $this->uri = null;
     }
 
-    /**
-     * @covers ::getParser
-     */
     public function testDefaultConstructor()
     {
         $this->assertSame('', (string) Http::createFromString());
@@ -139,6 +136,26 @@ class HttpTest extends TestCase
             ['data:go'],
             ['//data'],
             ['to://to'],
+        ];
+    }
+
+    /**
+     * @covers ::assertValidState
+     * @dataProvider invalidURI
+     *
+     * @param mixed $uri
+     */
+    public function testCreateFromInvalidUrlKO($uri)
+    {
+        $this->expectException(UriException::class);
+        Http::createFromString($uri);
+    }
+
+    public function invalidURI()
+    {
+        return [
+            ['http://user@:80'],
+            ['//user@:80'],
         ];
     }
 

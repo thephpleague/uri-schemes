@@ -6,7 +6,7 @@
  * @subpackage League\Uri\Schemes
  * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
  * @license    https://github.com/thephpleague/uri-components/blob/master/LICENSE (MIT License)
- * @version    1.0.6
+ * @version    1.1.0
  * @link       https://github.com/thephpleague/uri-components
  *
  * For the full copyright and license information, please view the LICENSE
@@ -17,7 +17,8 @@ declare(strict_types=1);
 namespace League\Uri;
 
 use BadMethodCallException;
-use League\Uri\Interfaces\Uri;
+use League\Uri;
+use League\Uri\Interfaces\Uri as UriInterface;
 
 /**
  * common URI Object properties and methods
@@ -27,7 +28,7 @@ use League\Uri\Interfaces\Uri;
  * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
  * @since      1.0.0
  */
-abstract class AbstractUri implements Uri
+abstract class AbstractUri implements UriInterface
 {
     /**
      * Invalid Characters
@@ -160,7 +161,7 @@ abstract class AbstractUri implements Uri
      */
     public static function createFromString(string $uri = ''): self
     {
-        $components = self::getParser()(self::filterString($uri));
+        $components = Uri\parse(self::filterString($uri));
 
         return new static(
             $components['scheme'],
@@ -193,19 +194,6 @@ abstract class AbstractUri implements Uri
     }
 
     /**
-     * Returns the League URI Parser
-     *
-     * @return Parser
-     */
-    protected static function getParser(): Parser
-    {
-        static $parser;
-        $parser = $parser ?? new Parser();
-
-        return $parser;
-    }
-
-    /**
      * Create a new instance from a hash of parse_url parts
      *
      * @param array $components a hash representation of the URI similar
@@ -220,7 +208,7 @@ abstract class AbstractUri implements Uri
             'port' => null, 'path' => '', 'query' => null, 'fragment' => null,
         ];
 
-        if (null !== $components['host'] && !self::getParser()->isHost($components['host'])) {
+        if (null !== $components['host'] && !Uri\is_host($components['host'])) {
             throw UriException::createFromInvalidHost($components['host']);
         }
 
@@ -332,7 +320,7 @@ abstract class AbstractUri implements Uri
         }
 
         $user = preg_replace_callback(
-            '/(?:[^'.self::REGEXP_CHARS_UNRESERVED.self::REGEXP_CHARS_SUBDELIM.'%]++|%(?![A-Fa-f0-9]{2}))/',
+            '/(?:[^%'.self::REGEXP_CHARS_UNRESERVED.self::REGEXP_CHARS_SUBDELIM.']++|%(?![A-Fa-f0-9]{2}))/',
             [AbstractUri::class, 'urlEncodeMatch'],
             $user
         );
@@ -342,7 +330,7 @@ abstract class AbstractUri implements Uri
         }
 
         return $user.':'.preg_replace_callback(
-            '/(?:[^'.self::REGEXP_CHARS_UNRESERVED.self::REGEXP_CHARS_SUBDELIM.'%:]++|%(?![A-Fa-f0-9]{2}))/',
+            '/(?:[^%:'.self::REGEXP_CHARS_UNRESERVED.self::REGEXP_CHARS_SUBDELIM.']++|%(?![A-Fa-f0-9]{2}))/',
             [AbstractUri::class, 'urlEncodeMatch'],
             $password
         );
@@ -451,7 +439,7 @@ abstract class AbstractUri implements Uri
     protected function formatPath(string $path): string
     {
         return preg_replace_callback(
-            '/(?:[^'.self::REGEXP_CHARS_UNRESERVED.self::REGEXP_CHARS_SUBDELIM.'%:@\/]++|%(?![A-Fa-f0-9]{2}))/',
+            '/(?:[^'.self::REGEXP_CHARS_UNRESERVED.self::REGEXP_CHARS_SUBDELIM.'%:@\/}{]++|%(?![A-Fa-f0-9]{2}))/',
             [AbstractUri::class, 'urlEncodeMatch'],
             $path
         );
@@ -854,7 +842,6 @@ abstract class AbstractUri implements Uri
     {
         $user_info = null;
         if ('' != $user) {
-            list($user, $password) = $this->filterUserInfo($user, $password);
             $user_info = $this->formatUserInfo($user, $password);
         }
 
@@ -868,33 +855,6 @@ abstract class AbstractUri implements Uri
         $clone->assertValidState();
 
         return $clone;
-    }
-
-    /**
-     * Filter the URI user info component
-     *
-     * @param string|null $user     the URI user component
-     * @param string|null $password the URI password component
-     *
-     * @return string|null
-     */
-    protected function filterUserInfo($user = null, $password = null)
-    {
-        $user = $this->filterString($user);
-        if (strlen($user) !== strcspn($user, ':@/?#')) {
-            throw new UriException(sprintf('The encoded user `%s` contains invalid characters', $user));
-        }
-
-        if ('' == $password) {
-            return [$user, null];
-        }
-
-        $password = $this->filterString($password);
-        if (strlen($password) !== strcspn($password, '@/?#')) {
-            throw new UriException(sprintf('The encoded password `%s` contains invalid characters', $password));
-        }
-
-        return [$user, $password];
     }
 
     /**
@@ -919,7 +879,7 @@ abstract class AbstractUri implements Uri
             $host = null;
         }
 
-        if (null !== $host && !self::getParser()->isHost($host)) {
+        if (null !== $host && !Uri\is_host($host)) {
             throw UriException::createFromInvalidHost($host);
         }
 

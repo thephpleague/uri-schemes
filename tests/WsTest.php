@@ -13,7 +13,6 @@ use PHPUnit\Framework\TestCase;
 class WsTest extends TestCase
 {
     /**
-     * @covers ::getParser
      * @covers ::isValidUri
      * @dataProvider validUrlProvider
      *

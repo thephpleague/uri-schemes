@@ -13,7 +13,6 @@ use PHPUnit\Framework\TestCase;
 class DataTest extends TestCase
 {
     /**
-     * @covers ::getParser
      * @covers ::isValidUri
      * @covers ::filterPath
      */

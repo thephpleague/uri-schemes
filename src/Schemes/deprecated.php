@@ -29,7 +29,7 @@ if (!class_exists(File::class)) {
     /**
      * @deprecated use instead {@link Uri\File}
      */
-    class Data
+    class File
     {
     }
 }
@@ -39,7 +39,7 @@ if (!class_exists(Ftp::class)) {
     /**
      * @deprecated use instead {@link Uri\Ftp}
      */
-    class Data
+    class Ftp
     {
     }
 }
@@ -49,7 +49,7 @@ if (!class_exists(Http::class)) {
     /**
      * @deprecated use instead {@link Uri\Http}
      */
-    class Data
+    class Http
     {
     }
 }
@@ -59,7 +59,7 @@ if (!class_exists(UriException::class)) {
     /**
      * @deprecated use instead {@link Uri\UriException}
      */
-    class Data
+    class UriException
     {
     }
 }
@@ -69,7 +69,7 @@ if (!class_exists(Ws::class)) {
     /**
      * @deprecated use instead {@link Uri\Ws}
      */
-    class Data
+    class Ws
     {
     }
 }

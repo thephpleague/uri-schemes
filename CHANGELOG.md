@@ -2,6 +2,37 @@
 
 All Notable changes to `League\Uri\Schemes` will be documented in this file
 
+## 1.1.0 - TBD
+
+### Added
+
+- `League\Uri\Uri` default URI object which validate RFC3986
+- `League\Uri\AbstractUri`
+- `League\Uri\Data`
+- `League\Uri\File`
+- `League\Uri\Ftp`
+- `League\Uri\Http`
+- `League\Uri\UriException`
+- `League\Uri\Ws`
+
+### Fixed
+
+- improve path and user info component encoding
+
+### Deprecated
+
+- `League\Uri\Schemes\AbstractUri` replace by `League\Uri\AbstractUri`
+- `League\Uri\Schemes\Data` replace by `League\Uri\Data`
+- `League\Uri\Schemes\File` replace by `League\Uri\File`
+- `League\Uri\Schemes\Ftp` replace by `League\Uri\Ftp`
+- `League\Uri\Schemes\Http` replace by `League\Uri\Http`
+- `League\Uri\Schemes\UriException` replace by `League\Uri\UriException`
+- `League\Uri\Schemes\Ws` replace by `League\Uri\Ws`
+
+### Remove
+
+- None
+
 ## 1.0.6 - 2017-08-10
 
 ### Added

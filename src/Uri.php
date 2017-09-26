@@ -12,9 +12,30 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+declare(strict_types=1);
 
-namespace League\Uri\Schemes;
+namespace League\Uri;
 
-use League\Uri;
+/**
+ * Immutable Value object representing a RFC3986 Uri.
+ *
+ * @package    League\Uri
+ * @subpackage League\Uri\Schemes
+ * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
+ * @since      1.1.0
+ */
+class Uri extends AbstractUri
+{
+    /**
+     * @inheritdoc
+     */
+    protected static $supported_schemes = [];
 
-class_exists(Uri\UriException::class);
+    /**
+     * @inheritdoc
+     */
+    protected function isValidUri(): bool
+    {
+        return true;
+    }
+}

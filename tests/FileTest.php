@@ -13,7 +13,6 @@ use PHPUnit\Framework\TestCase;
 class FileTest extends TestCase
 {
     /**
-     * @covers ::getParser
      * @covers ::formatHost
      */
     public function testDefaultConstructor()

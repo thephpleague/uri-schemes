@@ -13,7 +13,6 @@ use PHPUnit\Framework\TestCase;
 class FtpTest extends TestCase
 {
     /**
-     * @covers ::getParser
      * @covers ::isValidUri
      * @dataProvider validUrlProvider
      *

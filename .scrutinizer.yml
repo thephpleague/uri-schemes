@@ -1,6 +1,8 @@
 filter:
     paths: [src/*]
-    excluded_paths: [tests/*]
+    excluded_paths:
+        - tests/*
+        - src/Schemes/deprecated.php
 checks:
     php:
         code_rating: true
@@ -11,7 +13,7 @@ tools:
     php_code_coverage: false
     php_loc:
         enabled: true
-        excluded_dirs: [tests, vendor]
+        excluded_dirs: [tests, vendor, src/Schemes]
     php_cpd:
         enabled: true
-        excluded_dirs: [tests, vendor]
+        excluded_dirs: [tests, vendor, src/Schemes]

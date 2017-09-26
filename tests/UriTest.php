@@ -5,6 +5,7 @@ namespace LeagueTest\Uri;
 use BadMethodCallException;
 use League\Uri\Exception as ParserException;
 use League\Uri\Http;
+use League\Uri\Uri;
 use League\Uri\UriException;
 use PHPUnit\Framework\TestCase;
 
@@ -21,7 +22,7 @@ class UriTest extends TestCase
 
     protected function setUp()
     {
-        $this->uri = Http::createFromString(
+        $this->uri = Uri::createFromString(
             'http://login:pass@secure.example.com:443/test/query.php?kingkong=toto#doc3'
         );
     }
@@ -32,7 +33,6 @@ class UriTest extends TestCase
     }
 
     /**
-     * @covers ::getParser
      * @covers ::__toString
      * @covers ::formatHost
      * @covers ::formatQueryAndFragment
@@ -44,7 +44,7 @@ class UriTest extends TestCase
     {
         $raw = 'HtTpS://MaStEr.eXaMpLe.CoM:/%7ejohndoe/%a1/in+dex.php?fào.%bar=v%61lue#fragment';
         $normalized = 'https://master.example.com/%7ejohndoe/%a1/in+dex.php?f%C3%A0o.%bar=v%61lue#fragment';
-        $this->assertSame($normalized, (string) Http::createFromString($raw));
+        $this->assertSame($normalized, (string) Uri::createFromString($raw));
     }
 
     /**
@@ -55,12 +55,11 @@ class UriTest extends TestCase
     {
         $this->assertSame(
             'http://xn--bb-bjab.be./path',
-            (string) Http::createFromString('http://Bébé.BE./path')
+            (string) Uri::createFromString('http://Bébé.BE./path')
         );
     }
 
     /**
-     * @covers ::getParser
      * @covers ::getUriString
      * @covers ::__toString
      * @covers ::formatUserInfo
@@ -69,7 +68,7 @@ class UriTest extends TestCase
     public function testPreserveComponentsOnInstantiation()
     {
         $uri = 'http://:@example.com?#';
-        $this->assertSame($uri, (string) Http::createFromString($uri));
+        $this->assertSame($uri, (string) Uri::createFromString($uri));
     }
 
     /**
@@ -201,7 +200,7 @@ class UriTest extends TestCase
     public function testWithInvalidCharacters()
     {
         $this->expectException(ParserException::class);
-        Http::createFromString("http://example.com/path\n");
+        Uri::createFromString("http://example.com/path\n");
     }
 
     /**
@@ -219,7 +218,7 @@ class UriTest extends TestCase
     public function testWithPathFailedWithInvalidChars()
     {
         $this->expectException(UriException::class);
-        Http::createFromString('http://example.com')->withPath('#24');
+        Uri::createFromString('http://example.com')->withPath('#24');
     }
 
     /**
@@ -228,7 +227,7 @@ class UriTest extends TestCase
     public function testWithPathFailedWithInvalidPathRelativeToTheAuthority()
     {
         $this->expectException(UriException::class);
-        Http::createFromString('http://example.com')->withPath('foo/bar');
+        Uri::createFromString('http://example.com')->withPath('foo/bar');
     }
 
     /**
@@ -237,7 +236,7 @@ class UriTest extends TestCase
     public function testWithQueryFailedWithInvalidChars()
     {
         $this->expectException(UriException::class);
-        Http::createFromString('http://example.com')->withQuery('?#');
+        Uri::createFromString('http://example.com')->withQuery('?#');
     }
 
     /**
@@ -246,7 +245,7 @@ class UriTest extends TestCase
     public function testModificationFailedWithUnsupportedPort()
     {
         $this->expectException(UriException::class);
-        Http::createFromString('http://example.com/path')->withPort(12365894);
+        Uri::createFromString('http://example.com/path')->withPort(12365894);
     }
 
     /**
@@ -255,48 +254,7 @@ class UriTest extends TestCase
     public function testModificationFailedWithInvalidHost()
     {
         $this->expectException(UriException::class);
-        Http::createFromString('http://example.com/path')->withHost('%23');
-    }
-
-    /**
-     * @covers ::assertValidState
-     * @dataProvider invalidUserInfoProvider
-     *
-     * @param mixed $user
-     * @param mixed $password
-     */
-    public function testModificationFailedWithInvalidUserInfo($user, $password)
-    {
-        $this->expectException(UriException::class);
-        Http::createFromString('http://example.com/path')->withUserInfo($user, $password);
-    }
-
-    public function invalidUserInfoProvider()
-    {
-        return [
-            ['login:', null],
-            ['login', 'password@'],
-        ];
-    }
-
-    /**
-     * @covers ::assertValidState
-     * @dataProvider invalidURI
-     *
-     * @param mixed $uri
-     */
-    public function testCreateFromInvalidUrlKO($uri)
-    {
-        $this->expectException(UriException::class);
-        Http::createFromString($uri);
-    }
-
-    public function invalidURI()
-    {
-        return [
-            ['http://user@:80'],
-            ['//user@:80'],
-        ];
+        Uri::createFromString('http://example.com/path')->withHost('%23');
     }
 
     /**
@@ -307,7 +265,7 @@ class UriTest extends TestCase
     public function testModificationFailedWithMissingAuthority($path)
     {
         $this->expectException(UriException::class);
-        Http::createFromString('http://example.com/path')
+        Uri::createFromString('http://example.com/path')
             ->withScheme('')
             ->withHost('')
             ->withPath($path);
@@ -334,13 +292,13 @@ class UriTest extends TestCase
     public function testEmptyValueDetection()
     {
         $expected = '//0:0@0/0?0#0';
-        $this->assertSame($expected, Http::createFromString($expected)->__toString());
+        $this->assertSame($expected, Uri::createFromString($expected)->__toString());
     }
 
     public function testPathDetection()
     {
         $expected = 'foo/bar:';
-        $this->assertSame($expected, Http::createFromString($expected)->getPath());
+        $this->assertSame($expected, Uri::createFromString($expected)->getPath());
     }
 
     /**
@@ -348,7 +306,7 @@ class UriTest extends TestCase
      */
     public function testSetState()
     {
-        $uri = Http::createFromString('https://a:b@c:442/d?q=r#f');
+        $uri = Uri::createFromString('https://a:b@c:442/d?q=r#f');
         $generateUri = eval('return '.var_export($uri, true).';');
         $this->assertEquals($uri, $generateUri);
     }
@@ -360,15 +318,15 @@ class UriTest extends TestCase
     {
         $uri = '//0:0@0/0?0#0';
         $this->assertEquals(
-            Http::createFromComponents(parse_url($uri)),
-            Http::createFromString($uri)
+            Uri::createFromComponents(parse_url($uri)),
+            Uri::createFromString($uri)
         );
     }
 
     public function testCreateFromComponentsTrowsException()
     {
         $this->expectException(ParserException::class);
-        Http::createFromComponents(['host' => '[127.0.0.1]']);
+        Uri::createFromComponents(['host' => '[127.0.0.1]']);
     }
 
     /**
@@ -377,7 +335,7 @@ class UriTest extends TestCase
     public function testInvalidSetterThrowException()
     {
         $this->expectException(BadMethodCallException::class);
-        Http::createFromString()->host = 'thephpleague.com';
+        Uri::createFromString()->host = 'thephpleague.com';
     }
 
     /**
@@ -386,7 +344,7 @@ class UriTest extends TestCase
     public function testInvalidGetterThrowException()
     {
         $this->expectException(BadMethodCallException::class);
-        Http::createFromString()->path;
+        Uri::createFromString()->path;
     }
 
     /**
@@ -395,7 +353,7 @@ class UriTest extends TestCase
     public function testInvalidIssetThrowException()
     {
         $this->expectException(BadMethodCallException::class);
-        isset(Http::createFromString()->path);
+        isset(Uri::createFromString()->path);
     }
 
     /**
@@ -404,6 +362,48 @@ class UriTest extends TestCase
     public function testInvalidUnssetThrowException()
     {
         $this->expectException(BadMethodCallException::class);
-        unset(Http::createFromString()->path);
+        unset(Uri::createFromString()->path);
+    }
+
+    /**
+     * @covers ::filterPath
+     */
+    public function testReservedCharsInPathUnencoded()
+    {
+        $uri = Uri::createFromString()
+            ->withHost('api.linkedin.com')
+            ->withScheme('https')
+            ->withPath('/v1/people/~:(first-name,last-name,email-address,picture-url)');
+
+        $this->assertContains(
+            '/v1/people/~:(first-name,last-name,email-address,picture-url)',
+            (string) $uri
+        );
+    }
+
+    /**
+     * @dataProvider userInfoProvider
+     * @param mixed $user
+     * @param mixed $credential
+     * @param mixed $expected
+     */
+    public function testWithUserInfoEncodesUsernameAndPassword($user, $credential, $expected)
+    {
+        $uri = Uri::createFromString('https://user:pass@local.example.com:3001/foo?bar=baz#quz');
+        $new = $uri->withUserInfo($user, $credential);
+        $this->assertSame($expected, $new->getUserInfo());
+    }
+
+    public function userInfoProvider()
+    {
+        return [
+            'no password' => ['login:', null, 'login%3A'],
+            'password with delimiter' => ['login', 'password@', 'login:password%40'],
+            'valid-chars' => ['foo', 'bar', 'foo:bar'],
+            'colon'       => ['foo:bar', 'baz:bat', 'foo%3Abar:baz:bat'],
+            'at'          => ['user@example.com', 'cred@foo', 'user%40example.com:cred%40foo'],
+            'percent'     => ['%25', '%25', '%25:%25'],
+            'invalid-enc' => ['%ZZ', '%GG', '%25ZZ:%25GG'],
+        ];
     }
 }
