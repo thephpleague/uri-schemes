@@ -197,6 +197,12 @@ class UriTest extends TestCase
         );
     }
 
+    public function testWithSchemeFailedWithInvalidSchemeValue()
+    {
+        $this->expectException(UriException::class);
+        Uri::createFromString('http://example.com')->withScheme('tété');
+    }
+
     public function testWithInvalidCharacters()
     {
         $this->expectException(ParserException::class);
@@ -240,7 +246,8 @@ class UriTest extends TestCase
     }
 
     /**
-     * @covers ::assertValidState
+     * @covers ::withPort
+     * @covers ::filterPort
      */
     public function testModificationFailedWithUnsupportedPort()
     {
@@ -249,7 +256,7 @@ class UriTest extends TestCase
     }
 
     /**
-     * @covers ::assertValidState
+     * @covers ::withHost
      */
     public function testModificationFailedWithInvalidHost()
     {

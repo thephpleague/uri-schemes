@@ -17,8 +17,9 @@ declare(strict_types=1);
 namespace League\Uri;
 
 use BadMethodCallException;
-use League\Uri;
 use League\Uri\Interfaces\Uri as UriInterface;
+use function League\Uri\is_host;
+use function League\Uri\parse;
 
 /**
  * common URI Object properties and methods
@@ -161,7 +162,7 @@ abstract class AbstractUri implements UriInterface
      */
     public static function createFromString(string $uri = ''): self
     {
-        $components = Uri\parse(self::filterString($uri));
+        $components = parse($uri);
 
         return new static(
             $components['scheme'],
@@ -208,7 +209,7 @@ abstract class AbstractUri implements UriInterface
             'port' => null, 'path' => '', 'query' => null, 'fragment' => null,
         ];
 
-        if (null !== $components['host'] && !Uri\is_host($components['host'])) {
+        if (null !== $components['host'] && !is_host($components['host'])) {
             throw UriException::createFromInvalidHost($components['host']);
         }
 
@@ -292,17 +293,24 @@ abstract class AbstractUri implements UriInterface
     /**
      * Format the Scheme and Host component
      *
-     * @param string|null $component
+     * @param string|null $scheme
      *
      * @return string|null
      */
-    protected function formatScheme(string $component = null)
+    protected function formatScheme(string $scheme = null)
     {
-        if ('' == $component) {
+        if (in_array($scheme, ['', null], true)) {
+            return $scheme;
+        }
+
+        $component = strtolower($scheme);
+
+        if (strlen($component) === strspn($component, Parser::SCHEME_VALID_CHARS)
+            && false !== strpos(Parser::SCHEME_VALID_STARTING_CHARS, $component[0])) {
             return $component;
         }
 
-        return strtolower($component);
+        throw new UriException(sprintf('The submitted scheme `%s` is invalid', $scheme));
     }
 
     /**
@@ -879,7 +887,7 @@ abstract class AbstractUri implements UriInterface
             $host = null;
         }
 
-        if (null !== $host && !Uri\is_host($host)) {
+        if (null !== $host && !is_host($host)) {
             throw UriException::createFromInvalidHost($host);
         }
 

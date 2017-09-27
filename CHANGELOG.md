@@ -6,6 +6,8 @@ All Notable changes to `League\Uri\Schemes` will be documented in this file
 
 ### Added
 
+- `League\Uri\create` a function to ease URI object creation
+- `League\Uri\Factory`
 - `League\Uri\Uri` default URI object which validate RFC3986
 - `League\Uri\AbstractUri`
 - `League\Uri\Data`
