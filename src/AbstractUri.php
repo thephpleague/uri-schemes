@@ -19,6 +19,8 @@ namespace League\Uri;
 use BadMethodCallException;
 use League\Uri\Interfaces\Uri as UriInterface;
 use function League\Uri\is_host;
+use function League\Uri\is_port;
+use function League\Uri\is_scheme;
 use function League\Uri\parse;
 
 /**
@@ -304,9 +306,7 @@ abstract class AbstractUri implements UriInterface
         }
 
         $component = strtolower($scheme);
-
-        if (strlen($component) === strspn($component, Parser::SCHEME_VALID_CHARS)
-            && false !== strpos(Parser::SCHEME_VALID_STARTING_CHARS, $component[0])) {
+        if (is_scheme($scheme)) {
             return $component;
         }
 
@@ -950,7 +950,7 @@ abstract class AbstractUri implements UriInterface
      */
     protected static function filterPort($port)
     {
-        if (null !== $port && (!is_int($port) || $port < 1 || $port > 65535)) {
+        if (null !== $port && !is_port($port)) {
             throw UriException::createFromInvalidPort($port);
         }
 
@@ -985,10 +985,6 @@ abstract class AbstractUri implements UriInterface
     public function withPath($path): self
     {
         $path = $this->filterString($path);
-        if (strlen($path) != strcspn($path, '?#')) {
-            throw new UriException(sprintf('The encoded path `%s` contains invalid characters', $path));
-        }
-
         $path = $this->filterPath($path);
         if ($path === $this->path) {
             return $this;
@@ -1022,10 +1018,6 @@ abstract class AbstractUri implements UriInterface
     public function withQuery($query): self
     {
         $query = $this->filterString($query);
-        if (false !== strpos($query, '#')) {
-            throw new UriException(sprintf('The submitted query `%s` contains invalid characters', $query));
-        }
-
         $query = '' == $query ? null : $this->formatQueryAndFragment($query);
         if ($query === $this->query) {
             return $this;

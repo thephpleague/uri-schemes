@@ -237,15 +237,6 @@ class UriTest extends TestCase
     }
 
     /**
-     * @covers ::assertValidState
-     */
-    public function testWithQueryFailedWithInvalidChars()
-    {
-        $this->expectException(UriException::class);
-        Uri::createFromString('http://example.com')->withQuery('?#');
-    }
-
-    /**
      * @covers ::withPort
      * @covers ::filterPort
      */

@@ -20,6 +20,7 @@ All Notable changes to `League\Uri\Schemes` will be documented in this file
 ### Fixed
 
 - improve path and user info component encoding
+- enable invalid characters in with* method they are safely encoded against component rules
 
 ### Deprecated
 
