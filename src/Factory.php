@@ -14,7 +14,7 @@ declare(strict_types=1);
 
 namespace League\Uri;
 
-use InvalidArgumentException;
+use Exception as PhpException;
 use League\Uri\Interfaces\Uri as LeagueUriInterface;
 use Psr\Http\Message\UriInterface;
 use ReflectionClass;
@@ -71,21 +71,20 @@ class Factory
      * @param string $scheme    valid URI scheme
      * @param string $className classname which implements LeagueUriInterface or UriInterface
      *
-     * @throws InvalidArgumentException if the scheme is invalid
-     * @throws InvalidArgumentException if the class does not implements a supported interface
+     * @throws Exception if the scheme is invalid
+     * @throws Exception if the class does not implements a supported interface
      */
     protected function addMap(string $scheme, string $className)
     {
-        if ('' !== $scheme && (strlen($scheme) !== strspn($scheme, Parser::SCHEME_VALID_CHARS)
-            || false === strpos(Parser::SCHEME_VALID_STARTING_CHARS, $scheme[0]))) {
-            throw new InvalidArgumentException(sprintf('Please verify the submitted scheme `%s`', $scheme));
+        if (!is_scheme($scheme)) {
+            throw new Exception(sprintf('Please verify the submitted scheme `%s`', $scheme));
         }
 
         if (empty(array_intersect((new ReflectionClass($className))->getInterfaceNames(), self::$uri_interfaces))) {
-            throw new InvalidArgumentException(sprintf('Please verify the submitted class `%s`', $className));
+            throw new Exception(sprintf('Please verify the submitted class `%s`', $className));
         }
 
-        $this->map[strtolower($scheme)] = $className;
+        $this->map[$scheme] = $className;
     }
 
     /**
@@ -102,7 +101,8 @@ class Factory
      * @param string $uri
      * @param mixed  $base_uri
      *
-     * @throws InvalidArgumentException if the base_uri is not absolute
+     * @throws Exception if the base_uri is not absolute
+     * @throws Exception if the uri is really malformed or an invalid URI
      *
      * @return LeagueUriInterface|UriInterface
      */
@@ -120,14 +120,14 @@ class Factory
         }
 
         if ('' === $base_uri->getScheme()) {
-            throw new InvalidArgumentException(sprintf('The submitted base uri %s must be an absolute URI', $base_uri));
+            throw new Exception(sprintf('The submitted base uri %s must be an absolute URI', $base_uri));
         }
 
         try {
             $uri = $this->newInstance($components, get_class($base_uri));
 
             return $this->resolve($uri, $base_uri);
-        } catch (InvalidArgumentException $e) {
+        } catch (PhpException $e) {
             $className = $this->map[strtolower($components['scheme'] ?? '')] ?? Uri::class;
             $uri = $this->newInstance($components, $className);
 
@@ -178,15 +178,15 @@ class Factory
                 ->withPath($this->removeDotSegments($uri->getPath()));
         }
 
-        list($target_user, $target_pass) = explode(':', $base_uri->getUserInfo(), 2) + ['', null];
-        list($target_path, $target_query) = $this->resolvePathAndQuery($uri, $base_uri);
+        list($base_uri_user, $base_uri_pass) = explode(':', $base_uri->getUserInfo(), 2) + ['', null];
+        list($uri_path, $uri_query) = $this->resolvePathAndQuery($uri, $base_uri);
 
         return $uri
-            ->withPath($this->removeDotSegments($target_path))
-            ->withQuery($target_query)
+            ->withPath($this->removeDotSegments($uri_path))
+            ->withQuery($uri_query)
             ->withHost($base_uri->getHost())
             ->withPort($base_uri->getPort())
-            ->withUserInfo($target_user, $target_pass)
+            ->withUserInfo($base_uri_user, $base_uri_pass)
             ->withScheme($base_uri->getScheme())
         ;
     }

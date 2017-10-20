@@ -18,10 +18,6 @@ namespace League\Uri;
 
 use BadMethodCallException;
 use League\Uri\Interfaces\Uri as UriInterface;
-use function League\Uri\is_host;
-use function League\Uri\is_port;
-use function League\Uri\is_scheme;
-use function League\Uri\parse;
 
 /**
  * common URI Object properties and methods
