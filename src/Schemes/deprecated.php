@@ -2,9 +2,9 @@
 
 namespace League\Uri\Schemes;
 
-use League\Uri;
+use League\Uri as Base;
 
-class_alias(Uri\AbstractUri::class, AbstractUri::class);
+class_alias(Base\AbstractUri::class, AbstractUri::class);
 if (!class_exists(AbstractUri::class)) {
     /**
      * @deprecated use instead {@link Uri\AbstractUri}
@@ -14,7 +14,7 @@ if (!class_exists(AbstractUri::class)) {
     }
 }
 
-class_alias(Uri\Data::class, Data::class);
+class_alias(Base\Data::class, Data::class);
 if (!class_exists(Data::class)) {
     /**
      * @deprecated use instead {@link Uri\Data}
@@ -24,7 +24,7 @@ if (!class_exists(Data::class)) {
     }
 }
 
-class_alias(Uri\File::class, File::class);
+class_alias(Base\File::class, File::class);
 if (!class_exists(File::class)) {
     /**
      * @deprecated use instead {@link Uri\File}
@@ -34,7 +34,7 @@ if (!class_exists(File::class)) {
     }
 }
 
-class_alias(Uri\Ftp::class, Ftp::class);
+class_alias(Base\Ftp::class, Ftp::class);
 if (!class_exists(Ftp::class)) {
     /**
      * @deprecated use instead {@link Uri\Ftp}
@@ -44,7 +44,7 @@ if (!class_exists(Ftp::class)) {
     }
 }
 
-class_alias(Uri\Http::class, Http::class);
+class_alias(Base\Http::class, Http::class);
 if (!class_exists(Http::class)) {
     /**
      * @deprecated use instead {@link Uri\Http}
@@ -54,7 +54,7 @@ if (!class_exists(Http::class)) {
     }
 }
 
-class_alias(Uri\UriException::class, UriException::class);
+class_alias(Base\UriException::class, UriException::class);
 if (!class_exists(UriException::class)) {
     /**
      * @deprecated use instead {@link Uri\UriException}
@@ -64,12 +64,22 @@ if (!class_exists(UriException::class)) {
     }
 }
 
-class_alias(Uri\Ws::class, Ws::class);
+class_alias(Base\Ws::class, Ws::class);
 if (!class_exists(Ws::class)) {
     /**
      * @deprecated use instead {@link Uri\Ws}
      */
     class Ws
+    {
+    }
+}
+
+class_alias(Base\Uri::class, Uri::class);
+if (!class_exists(Uri::class)) {
+    /**
+     * @deprecated use instead {@link Uri\Ws}
+     */
+    class Uri
     {
     }
 }
