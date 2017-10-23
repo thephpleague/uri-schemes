@@ -14,7 +14,6 @@ declare(strict_types=1);
 
 namespace League\Uri;
 
-use Exception as PhpException;
 use League\Uri\Interfaces\Uri as LeagueUriInterface;
 use Psr\Http\Message\UriInterface;
 use ReflectionClass;
@@ -102,41 +101,66 @@ class Factory
      * @param mixed  $base_uri
      *
      * @throws Exception if the base_uri is not absolute
-     * @throws Exception if the uri is really malformed or an invalid URI
      *
      * @return LeagueUriInterface|UriInterface
      */
     public function create(string $uri, $base_uri = null)
     {
         $components = parse($uri);
-
         if (null === $base_uri) {
-            $className = $this->map[strtolower($components['scheme'] ?? '')] ?? Uri::class;
+            $className = $this->getClassName($components['scheme']);
+
             return $this->newInstance($components, $className);
         }
 
+        $base_uri = $this->filterBaseUri($base_uri);
+        $className = $this->getClassName($components['scheme'], $base_uri);
+
+        return $this->resolve($this->newInstance($components, $className), $base_uri);
+    }
+
+    /**
+     * Returns the className to use to instantiate the URI object.
+     *
+     * @param string|null $scheme   URI scheme component
+     * @param mixed       $base_uri base URI object
+     *
+     * @return string
+     */
+    protected function getClassName($scheme, $base_uri = null): string
+    {
+        $scheme = strtolower($scheme ?? '');
+        if (isset($base_uri) && in_array($scheme, [$base_uri->getScheme(), ''])) {
+            return get_class($base_uri);
+        }
+
+        return $this->map[$scheme] ?? Uri::class;
+    }
+
+    /**
+     * Returns the Base URI.
+     *
+     * @param LeagueUriInterface|UriInterface|string $base_uri
+     *
+     * @throws Exception if the Base Uri is not an absolute URI
+     *
+     * @return LeagueUriInterface|UriInterface
+     */
+    protected function filterBaseUri($base_uri)
+    {
         if (!$base_uri instanceof UriInterface && !$base_uri instanceof LeagueUriInterface) {
             $base_uri = $this->create($base_uri);
         }
 
-        if ('' === $base_uri->getScheme()) {
-            throw new Exception(sprintf('The submitted base uri %s must be an absolute URI', $base_uri));
+        if ('' !== $base_uri->getScheme()) {
+            return $base_uri;
         }
 
-        try {
-            $uri = $this->newInstance($components, get_class($base_uri));
-
-            return $this->resolve($uri, $base_uri);
-        } catch (PhpException $e) {
-            $className = $this->map[strtolower($components['scheme'] ?? '')] ?? Uri::class;
-            $uri = $this->newInstance($components, $className);
-
-            return $this->resolve($uri, $base_uri);
-        }
+        throw new Exception(sprintf('The submitted base uri %s must be an absolute URI', $base_uri));
     }
 
     /**
-     * create a new URI object from its name using Reflection
+     * Creates a new URI object from its name using Reflection.
      *
      * @param array  $components
      * @param string $className
@@ -158,7 +182,7 @@ class Factory
     }
 
     /**
-     * Resolve an URI against a base URI
+     * Resolve an URI against a base URI.
      *
      * @param LeagueUriInterface|UriInterface $uri
      * @param LeagueUriInterface|UriInterface $base_uri
@@ -192,7 +216,7 @@ class Factory
     }
 
     /**
-     * Remove dot segments from the URI path
+     * Remove dot segments from the URI path.
      *
      * @internal used internally to create an URI object
      *
@@ -216,7 +240,7 @@ class Factory
     }
 
     /**
-     * Remove dot segments
+     * Remove dot segments.
      *
      * @param array  $carry
      * @param string $segment
@@ -239,7 +263,7 @@ class Factory
     }
 
     /**
-     * Resolve an URI path and query component
+     * Resolve an URI path and query component.
      *
      * @internal used internally to create an URI object
      *
@@ -258,17 +282,17 @@ class Factory
         }
 
         if ('' === $target_path) {
-            $target_path = $base_uri->getPath();
-            //because some PSR-7 Uri implementations allow this RFC3986 forbidden construction
-            //@codeCoverageIgnoreStart
-            if ('' !== $base_uri->getAuthority() && 0 !== strpos($target_path, '/')) {
-                $target_path = '/'.$target_path;
-            }
-            //codeCoverageIgnoreEnd
-
             if ('' === $target_query) {
                 $target_query = $base_uri->getQuery();
             }
+
+            $target_path = $base_uri->getPath();
+            //@codeCoverageIgnoreStart
+            //because some PSR-7 Uri implementations allow this RFC3986 forbidden construction
+            if ('' !== $base_uri->getAuthority() && 0 !== strpos($target_path, '/')) {
+                $target_path = '/'.$target_path;
+            }
+            //@codeCoverageIgnoreEnd
 
             return [$target_path, $target_query];
         }

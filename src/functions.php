@@ -24,12 +24,12 @@ use Psr\Http\Message\UriInterface;
  * @see Uri\Factory::__construct
  * @see Uri\Factory::create
  *
- * @param mixed $uri
- * @param mixed $base_uri
+ * @param string $uri
+ * @param mixed  $base_uri
  *
  * @return LeagueUriInterface|UriInterface
  */
-function create($uri, $base_uri = null)
+function create(string $uri, $base_uri = null)
 {
     static $factory;
 

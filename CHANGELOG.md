@@ -20,9 +20,11 @@ All Notable changes to `League\Uri\Schemes` will be documented in this file
 ### Fixed
 
 - improve path and user info component encoding
-- enable invalid characters in with* method they are safely encoded against component rules
+- enable invalid characters in with* methods they are now safely encoded against component rules
 
 ### Deprecated
+
+The `League\Uri\Schemes` namespace is deprecated. URI object are now define directly in the `League\Uri` namespace.
 
 - `League\Uri\Schemes\AbstractUri` replace by `League\Uri\AbstractUri`
 - `League\Uri\Schemes\Data` replace by `League\Uri\Data`

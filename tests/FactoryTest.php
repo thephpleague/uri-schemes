@@ -87,7 +87,7 @@ class FactoryTest extends TestCase
             ],
             'generic' => [
                 'expected' => Uri\Uri::class,
-                'uri' => '//www.example.com',
+                'uri' => 'mailto:info@thephpleague.com',
             ],
         ];
     }
@@ -178,8 +178,14 @@ class FactoryTest extends TestCase
             'uri with a base URI as string' => [
                 'expected_class' => Uri\Http::class,
                 'expected_uri' => 'https://example.com/path/to/file',
-                'uri' => '/path/to/file',
-                'base_uri' => 'https://example.com/index.php',
+                'uri' => 'https://example.com/path/to/file',
+                'base_uri' => 'ftp://example.com/index.php',
+            ],
+            'uri with a base URI as league URI' => [
+                'expected_class' => Uri\Http::class,
+                'expected_uri' => 'https://example.com/path/to/file',
+                'uri' => 'https://example.com/path/to/file',
+                'base_uri' => Uri\Ftp::createFromString('ftp://example.com/index.php'),
             ],
         ];
     }
