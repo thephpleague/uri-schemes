@@ -7,7 +7,7 @@ use League\Uri as Base;
 class_alias(Base\AbstractUri::class, AbstractUri::class);
 if (!class_exists(AbstractUri::class)) {
     /**
-     * @deprecated use instead {@link Uri\AbstractUri}
+     * @deprecated use instead {@link Base\AbstractUri}
      */
     class AbstractUri
     {
@@ -17,7 +17,7 @@ if (!class_exists(AbstractUri::class)) {
 class_alias(Base\Data::class, Data::class);
 if (!class_exists(Data::class)) {
     /**
-     * @deprecated use instead {@link Uri\Data}
+     * @deprecated use instead {@link Base\Data}
      */
     class Data
     {
@@ -27,7 +27,7 @@ if (!class_exists(Data::class)) {
 class_alias(Base\File::class, File::class);
 if (!class_exists(File::class)) {
     /**
-     * @deprecated use instead {@link Uri\File}
+     * @deprecated use instead {@link Base\File}
      */
     class File
     {
@@ -37,7 +37,7 @@ if (!class_exists(File::class)) {
 class_alias(Base\Ftp::class, Ftp::class);
 if (!class_exists(Ftp::class)) {
     /**
-     * @deprecated use instead {@link Uri\Ftp}
+     * @deprecated use instead {@link Base\Ftp}
      */
     class Ftp
     {
@@ -47,9 +47,19 @@ if (!class_exists(Ftp::class)) {
 class_alias(Base\Http::class, Http::class);
 if (!class_exists(Http::class)) {
     /**
-     * @deprecated use instead {@link Uri\Http}
+     * @deprecated use instead {@link Base\Http}
      */
     class Http
+    {
+    }
+}
+
+class_alias(Base\Uri::class, Uri::class);
+if (!class_exists(Uri::class)) {
+    /**
+     * @deprecated use instead {@link Base\Ws}
+     */
+    class Uri
     {
     }
 }
@@ -57,7 +67,7 @@ if (!class_exists(Http::class)) {
 class_alias(Base\UriException::class, UriException::class);
 if (!class_exists(UriException::class)) {
     /**
-     * @deprecated use instead {@link Uri\UriException}
+     * @deprecated use instead {@link Base\UriException}
      */
     class UriException
     {
@@ -67,19 +77,9 @@ if (!class_exists(UriException::class)) {
 class_alias(Base\Ws::class, Ws::class);
 if (!class_exists(Ws::class)) {
     /**
-     * @deprecated use instead {@link Uri\Ws}
+     * @deprecated use instead {@link Base\Ws}
      */
     class Ws
-    {
-    }
-}
-
-class_alias(Base\Uri::class, Uri::class);
-if (!class_exists(Uri::class)) {
-    /**
-     * @deprecated use instead {@link Uri\Ws}
-     */
-    class Uri
     {
     }
 }
