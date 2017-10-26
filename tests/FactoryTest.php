@@ -57,6 +57,16 @@ class FactoryTest extends TestCase
     }
 
     /**
+     * @covers \League\Uri\create
+     * @covers \League\Uri\Factory
+     */
+    public function testCreateThrowExceptionWithUriNotAbsolute()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        Uri\create('/path/to/you');
+    }
+
+    /**
      * @dataProvider uriProvider
      *
      * @covers \League\Uri\create

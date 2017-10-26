@@ -87,8 +87,7 @@ class Factory
     }
 
     /**
-     * Create a new URI optionally according to
-     * a base URI object
+     * Create a new absolute URI optionally according to another absolute base URI object.
      *
      * The base URI can be
      * <ul>
@@ -100,23 +99,49 @@ class Factory
      * @param string $uri
      * @param mixed  $base_uri
      *
-     * @throws Exception if the base_uri is not absolute
+     * @throws Exception if there's no base URI and the submitted URI is not absolute
      *
      * @return LeagueUriInterface|UriInterface
      */
     public function create(string $uri, $base_uri = null)
     {
         $components = parse($uri);
-        if (null === $base_uri) {
+        if (null !== $base_uri) {
+            $base_uri = $this->filterBaseUri($base_uri);
+            $className = $this->getClassName($components['scheme'], $base_uri);
+
+            return $this->resolve($this->newInstance($components, $className), $base_uri);
+        }
+
+        if (null !== $components['scheme']) {
             $className = $this->getClassName($components['scheme']);
 
             return $this->newInstance($components, $className);
         }
 
-        $base_uri = $this->filterBaseUri($base_uri);
-        $className = $this->getClassName($components['scheme'], $base_uri);
+        throw new Exception(sprintf('the submitted URI `%s` must be an absolute URI', $uri));
+    }
 
-        return $this->resolve($this->newInstance($components, $className), $base_uri);
+    /**
+     * Returns the Base URI.
+     *
+     * @param LeagueUriInterface|UriInterface|string $uri
+     *
+     * @throws Exception if the Base Uri is not an absolute URI
+     *
+     * @return LeagueUriInterface|UriInterface
+     */
+    protected function filterBaseUri($uri)
+    {
+        if (!$uri instanceof UriInterface && !$uri instanceof LeagueUriInterface) {
+            return $this->create($uri);
+        }
+
+        if ('' !== $uri->getScheme()) {
+            return $uri;
+        }
+
+        throw new Exception(sprintf('The submitted URI `%s` must be an absolute URI', $uri));
     }
 
     /**
@@ -135,28 +160,6 @@ class Factory
         }
 
         return $this->map[$scheme] ?? Uri::class;
-    }
-
-    /**
-     * Returns the Base URI.
-     *
-     * @param LeagueUriInterface|UriInterface|string $base_uri
-     *
-     * @throws Exception if the Base Uri is not an absolute URI
-     *
-     * @return LeagueUriInterface|UriInterface
-     */
-    protected function filterBaseUri($base_uri)
-    {
-        if (!$base_uri instanceof UriInterface && !$base_uri instanceof LeagueUriInterface) {
-            $base_uri = $this->create($base_uri);
-        }
-
-        if ('' !== $base_uri->getScheme()) {
-            return $base_uri;
-        }
-
-        throw new Exception(sprintf('The submitted base uri %s must be an absolute URI', $base_uri));
     }
 
     /**
@@ -305,7 +308,9 @@ class Factory
         if ('' !== $base_path) {
             $segments = explode('/', $base_path);
             array_pop($segments);
-            $target_path = implode('/', $segments).'/'.$target_path;
+            if (!empty($segments)) {
+                $target_path = implode('/', $segments).'/'.$target_path;
+            }
         }
 
         return [$target_path, $target_query];
