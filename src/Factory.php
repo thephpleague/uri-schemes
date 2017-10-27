@@ -239,6 +239,10 @@ class Factory
             $new_path .= '/';
         }
 
+        if (strpos($path, '/') === 0 && strpos($new_path, '/') !== 0) {
+            return '/'.$new_path;
+        }
+
         return $new_path;
     }
 
