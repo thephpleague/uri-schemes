@@ -18,6 +18,14 @@ use League\Uri\Interfaces\Uri as LeagueUriInterface;
 use Psr\Http\Message\UriInterface;
 use ReflectionClass;
 
+/**
+ * Factory class to ease loading URI object
+ *
+ * @package    League\Uri
+ * @subpackage League\Uri\Schemes
+ * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
+ * @since      1.1.0
+ */
 class Factory
 {
     /**

@@ -25,7 +25,7 @@ use League\Uri\Interfaces\Uri as UriInterface;
  * @package    League\Uri
  * @subpackage League\Uri\Schemes
  * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
- * @since      1.0.0
+ * @since      1.1.0
  */
 abstract class AbstractUri implements UriInterface
 {

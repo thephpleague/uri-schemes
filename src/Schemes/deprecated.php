@@ -2,82 +2,82 @@
 
 namespace League\Uri\Schemes;
 
-use League\Uri as Base;
+use League\Uri as LeagueUri;
 
-class_alias(Base\AbstractUri::class, AbstractUri::class);
+class_alias(LeagueUri\AbstractUri::class, AbstractUri::class);
 if (!class_exists(AbstractUri::class)) {
     /**
-     * @deprecated use instead {@link Base\AbstractUri}
+     * @deprecated use instead {@link LeagueUri\AbstractUri}
      */
     class AbstractUri
     {
     }
 }
 
-class_alias(Base\Data::class, Data::class);
+class_alias(LeagueUri\Data::class, Data::class);
 if (!class_exists(Data::class)) {
     /**
-     * @deprecated use instead {@link Base\Data}
+     * @deprecated use instead {@link LeagueUri\Data}
      */
     class Data
     {
     }
 }
 
-class_alias(Base\File::class, File::class);
+class_alias(LeagueUri\File::class, File::class);
 if (!class_exists(File::class)) {
     /**
-     * @deprecated use instead {@link Base\File}
+     * @deprecated use instead {@link LeagueUri\File}
      */
     class File
     {
     }
 }
 
-class_alias(Base\Ftp::class, Ftp::class);
+class_alias(LeagueUri\Ftp::class, Ftp::class);
 if (!class_exists(Ftp::class)) {
     /**
-     * @deprecated use instead {@link Base\Ftp}
+     * @deprecated use instead {@link LeagueUri\Ftp}
      */
     class Ftp
     {
     }
 }
 
-class_alias(Base\Http::class, Http::class);
+class_alias(LeagueUri\Http::class, Http::class);
 if (!class_exists(Http::class)) {
     /**
-     * @deprecated use instead {@link Base\Http}
+     * @deprecated use instead {@link LeagueUri\Http}
      */
     class Http
     {
     }
 }
 
-class_alias(Base\Uri::class, Uri::class);
+class_alias(LeagueUri\Uri::class, Uri::class);
 if (!class_exists(Uri::class)) {
     /**
-     * @deprecated use instead {@link Base\Ws}
+     * @deprecated use instead {@link LeagueUri\Ws}
      */
     class Uri
     {
     }
 }
 
-class_alias(Base\UriException::class, UriException::class);
+class_alias(LeagueUri\UriException::class, UriException::class);
 if (!class_exists(UriException::class)) {
     /**
-     * @deprecated use instead {@link Base\UriException}
+     * @deprecated use instead {@link LeagueUri\UriException}
      */
     class UriException
     {
     }
 }
 
-class_alias(Base\Ws::class, Ws::class);
+class_alias(LeagueUri\Ws::class, Ws::class);
 if (!class_exists(Ws::class)) {
     /**
-     * @deprecated use instead {@link Base\Ws}
+     * @deprecated use instead {@link LeagueUri\Ws}
      */
     class Ws
     {

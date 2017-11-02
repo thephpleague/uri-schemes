@@ -24,7 +24,7 @@ use Psr\Http\Message\UriInterface;
  * @package    League\Uri
  * @subpackage League\Uri\Schemes
  * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
- * @since      1.0.0
+ * @since      1.1.0
  */
 class Http extends AbstractUri implements UriInterface
 {

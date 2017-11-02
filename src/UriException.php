@@ -21,7 +21,7 @@ namespace League\Uri;
  *
  * @package League\Uri
  * @author  Ignace Nyamagana Butera <nyamsprod@gmail.com>
- * @since   0.3.0
+ * @since   1.1.0
  */
 class UriException extends Exception
 {
