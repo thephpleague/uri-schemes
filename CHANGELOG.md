@@ -2,6 +2,26 @@
 
 All Notable changes to `League\Uri\Schemes` will be documented in this file
 
+## 1.1.1 - 2017-12-01
+
+### Added
+
+- None
+
+### Fixed
+
+- improve host normalization. now convert urlencoded label into punycode
+- update Uri\Parser dependency requirement
+- update PHP7.0.13 minimal version because of PHP bugs in earlier version
+
+### Deprecated
+
+- None
+
+### Remove
+
+- None
+
 ## 1.1.0 - 2017-11-02
 
 ### Added

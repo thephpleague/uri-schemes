@@ -57,7 +57,7 @@ if (!class_exists(Http::class)) {
 class_alias(LeagueUri\Uri::class, Uri::class);
 if (!class_exists(Uri::class)) {
     /**
-     * @deprecated use instead {@link LeagueUri\Ws}
+     * @deprecated use instead {@link LeagueUri\Uri}
      */
     class Uri
     {
