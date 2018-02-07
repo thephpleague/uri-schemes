@@ -374,21 +374,52 @@ abstract class AbstractUri implements UriInterface
             return strtolower($host);
         }
 
-        $component = '';
-        $valid_ascii_label_characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-';
-        foreach (explode('.', mb_strtolower($host, 'UTF-8')) as $label) {
-            if (false !== strpos($label, '%')) {
-                $label = rawurldecode($label);
-            }
-
-            if (strlen($label) !== strspn($label, $valid_ascii_label_characters)) {
-                $label = (string) idn_to_ascii($label, IDNA_NONTRANSITIONAL_TO_ASCII, INTL_IDNA_VARIANT_UTS46);
-            }
-
-            $component .= $label.'.';
+        $component = strtolower($host);
+        if (false !== strpos($component, '%')) {
+            $component = rawurldecode($component);
         }
 
-        return substr($component, 0, -1);
+        $component = idn_to_ascii($component, 0, INTL_IDNA_VARIANT_UTS46, $arr);
+        if (!$arr['errors']) {
+            return $component;
+        }
+
+        throw new Exception(sprintf('Host %s can not be converted : %s', $host, $this->getIDNErrors($arr['errors'])));
+    }
+
+    /**
+     * Get and format IDN conversion error message
+     *
+     * @param int $error_byte
+     *
+     * @return string
+     */
+    protected function getIDNErrors(int $error_byte): string
+    {
+        static $idn_errors = [
+            'empty label' => IDNA_ERROR_EMPTY_LABEL,
+            'label too long' => IDNA_ERROR_LABEL_TOO_LONG,
+            'domain name too long' => IDNA_ERROR_DOMAIN_NAME_TOO_LONG,
+            'leading hyphen' => IDNA_ERROR_LEADING_HYPHEN,
+            'trailing hyphen' => IDNA_ERROR_TRAILING_HYPHEN,
+            'error hyphen 3 4' => IDNA_ERROR_HYPHEN_3_4,
+            'leading combining mark' => IDNA_ERROR_LEADING_COMBINING_MARK,
+            'disallowed' => IDNA_ERROR_DISALLOWED,
+            'error punycode' => IDNA_ERROR_PUNYCODE,
+            'label contains dot' => IDNA_ERROR_LABEL_HAS_DOT,
+            'invalid ace label' => IDNA_ERROR_INVALID_ACE_LABEL,
+            'bidi error' => IDNA_ERROR_BIDI,
+            'contextj error' => IDNA_ERROR_CONTEXTJ,
+        ];
+
+        $res = [];
+        foreach ($idn_errors as $name => $value) {
+            if ($error_byte & $value) {
+                $res[] = $name;
+            }
+        }
+
+        return implode(', ', $res);
     }
 
     /**

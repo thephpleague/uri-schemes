@@ -197,6 +197,16 @@ class UriTest extends TestCase
         );
     }
 
+    /**
+     * @covers ::getIDNerrors
+     * @covers ::formatHost
+     */
+    public function testCannotConvertInvalidHost()
+    {
+        $this->expectException(ParserException::class);
+        Uri::createFromString('http://_b%C3%A9bé.be-/foo/bar');
+    }
+
     public function testWithSchemeFailedWithInvalidSchemeValue()
     {
         $this->expectException(UriException::class);
