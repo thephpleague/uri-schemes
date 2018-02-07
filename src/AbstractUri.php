@@ -297,7 +297,7 @@ abstract class AbstractUri implements UriInterface
      */
     protected function formatScheme(string $scheme = null)
     {
-        if (in_array($scheme, ['', null], true)) {
+        if ($scheme === '' || $scheme === null) {
             return $scheme;
         }
 
@@ -364,8 +364,14 @@ abstract class AbstractUri implements UriInterface
      */
     protected function formatHost($host)
     {
+        static $pattern = '/^(?<name>[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)(?:\.(?&name))*$/i';
+
         if ('' == $host || false !== strpos($host, ']')) {
             return $host;
+        }
+
+        if (!isset($host[253]) && preg_match($pattern, $host)) {
+            return strtolower($host);
         }
 
         $component = '';
