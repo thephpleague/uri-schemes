@@ -384,22 +384,22 @@ abstract class AbstractUri implements UriInterface
             return $component;
         }
 
-        throw new Exception(sprintf('Host %s is invalid : %s', $host, $this->getIDNErrors($arr['errors'])));
+        throw new Exception(sprintf('Host %s is invalid : %s', $host, self::getIDNErrors($arr['errors'])));
     }
 
     /**
-     * Get and format IDN conversion error message
+     * Retrieves and format IDNA conversion error message
+     *
+     * @see http://icu-project.org/apiref/icu4j/com/ibm/icu/text/IDNA.Error.html
      *
      * @param int $error_byte
      *
      * @return string
      */
-    protected function getIDNErrors(int $error_byte): string
+    private static function getIDNErrors(int $error_byte): string
     {
         /**
          * IDNA errors
-         *
-         * @see http://icu-project.org/apiref/icu4j/com/ibm/icu/text/IDNA.Error.html
          */
         static $idn_errors = [
             IDNA_ERROR_EMPTY_LABEL => 'a non-final domain name label (or the whole domain name) is empty',
