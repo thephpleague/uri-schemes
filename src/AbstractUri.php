@@ -384,7 +384,7 @@ abstract class AbstractUri implements UriInterface
             return $component;
         }
 
-        throw new Exception(sprintf('Host %s can not be converted : %s', $host, $this->getIDNErrors($arr['errors'])));
+        throw new Exception(sprintf('Host %s is invalid : %s', $host, $this->getIDNErrors($arr['errors'])));
     }
 
     /**
@@ -396,30 +396,35 @@ abstract class AbstractUri implements UriInterface
      */
     protected function getIDNErrors(int $error_byte): string
     {
+        /**
+         * IDNA errors
+         *
+         * @see http://icu-project.org/apiref/icu4j/com/ibm/icu/text/IDNA.Error.html
+         */
         static $idn_errors = [
-            'empty label' => IDNA_ERROR_EMPTY_LABEL,
-            'label too long' => IDNA_ERROR_LABEL_TOO_LONG,
-            'domain name too long' => IDNA_ERROR_DOMAIN_NAME_TOO_LONG,
-            'leading hyphen' => IDNA_ERROR_LEADING_HYPHEN,
-            'trailing hyphen' => IDNA_ERROR_TRAILING_HYPHEN,
-            'error hyphen 3 4' => IDNA_ERROR_HYPHEN_3_4,
-            'leading combining mark' => IDNA_ERROR_LEADING_COMBINING_MARK,
-            'disallowed' => IDNA_ERROR_DISALLOWED,
-            'error punycode' => IDNA_ERROR_PUNYCODE,
-            'label contains dot' => IDNA_ERROR_LABEL_HAS_DOT,
-            'invalid ace label' => IDNA_ERROR_INVALID_ACE_LABEL,
-            'bidi error' => IDNA_ERROR_BIDI,
-            'contextj error' => IDNA_ERROR_CONTEXTJ,
+            IDNA_ERROR_EMPTY_LABEL => 'a non-final domain name label (or the whole domain name) is empty',
+            IDNA_ERROR_LABEL_TOO_LONG => 'a domain name label is longer than 63 bytes',
+            IDNA_ERROR_DOMAIN_NAME_TOO_LONG => 'a domain name is longer than 255 bytes in its storage form',
+            IDNA_ERROR_LEADING_HYPHEN => 'a label starts with a hyphen-minus ("-")',
+            IDNA_ERROR_TRAILING_HYPHEN => 'a label ends with a hyphen-minus ("-")',
+            IDNA_ERROR_HYPHEN_3_4 => 'a label contains hyphen-minus ("-") in the third and fourth positions',
+            IDNA_ERROR_LEADING_COMBINING_MARK => 'a label starts with a combining mark',
+            IDNA_ERROR_DISALLOWED => 'a label or domain name contains disallowed characters',
+            IDNA_ERROR_PUNYCODE => 'a label starts with "xn--" but does not contain valid Punycode',
+            IDNA_ERROR_LABEL_HAS_DOT => 'a label contains a dot=full stop',
+            IDNA_ERROR_INVALID_ACE_LABEL => 'An ACE label does not contain a valid label string',
+            IDNA_ERROR_BIDI => 'a label does not meet the IDNA BiDi requirements (for right-to-left characters)',
+            IDNA_ERROR_CONTEXTJ => 'a label does not meet the IDNA CONTEXTJ requirements',
         ];
 
         $res = [];
-        foreach ($idn_errors as $name => $value) {
-            if ($error_byte & $value) {
-                $res[] = $name;
+        foreach ($idn_errors as $error => $reason) {
+            if ($error_byte & $error) {
+                $res[] = $reason;
             }
         }
 
-        return implode(', ', $res);
+        return empty($res) ? 'Unknown IDNA conversion error.' : implode(', ', $res).'.';
     }
 
     /**
