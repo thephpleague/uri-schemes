@@ -197,12 +197,6 @@ class FactoryTest extends TestCase
                 'uri' => 'https://example.com/path/to/file',
                 'base_uri' => Uri\Ftp::createFromString('ftp://example.com/index.php'),
             ],
-            'uri without base URI must be resolve too' => [
-                'expected_class' => Uri\Http::class,
-                'expected_uri' => 'https://example.com/x',
-                'uri' => 'https://EXAMPLE.com/../x',
-                'base_uri' => null,
-            ],
         ];
     }
 
