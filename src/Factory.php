@@ -121,13 +121,24 @@ class Factory
             return $this->resolve($this->newInstance($components, $className), $base_uri);
         }
 
-        if (null !== $components['scheme']) {
-            $className = $this->getClassName($components['scheme']);
-
-            return $this->newInstance($components, $className);
+        if (null === $components['scheme']) {
+            throw new Exception(sprintf('the submitted URI `%s` must be an absolute URI', $uri));
         }
 
-        throw new Exception(sprintf('the submitted URI `%s` must be an absolute URI', $uri));
+        $className = $this->getClassName($components['scheme']);
+        $uri = $this->newInstance($components, $className);
+        if ('' === $uri->getAuthority()) {
+            return $uri;
+        }
+
+        $path = $uri->getPath();
+        //@codeCoverageIgnoreStart
+        //because some PSR-7 Uri implementations allow this RFC3986 forbidden construction
+        if (0 !== strpos($path, '/')) {
+            $path = '/'.$path;
+        }
+        //@codeCoverageIgnoreEnd
+        return $uri->withPath($this->removeDotSegments($path));
     }
 
     /**
