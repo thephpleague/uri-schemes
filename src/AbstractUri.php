@@ -135,7 +135,7 @@ abstract class AbstractUri implements UriInterface
      */
     public static function __set_state(array $components): self
     {
-        list($components['user'], $components['pass']) = explode(':', $components['user_info'], 2) + [null, null];
+        list($components['user'], $components['pass']) = explode(':', $components['user_info'], 2) + [1 => null];
 
         return new static(
             $components['scheme'],
@@ -198,7 +198,7 @@ abstract class AbstractUri implements UriInterface
      *
      * @return static
      */
-    public static function createFromComponents(array $components): self
+    public static function createFromComponents(array $components = []): self
     {
         $components += [
             'scheme' => null, 'user' => null, 'pass' => null, 'host' => null,
@@ -510,9 +510,9 @@ abstract class AbstractUri implements UriInterface
      *
      * @return string|null
      */
-    protected function formatQueryAndFragment($component)
+    protected function formatQueryAndFragment(string $component = null)
     {
-        if ('' == $component) {
+        if (null === $component || '' === $component) {
             return $component;
         }
 
