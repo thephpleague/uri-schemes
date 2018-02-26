@@ -435,11 +435,6 @@ abstract class AbstractUri implements UriInterface
             $formatted_host = rawurldecode($formatted_host);
         }
 
-        static $gen_delims = '/[:\/?#\[\]@ ]/'; // Also includes space.
-        if (preg_match($gen_delims, $formatted_host)) {
-            throw new UriException(sprintf('the submitted host %s can not contain URI delimiters or a space', $host));
-        }
-
         static $reg_name = '/
             ^(
                 (?<unreserved>[a-z0-9_~\-\.])|
@@ -449,6 +444,11 @@ abstract class AbstractUri implements UriInterface
         /ix';
         if (preg_match($reg_name, $formatted_host)) {
             return $formatted_host;
+        }
+
+        static $gen_delims = '/[:\/?#\[\]@ ]/'; // Also includes space.
+        if (preg_match($gen_delims, $formatted_host)) {
+            throw new UriException(sprintf('the submitted host %s can not contain URI delimiters or a space', $host));
         }
 
         $formatted_host = idn_to_ascii($formatted_host, 0, INTL_IDNA_VARIANT_UTS46, $arr);
