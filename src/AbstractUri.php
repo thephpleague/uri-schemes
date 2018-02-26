@@ -401,17 +401,10 @@ abstract class AbstractUri implements UriInterface
         }
 
         //Only the address block fe80::/10 can have a Zone ID attach to
-        //Unpacking the IP address to get its binary string representation
-        //and detect the link local significant 10 bits
+        //let's detect the link local significant 10 bits
+        static $address_block = "\xfe\x80";
 
-        $binary = '';
-        $unpacked = unpack('A16', inet_pton($ipv6))[1];
-        foreach (str_split($unpacked) as $char) {
-            $binary .= str_pad(decbin(ord($char)), 8, '0', STR_PAD_LEFT);
-        }
-
-        static $local_link_prefix = '1111111010';
-        if ($local_link_prefix === substr($binary, 0, 10)) {
+        if (substr(inet_pton($ipv6) & $address_block, 0, 2) === $address_block) {
             return $host;
         }
 
