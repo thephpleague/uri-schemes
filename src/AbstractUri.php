@@ -356,7 +356,7 @@ abstract class AbstractUri implements UriInterface
      *
      * @return string|null
      */
-    protected function formatHost($host)
+    protected function formatHost(string $host = null)
     {
         if (null === $host || '' === $host) {
             return $host;
@@ -435,7 +435,7 @@ abstract class AbstractUri implements UriInterface
      *
      * @return int|null
      */
-    protected function formatPort($port)
+    protected function formatPort(int $port = null)
     {
         if (isset(static::$supported_schemes[$this->scheme])
             && static::$supported_schemes[$this->scheme] === $port) {
@@ -636,15 +636,13 @@ abstract class AbstractUri implements UriInterface
      */
     public function __toString(): string
     {
-        if (null === $this->uri) {
-            $this->uri = $this->getUriString(
-                $this->scheme,
-                $this->authority,
-                $this->path,
-                $this->query,
-                $this->fragment
-            );
-        }
+        $this->uri = $this->uri ?? $this->getUriString(
+            $this->scheme,
+            $this->authority,
+            $this->path,
+            $this->query,
+            $this->fragment
+        );
 
         return $this->uri;
     }
@@ -987,9 +985,13 @@ abstract class AbstractUri implements UriInterface
      *
      * @return int|null
      */
-    protected static function filterPort($port)
+    protected static function filterPort(int $port = null)
     {
-        if (null !== $port && !is_port($port)) {
+        if (null === $port) {
+            return $port;
+        }
+
+        if ($port < 1 || $port > 65535) {
             throw UriException::createFromInvalidPort($port);
         }
 
