@@ -13,7 +13,7 @@ use PHPUnit\Framework\TestCase;
 class HttpTest extends TestCase
 {
     /**
-     * @var Uri
+     * @var Http
      */
     private $uri;
 
@@ -26,7 +26,7 @@ class HttpTest extends TestCase
 
     protected function tearDown()
     {
-        $this->uri = null;
+        unset($this->uri);
     }
 
     public function testDefaultConstructor()
@@ -168,7 +168,7 @@ class HttpTest extends TestCase
      * @dataProvider validServerArray
      *
      * @param string $expected
-     * @param string $input
+     * @param array  $input
      */
     public function testCreateFromServer($expected, $input)
     {

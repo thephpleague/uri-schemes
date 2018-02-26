@@ -1,6 +1,6 @@
 <?php
 
-namespace LeagueTest\UriSchemes;
+namespace LeagueTest\Uri;
 
 use InvalidArgumentException;
 use League\Uri;
@@ -43,7 +43,7 @@ class FactoryTest extends TestCase
     public function testFactoryAddMapper()
     {
         $factory = new Uri\Factory(['http' => Uri\Uri::class]);
-        $this->assertInstanceof(Uri\Uri::class, $factory->create('http://example.com'));
+        $this->assertInstanceOf(Uri\Uri::class, $factory->create('http://example.com'));
     }
 
     /**
@@ -77,7 +77,7 @@ class FactoryTest extends TestCase
      */
     public function testCreate($expected, $uri)
     {
-        $this->assertInstanceof($expected, Uri\create($uri));
+        $this->assertInstanceOf($expected, Uri\create($uri));
     }
 
     public function uriProvider()
@@ -116,7 +116,7 @@ class FactoryTest extends TestCase
     public function testCreateWithBaseUri($expected_class, $expected_uri, $uri, $base_uri)
     {
         $obj = Uri\create($uri, $base_uri);
-        $this->assertInstanceof($expected_class, $obj);
+        $this->assertInstanceOf($expected_class, $obj);
         $this->assertSame($expected_uri, (string) $obj);
     }
 

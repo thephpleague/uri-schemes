@@ -115,7 +115,7 @@ abstract class AbstractUri implements UriInterface
     /**
      * URI string representation
      *
-     * @var string
+     * @var string|null
      */
     protected $uri;
 

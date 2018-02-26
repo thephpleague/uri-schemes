@@ -175,7 +175,7 @@ class Factory
     protected function getClassName($scheme, $base_uri = null): string
     {
         $scheme = strtolower($scheme ?? '');
-        if (isset($base_uri) && in_array($scheme, [$base_uri->getScheme(), ''])) {
+        if (isset($base_uri) && in_array($scheme, [$base_uri->getScheme(), ''], true)) {
             return get_class($base_uri);
         }
 

@@ -1,0 +1,10 @@
+includes:
+    - vendor/phpstan/phpstan-strict-rules/rules.neon
+    - vendor/phpstan/phpstan-phpunit/extension.neon
+    - vendor/phpstan/phpstan-phpunit/rules.neon
+    - vendor/phpstan/phpstan-phpunit/strictRules.neon
+parameters:
+    ignoreErrors:
+        - '#Access to protected property League\\Uri\\Uri::\$host#'
+        - '#Access to protected property League\\Uri\\Uri::\$path#'
+    reportUnmatchedIgnoredErrors: false

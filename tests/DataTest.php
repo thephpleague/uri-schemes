@@ -68,7 +68,7 @@ class DataTest extends TestCase
      * @covers ::assertValidPath
      * @covers ::isValidUri
      * @dataProvider invalidUrlProvider
-     * @param $uri
+     * @param string $uri
      */
     public function testCreateFromStringFailed($uri)
     {
@@ -90,7 +90,7 @@ class DataTest extends TestCase
     /**
      * @covers ::createFromPath
      * @dataProvider invalidDataPath
-     * @param $path
+     * @param string $path
      */
     public function testCreateFromPathFailed($path)
     {
@@ -150,8 +150,8 @@ class DataTest extends TestCase
      * @covers ::createFromPath
      * @dataProvider validFilePath
      *
-     * @param $path
-     * @param $expected
+     * @param string $path
+     * @param string $expected
      */
     public function testCreateFromPath($path, $expected)
     {

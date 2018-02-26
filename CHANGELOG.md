@@ -2,6 +2,25 @@
 
 All Notable changes to `League\Uri\Schemes` will be documented in this file
 
+## Next - TBD
+
+### Added
+
+- None
+
+### Fixed
+
+- `Factory::create` now always remove dot segments
+- using PHPstan
+
+### Deprecated
+
+- None
+
+### Remove
+
+- None
+
 ## 1.1.1 - 2017-12-01
 
 ### Added

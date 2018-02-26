@@ -16,7 +16,7 @@ use PHPUnit\Framework\TestCase;
 class UriTest extends TestCase
 {
     /**
-     * @var Http
+     * @var Uri
      */
     private $uri;
 
@@ -29,7 +29,7 @@ class UriTest extends TestCase
 
     protected function tearDown()
     {
-        $this->uri = null;
+        unset($this->uri);
     }
 
     /**
