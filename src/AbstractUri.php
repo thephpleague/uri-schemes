@@ -135,9 +135,7 @@ abstract class AbstractUri implements UriInterface
      */
     public static function __set_state(array $components): self
     {
-        $user_info = explode(':', $components['user_info'], 2);
-        $components['user'] = array_shift($user_info);
-        $components['pass'] = array_shift($user_info);
+        list($components['user'], $components['pass']) = explode(':', $components['user_info'], 2) + [null, null];
 
         return new static(
             $components['scheme'],
@@ -206,10 +204,6 @@ abstract class AbstractUri implements UriInterface
             'scheme' => null, 'user' => null, 'pass' => null, 'host' => null,
             'port' => null, 'path' => '', 'query' => null, 'fragment' => null,
         ];
-
-        if (null !== $components['host'] && !is_host($components['host'])) {
-            throw UriException::createFromInvalidHost($components['host']);
-        }
 
         return new static(
             $components['scheme'],
@@ -364,27 +358,34 @@ abstract class AbstractUri implements UriInterface
      */
     protected function formatHost($host)
     {
-        static $pattern = '/^(?<name>[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)(?:\.(?&name))*$/i';
-
-        if ('' == $host || false !== strpos($host, ']')) {
+        if (null === $host || '' === $host) {
             return $host;
         }
 
+        static $pattern = '/^(?<name>[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)(?:\.(?&name))*$/i';
         if (!isset($host[253]) && preg_match($pattern, $host)) {
             return strtolower($host);
         }
 
-        $component = strtolower($host);
-        if (false !== strpos($component, '%')) {
-            $component = rawurldecode($component);
+        if (!is_host($host)) {
+            throw UriException::createFromInvalidHost($host);
         }
 
-        $component = idn_to_ascii($component, 0, INTL_IDNA_VARIANT_UTS46, $arr);
+        if (false !== strpos($host, ']')) {
+            return $host;
+        }
+
+        $formatted_host = strtolower($host);
+        if (false !== strpos($formatted_host, '%')) {
+            $formatted_host = rawurldecode($formatted_host);
+        }
+
+        $formatted_host = idn_to_ascii($formatted_host, 0, INTL_IDNA_VARIANT_UTS46, $arr);
         if (!$arr['errors']) {
-            return $component;
+            return $formatted_host;
         }
 
-        throw new Exception(sprintf('Host %s is invalid : %s', $host, self::getIDNErrors($arr['errors'])));
+        throw new Exception(sprintf('Host %s is invalid : %s', $host, $this->getIDNAErrors($arr['errors'])));
     }
 
     /**
@@ -396,7 +397,7 @@ abstract class AbstractUri implements UriInterface
      *
      * @return string
      */
-    private static function getIDNErrors(int $error_byte): string
+    private function getIDNAErrors(int $error_byte): string
     {
         /**
          * IDNA errors
@@ -925,12 +926,8 @@ abstract class AbstractUri implements UriInterface
     public function withHost($host): self
     {
         $host = $this->filterString($host);
-        if ('' == $host) {
+        if ('' === $host) {
             $host = null;
-        }
-
-        if (null !== $host && !is_host($host)) {
-            throw UriException::createFromInvalidHost($host);
         }
 
         $host = $this->formatHost($host);

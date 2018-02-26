@@ -105,12 +105,13 @@ class UriTest extends TestCase
     /**
      * @covers ::getHost
      * @covers ::withHost
+     * @covers ::formatHost
      */
     public function testHost()
     {
         $this->assertSame('secure.example.com', $this->uri->getHost());
         $this->assertSame($this->uri, $this->uri->withHost('secure.example.com'));
-        $this->assertNotEquals($this->uri, $this->uri->withHost('shop.example.com'));
+        $this->assertNotEquals($this->uri, $this->uri->withHost('[::1]'));
     }
 
     /**
@@ -198,7 +199,7 @@ class UriTest extends TestCase
     }
 
     /**
-     * @covers ::getIDNerrors
+     * @covers ::getIDNAErrors
      * @covers ::formatHost
      */
     public function testCannotConvertInvalidHost()
