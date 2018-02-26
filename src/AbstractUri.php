@@ -386,30 +386,35 @@ abstract class AbstractUri implements UriInterface
         }
 
         if (false === ($pos = strpos($ipv6, '%'))) {
-            throw new UriException(sprintf('the submitted host %s is an Invalid IPV6 hostname', $host));
+            throw new UriException(sprintf('the submitted host %s is an invalid IPv6 host', $host));
         }
 
         static $gen_delims = '/[:\/?#\[\]@ ]/'; // Also includes space.
         if (preg_match($gen_delims, rawurldecode(substr($ipv6, $pos)))) {
-            throw new UriException(sprintf('the submitted host %s is an Invalid IPV6 hostname', $host));
+            throw new UriException(sprintf('the submitted host %s is an invalid IPv6 host', $host));
         }
 
         $ipv6 = substr($ipv6, 0, $pos);
         if (!filter_var($ipv6, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
-            throw new UriException(sprintf('the submitted host %s is an Invalid IPV6 hostname', $host));
+            throw new UriException(sprintf('the submitted host %s is an invalid IPv6 host', $host));
         }
 
-        $reducer = function (string $carry, string $char): string {
-            return $carry.str_pad(decbin(ord($char)), 8, '0', STR_PAD_LEFT);
-        };
+        //Only the address block fe80::/10 can have a Zone ID attach to
+        //Unpacking the IP address to get its binary string representation
+        //and detect the link local significant 10 bits
+
+        $binary = '';
+        $unpacked = unpack('A16', inet_pton($ipv6))[1];
+        foreach (str_split($unpacked) as $char) {
+            $binary .= str_pad(decbin(ord($char)), 8, '0', STR_PAD_LEFT);
+        }
 
         static $local_link_prefix = '1111111010';
-        $res = array_reduce(str_split(unpack('A16', inet_pton($ipv6))[1]), $reducer, '');
-        if (substr($res, 0, 10) === $local_link_prefix) {
+        if ($local_link_prefix === substr($binary, 0, 10)) {
             return $host;
         }
 
-        throw new UriException(sprintf('the submitted host is an Invalid IPV6 hostname', $host));
+        throw new UriException(sprintf('the submitted host is an invalid IPv6 host', $host));
     }
 
     /**
