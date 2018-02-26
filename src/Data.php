@@ -76,16 +76,16 @@ class Data extends AbstractUri
             throw new UriException(sprintf('The submitted path `%s` is invalid according to RFC2937', $path));
         }
 
-        $parts = explode(',', $path, 2);
-        $mediatype = explode(';', array_shift($parts), 2);
-        $data = array_shift($parts);
-        $mimetype = array_shift($mediatype);
-        if ('' == $mimetype) {
+        $parts = explode(',', $path, 2) + [1 => null];
+        $mediatype = explode(';', $parts[0], 2) + [1 => null];
+        $data = $parts[1];
+        $mimetype = $mediatype[0];
+        if (null === $mimetype || '' === $mimetype) {
             $mimetype = 'text/plain';
         }
 
-        $parameters = array_shift($mediatype);
-        if ('' == $parameters) {
+        $parameters = $mediatype[1];
+        if (null === $parameters || '' === $parameters) {
             $parameters = 'charset=us-ascii';
         }
 
@@ -114,7 +114,7 @@ class Data extends AbstractUri
 
         $is_binary = preg_match(',(;|^)base64$,', $parameters, $matches);
         if ($is_binary) {
-            $parameters = mb_substr($parameters, 0, - strlen($matches[0]));
+            $parameters = substr($parameters, 0, - strlen($matches[0]));
         }
 
         $res = array_filter(array_filter(explode(';', $parameters), [$this, 'validateParameter']));
@@ -143,8 +143,7 @@ class Data extends AbstractUri
     {
         $properties = explode('=', $parameter);
 
-        return 2 != count($properties)
-            || mb_strtolower($properties[0], 'UTF-8') === 'base64';
+        return 2 != count($properties) || strtolower($properties[0]) === 'base64';
     }
 
     /**

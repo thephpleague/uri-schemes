@@ -213,7 +213,7 @@ class Factory
                 ->withPath($this->removeDotSegments($uri->getPath()));
         }
 
-        list($base_uri_user, $base_uri_pass) = explode(':', $base_uri->getUserInfo(), 2) + ['', null];
+        list($base_uri_user, $base_uri_pass) = explode(':', $base_uri->getUserInfo(), 2) + [1 => null];
         list($uri_path, $uri_query) = $this->resolvePathAndQuery($uri, $base_uri);
 
         return $uri

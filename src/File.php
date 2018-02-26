@@ -124,8 +124,8 @@ class File extends AbstractUri
 
         //UNC Windows Path
         if ('//' === substr($uri, 0, 2)) {
-            $parts = explode('/', substr($uri, 2), 2);
-            return new static('file', null, null, array_shift($parts), null, '/'.array_shift($parts));
+            $parts = explode('/', substr($uri, 2), 2) + [1 => null];
+            return new static('file', null, null, $parts[0], null, '/'.$parts[1]);
         }
 
         return new static(null, null, null, null, null, $uri);
