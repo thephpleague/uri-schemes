@@ -348,10 +348,7 @@ abstract class AbstractUri implements UriInterface
     }
 
     /**
-     * Format the Host component
-     *
-     * - convert each registered name label to its IDNA ASCII form only if it contains none valid label characters
-     * - convert each label to its lower case representation for normalization
+     * Validate and Format the Host component
      *
      * @param string|null $host
      *
@@ -364,14 +361,14 @@ abstract class AbstractUri implements UriInterface
         }
 
         if ('[' === $host[0] && ']' === substr($host, -1)) {
-            return $this->formatIpv6($host);
+            return $this->formatIp($host);
         }
 
         return $this->formatRegisteredName($host);
     }
 
     /**
-     * Validate and Format the IPv6 host containing or not a ZoneId
+     * Validate and Format the IPv6/IPvfuture host
      *
      * @param string $host
      *
@@ -379,32 +376,40 @@ abstract class AbstractUri implements UriInterface
      *
      * @return string
      */
-    private function formatIpv6(string $host)
+    private function formatIp(string $host)
     {
-        $ipv6 = substr($host, 1, -1);
-        if (filter_var($ipv6, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+        $ip = substr($host, 1, -1);
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
             return $host;
         }
 
-        if (false === ($pos = strpos($ipv6, '%'))) {
-            throw new UriException(sprintf('the submitted host %s is an invalid IPv6 host', $host));
+        static $ip_future = '/^
+            v(?<version>\d+)\.
+            ((?<unreserved>[a-z0-9_~\-\.])|(?<sub_delims>[!$&\'()*+,;=:]))+
+        $/ix';
+        if (preg_match($ip_future, $ip, $matches) && !in_array($matches['version'], ['4', '6'], true)) {
+            return $host;
+        }
+
+        if (false === ($pos = strpos($ip, '%'))) {
+            throw new UriException(sprintf('the submitted host `%s` is an invalid IPv6 host', $host));
         }
 
         static $gen_delims = '/[:\/?#\[\]@ ]/'; // Also includes space.
-        if (preg_match($gen_delims, rawurldecode(substr($ipv6, $pos)))) {
-            throw new UriException(sprintf('the submitted host %s is an invalid IPv6 host', $host));
+        if (preg_match($gen_delims, rawurldecode(substr($ip, $pos)))) {
+            throw new UriException(sprintf('the submitted host `%s` is an invalid IPv6 host', $host));
         }
 
-        $ipv6 = substr($ipv6, 0, $pos);
-        if (!filter_var($ipv6, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
-            throw new UriException(sprintf('the submitted host %s is an invalid IPv6 host', $host));
+        $ip = substr($ip, 0, $pos);
+        if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+            throw new UriException(sprintf('the submitted host `%s` is an invalid IPv6 host', $host));
         }
 
         //Only the address block fe80::/10 can have a Zone ID attach to
         //let's detect the link local significant 10 bits
         static $address_block = "\xfe\x80";
 
-        if (substr(inet_pton($ipv6) & $address_block, 0, 2) === $address_block) {
+        if (substr(inet_pton($ip) & $address_block, 0, 2) === $address_block) {
             return $host;
         }
 
@@ -429,13 +434,11 @@ abstract class AbstractUri implements UriInterface
             $formatted_host = rawurldecode($formatted_host);
         }
 
-        static $reg_name = '/
-            ^(
-                (?<unreserved>[a-z0-9_~\-\.])|
-                (?<sub_delims>[!$&\'()*+,;=])|
-                (?<encoded>%[A-F0-9]{2})
-            )+$
-        /ix';
+        static $reg_name = '/^(
+            (?<unreserved>[a-z0-9_~\-\.])|
+            (?<sub_delims>[!$&\'()*+,;=])|
+            (?<encoded>%[A-F0-9]{2})
+        )+$/ix';
         if (preg_match($reg_name, $formatted_host)) {
             return $formatted_host;
         }

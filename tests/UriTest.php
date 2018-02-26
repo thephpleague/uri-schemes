@@ -107,7 +107,7 @@ class UriTest extends TestCase
      * @covers ::getHost
      * @covers ::withHost
      * @covers ::formatHost
-     * @covers ::formatIpv6
+     * @covers ::formatIp
      * @covers ::formatRegisteredName
      */
     public function testHost()
@@ -144,6 +144,7 @@ class UriTest extends TestCase
     /**
      * @covers ::getPort
      * @covers ::withPort
+     * @covers ::filterPort
      */
     public function testPort()
     {
@@ -217,6 +218,9 @@ class UriTest extends TestCase
         Uri::createFromString('http://example.com')->withScheme('tété');
     }
 
+    /**
+     * @covers ::filterString
+     */
     public function testWithInvalidCharacters()
     {
         $this->expectException(ParserException::class);
@@ -339,7 +343,7 @@ class UriTest extends TestCase
     }
 
     /**
-     * @covers ::formatIpv6
+     * @covers ::formatIp
      */
     public function testCreateFromComponentsHandlesScopedIpv6()
     {
@@ -351,7 +355,38 @@ class UriTest extends TestCase
     }
 
     /**
-     * @covers ::formatIpv6
+     * @covers ::formatIp
+     */
+    public function testCreateFromComponentsHandlesIpvFuture()
+    {
+        $expected = '[v1.ZZ.ZZ]';
+        $this->assertSame(
+            $expected,
+            Uri::createFromComponents(['host' => $expected])->getHost()
+        );
+    }
+
+
+    /**
+     * @covers ::formatIp
+     */
+    public function testCreateFromComponentsThrowsOnInvalidIpvFuture()
+    {
+        $this->expectException(ParserException::class);
+        Uri::createFromComponents(['host' => '[v4.1.2.3]']);
+    }
+
+    /**
+     * @covers ::filterString
+     */
+    public function testCreateFromComponentsThrowsExceptionWithInvalidChars()
+    {
+        $this->expectException(ParserException::class);
+        Uri::createFromComponents()->withFragment("\n\rtoto");
+    }
+
+    /**
+     * @covers ::formatIp
      */
     public function testCreateFromComponentsThrowsException()
     {
@@ -360,7 +395,7 @@ class UriTest extends TestCase
     }
 
     /**
-     * @covers ::formatIpv6
+     * @covers ::formatIp
      */
     public function testCreateFromComponentsThrowsException2()
     {
@@ -369,7 +404,7 @@ class UriTest extends TestCase
     }
 
     /**
-     * @covers ::formatIpv6
+     * @covers ::formatIp
      */
     public function testCreateFromComponentsThrowsException3()
     {
@@ -378,7 +413,7 @@ class UriTest extends TestCase
     }
 
     /**
-     * @covers ::formatIpv6
+     * @covers ::formatIp
      */
     public function testCreateFromComponentsThrowsException4()
     {
