@@ -356,14 +356,14 @@ abstract class AbstractUri implements UriInterface
      *
      * @return string|null
      */
-    protected function formatHost(string $host = null)
+    protected function formatHost($host)
     {
         if (null === $host || '' === $host) {
             return $host;
         }
 
         static $pattern = '/^(?<name>[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)(?:\.(?&name))*$/i';
-        if (!isset($host[253]) && preg_match($pattern, $host)) {
+        if (preg_match($pattern, $host)) {
             return strtolower($host);
         }
 
@@ -371,7 +371,7 @@ abstract class AbstractUri implements UriInterface
             throw UriException::createFromInvalidHost($host);
         }
 
-        if (false !== strpos($host, ']')) {
+        if ('[' === $host[0]) {
             return $host;
         }
 
@@ -435,7 +435,7 @@ abstract class AbstractUri implements UriInterface
      *
      * @return int|null
      */
-    protected function formatPort(int $port = null)
+    protected function formatPort($port)
     {
         if (isset(static::$supported_schemes[$this->scheme])
             && static::$supported_schemes[$this->scheme] === $port) {

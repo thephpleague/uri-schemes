@@ -74,7 +74,7 @@ class File extends AbstractUri
      *
      * @return string|null
      */
-    protected function formatHost(string $host = null)
+    protected function formatHost($host)
     {
         if ('' === $host) {
             $host = 'localhost';
