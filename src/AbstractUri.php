@@ -362,22 +362,88 @@ abstract class AbstractUri implements UriInterface
             return $host;
         }
 
-        static $pattern = '/^(?<name>[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)(?:\.(?&name))*$/i';
-        if (preg_match($pattern, $host)) {
-            return strtolower($host);
+        if ('[' === $host[0] && ']' === substr($host, -1)) {
+            return $this->formatIpv6($host);
         }
 
-        if (!is_host($host)) {
-            throw UriException::createFromInvalidHost($host);
-        }
+        return $this->formatRegisteredName($host);
+    }
 
-        if ('[' === $host[0]) {
+    /**
+     * Validate and Format the IPv6 host containing or not a ZoneId
+     *
+     * @param string $host
+     *
+     * @throws UriException if the submitted host is not a valid IPv6
+     *
+     * @return string
+     */
+    private function formatIpv6(string $host)
+    {
+        $ipv6 = substr($host, 1, -1);
+        if (filter_var($ipv6, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
             return $host;
         }
 
+        if (false === ($pos = strpos($ipv6, '%'))) {
+            throw new UriException(sprintf('the submitted host %s is an Invalid IPV6 hostname', $host));
+        }
+
+        static $gen_delims = '/[:\/?#\[\]@ ]/'; // Also includes space.
+        if (preg_match($gen_delims, rawurldecode(substr($ipv6, $pos)))) {
+            throw new UriException(sprintf('the submitted host %s is an Invalid IPV6 hostname', $host));
+        }
+
+        $ipv6 = substr($ipv6, 0, $pos);
+        if (!filter_var($ipv6, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+            throw new UriException(sprintf('the submitted host %s is an Invalid IPV6 hostname', $host));
+        }
+
+        $reducer = function (string $carry, string $char): string {
+            return $carry.str_pad(decbin(ord($char)), 8, '0', STR_PAD_LEFT);
+        };
+
+        static $local_link_prefix = '1111111010';
+        $res = array_reduce(str_split(unpack('A16', inet_pton($ipv6))[1]), $reducer, '');
+        if (substr($res, 0, 10) === $local_link_prefix) {
+            return $host;
+        }
+
+        throw new UriException(sprintf('the submitted host is an Invalid IPV6 hostname', $host));
+    }
+
+    /**
+     * Validate and format a registered name.
+     *
+     * The host is converted to its ascii representation if needed
+     *
+     * @param string $host
+     *
+     * @throws UriException if the submitted host is not a valid registered name
+     *
+     * @return string
+     */
+    private function formatRegisteredName(string $host)
+    {
         $formatted_host = strtolower($host);
         if (false !== strpos($formatted_host, '%')) {
             $formatted_host = rawurldecode($formatted_host);
+        }
+
+        static $gen_delims = '/[:\/?#\[\]@ ]/'; // Also includes space.
+        if (preg_match($gen_delims, $formatted_host)) {
+            throw new UriException(sprintf('the submitted host %s can not contain URI delimiters or a space', $host));
+        }
+
+        static $reg_name = '/
+            ^(
+                (?<unreserved>[a-z0-9_~\-\.])|
+                (?<sub_delims>[!$&\'()*+,;=])|
+                (?<encoded>%[A-F0-9]{2})
+            )+$
+        /ix';
+        if (preg_match($reg_name, $formatted_host)) {
+            return $formatted_host;
         }
 
         $formatted_host = idn_to_ascii($formatted_host, 0, INTL_IDNA_VARIANT_UTS46, $arr);
@@ -385,7 +451,7 @@ abstract class AbstractUri implements UriInterface
             return $formatted_host;
         }
 
-        throw new Exception(sprintf('Host %s is invalid : %s', $host, $this->getIDNAErrors($arr['errors'])));
+        throw new UriException(sprintf('Host %s is invalid : %s', $host, $this->getIDNAErrors($arr['errors'])));
     }
 
     /**

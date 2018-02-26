@@ -35,6 +35,7 @@ class UriTest extends TestCase
     /**
      * @covers ::__toString
      * @covers ::formatHost
+     * @covers ::formatRegisteredName
      * @covers ::formatQueryAndFragment
      * @covers ::formatPort
      * @covers ::formatUserInfo
@@ -106,6 +107,8 @@ class UriTest extends TestCase
      * @covers ::getHost
      * @covers ::withHost
      * @covers ::formatHost
+     * @covers ::formatIpv6
+     * @covers ::formatRegisteredName
      */
     public function testHost()
     {
@@ -258,6 +261,7 @@ class UriTest extends TestCase
     }
 
     /**
+     * @covers ::formatRegisteredName
      * @covers ::withHost
      */
     public function testModificationFailedWithInvalidHost()
@@ -294,6 +298,7 @@ class UriTest extends TestCase
     /**
      * @covers ::__toString
      * @covers ::formatHost
+     * @covers ::formatRegisteredName
      * @covers ::formatQueryAndFragment
      * @covers ::formatPort
      * @covers ::formatUserInfo
@@ -322,6 +327,7 @@ class UriTest extends TestCase
 
     /**
      * @covers ::createFromComponents
+     * @covers ::formatRegisteredName
      */
     public function testCreateFromComponents()
     {
@@ -332,10 +338,61 @@ class UriTest extends TestCase
         );
     }
 
-    public function testCreateFromComponentsTrowsException()
+    /**
+     * @covers ::formatIpv6
+     */
+    public function testCreateFromComponentsHandlesScopedIpv6()
+    {
+        $expected = '[fe80:1234::%251]';
+        $this->assertSame(
+            $expected,
+            Uri::createFromComponents(['host' => $expected])->getHost()
+        );
+    }
+
+    /**
+     * @covers ::formatIpv6
+     */
+    public function testCreateFromComponentsThrowsException()
     {
         $this->expectException(ParserException::class);
         Uri::createFromComponents(['host' => '[127.0.0.1]']);
+    }
+
+    /**
+     * @covers ::formatIpv6
+     */
+    public function testCreateFromComponentsThrowsException2()
+    {
+        $this->expectException(ParserException::class);
+        Uri::createFromComponents(['host' => '[127.0.0.1%251]']);
+    }
+
+    /**
+     * @covers ::formatIpv6
+     */
+    public function testCreateFromComponentsThrowsException3()
+    {
+        $this->expectException(ParserException::class);
+        Uri::createFromComponents(['host' => '[fe80:1234::%25 1]']);
+    }
+
+    /**
+     * @covers ::formatIpv6
+     */
+    public function testCreateFromComponentsThrowsException4()
+    {
+        $this->expectException(ParserException::class);
+        Uri::createFromComponents(['host' => '[::1%251]']);
+    }
+
+    /**
+     * @covers ::formatRegisteredName
+     */
+    public function testCreateFromComponentsThrowsException5()
+    {
+        $this->expectException(ParserException::class);
+        Uri::createFromComponents(['host' => 'a⒈com']);
     }
 
     /**
