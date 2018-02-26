@@ -295,9 +295,10 @@ abstract class AbstractUri implements UriInterface
             return $scheme;
         }
 
-        $component = strtolower($scheme);
-        if (is_scheme($scheme)) {
-            return $component;
+        $formatted_scheme = strtolower($scheme);
+        static $pattern = '/^[a-z][a-z\+\.\-]*$/i';
+        if (preg_match($pattern, $formatted_scheme)) {
+            return $formatted_scheme;
         }
 
         throw new UriException(sprintf('The submitted scheme `%s` is invalid', $scheme));
@@ -1056,7 +1057,7 @@ abstract class AbstractUri implements UriInterface
      *
      * @return int|null
      */
-    protected static function filterPort(int $port = null)
+    protected static function filterPort($port)
     {
         if (null === $port) {
             return $port;
