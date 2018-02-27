@@ -1062,7 +1062,7 @@ abstract class AbstractUri implements UriInterface
             return $port;
         }
 
-        if ($port < 1 || $port > 65535) {
+        if ($port < 1) {
             throw UriException::createFromInvalidPort($port);
         }
 

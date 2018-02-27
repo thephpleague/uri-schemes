@@ -35,6 +35,16 @@ class HttpTest extends TestCase
     }
 
     /**
+     * @covers ::withPort
+     * @covers ::filterPort
+     */
+    public function testModificationFailedWithUnsupportedPort()
+    {
+        $this->expectException(UriException::class);
+        Http::createFromString('http://example.com/path')->withPort(12365894);
+    }
+
+    /**
      * @covers ::isValidUri
      * @dataProvider validUrlProvider
      *

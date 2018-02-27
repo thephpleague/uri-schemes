@@ -37,6 +37,19 @@ class Http extends AbstractUri implements UriInterface
     ];
 
     /**
+     * @inheritdoc
+     */
+    protected static function filterPort($port)
+    {
+        $port = parent::filterPort($port);
+        if (65535 < $port) {
+            throw UriException::createFromInvalidPort($port);
+        }
+
+        return $port;
+    }
+
+    /**
      * Tell whether the Http(s) URI is in valid state.
      *
      * A valid HTTP(S) URI:

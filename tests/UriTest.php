@@ -255,16 +255,6 @@ class UriTest extends TestCase
     }
 
     /**
-     * @covers ::withPort
-     * @covers ::filterPort
-     */
-    public function testModificationFailedWithUnsupportedPort()
-    {
-        $this->expectException(UriException::class);
-        Uri::createFromString('http://example.com/path')->withPort(12365894);
-    }
-
-    /**
      * @covers ::formatRegisteredName
      * @covers ::withHost
      */
