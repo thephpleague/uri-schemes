@@ -56,4 +56,20 @@ class Ws extends AbstractUri
             && (null === $this->scheme || isset(static::$supported_schemes[$this->scheme]))
             && !('' != $this->scheme && null === $this->host);
     }
+
+    /**
+     * @inheritdoc
+     */
+    protected static function filterPort($port)
+    {
+        if (null === $port) {
+            return $port;
+        }
+
+        if (1 > $port || 65535 < $port) {
+            throw UriException::createFromInvalidPort($port);
+        }
+
+        return $port;
+    }
 }

@@ -333,6 +333,17 @@ class UriTest extends TestCase
     }
 
     /**
+     * @covers ::filterPort
+     * @covers ::withPort
+     */
+    public function testModificationFailedWithInvalidPort()
+    {
+        $this->expectException(UriException::class);
+        Uri::createFromString('http://example.com/path')->withPort(-1);
+    }
+
+
+    /**
      * @covers ::formatIp
      */
     public function testCreateFromComponentsHandlesScopedIpv6()

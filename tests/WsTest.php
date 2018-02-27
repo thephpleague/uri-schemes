@@ -24,6 +24,16 @@ class WsTest extends TestCase
         $this->assertSame($expected, (string) Ws::createFromString($input));
     }
 
+    /**
+     * @covers ::withPort
+     * @covers ::filterPort
+     */
+    public function testModificationFailedWithUnsupportedPort()
+    {
+        $this->expectException(UriException::class);
+        Ws::createFromString('wss://example.com/path')->withPort(12365894);
+    }
+
     public function validUrlProvider()
     {
         return [

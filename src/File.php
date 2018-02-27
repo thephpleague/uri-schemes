@@ -93,7 +93,7 @@ class File extends AbstractUri
     public static function createFromUnixPath(string $uri = ''): self
     {
         $uri = implode('/', array_map('rawurlencode', explode('/', $uri)));
-        if (isset($uri) && '/' === $uri[0]) {
+        if ('/' === $uri[0] ?? null) {
             return new static('file', null, null, 'localhost', null, $uri);
         }
 
@@ -110,7 +110,8 @@ class File extends AbstractUri
     public static function createFromWindowsPath(string $uri = ''): self
     {
         $root = '';
-        if (preg_match(',^(?<root>[a-zA-Z][:|\|]),', $uri, $matches)) {
+        static $pattern = ',^(?<root>[a-zA-Z][:|\|]),';
+        if (preg_match($pattern, $uri, $matches)) {
             $root = substr($matches['root'], 0, -1).':';
             $uri = substr($uri, strlen($root));
         }
