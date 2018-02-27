@@ -385,7 +385,7 @@ abstract class AbstractUri implements UriInterface
 
         static $ip_future = '/^
             v(?<version>[A-F0-9])+\.
-            (
+            (?:
                 (?<unreserved>[a-z0-9_~\-\.])|
                 (?<sub_delims>[!$&\'()*+,;=:])  # also include the : character
             )+
