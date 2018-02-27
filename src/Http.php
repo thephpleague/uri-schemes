@@ -42,7 +42,11 @@ class Http extends AbstractUri implements UriInterface
     protected static function filterPort($port)
     {
         $port = parent::filterPort($port);
-        if (65535 < $port) {
+        if (null === $port) {
+            return $port;
+        }
+
+        if (1 > $port || 65535 < $port) {
             throw UriException::createFromInvalidPort($port);
         }
 

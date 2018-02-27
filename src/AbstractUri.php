@@ -296,7 +296,7 @@ abstract class AbstractUri implements UriInterface
         }
 
         $formatted_scheme = strtolower($scheme);
-        static $pattern = '/^[a-z][a-z\+\.\-]*$/i';
+        static $pattern = '/^[a-z][a-z\+\.\-]*$/';
         if (preg_match($pattern, $formatted_scheme)) {
             return $formatted_scheme;
         }
@@ -360,7 +360,7 @@ abstract class AbstractUri implements UriInterface
             return $host;
         }
 
-        if ('[' !== $host[0] || ']' !== substr($host, -1)) {
+        if ('[' !== $host[0]) {
             return $this->formatRegisteredName($host);
         }
 
@@ -395,17 +395,17 @@ abstract class AbstractUri implements UriInterface
         }
 
         if (false === ($pos = strpos($ip, '%'))) {
-            throw new UriException(sprintf('the submitted host `%s` is invalid : the IP host is malformed', $host));
+            throw new UriException(sprintf('Host `%s` is invalid : the IP host is malformed', $host));
         }
 
         static $gen_delims = '/[:\/?#\[\]@ ]/'; // Also includes space.
         if (preg_match($gen_delims, rawurldecode(substr($ip, $pos)))) {
-            throw new UriException(sprintf('the submitted host `%s` is invalid : the IP host is malformed', $host));
+            throw new UriException(sprintf('Host `%s` is invalid : the IP host is malformed', $host));
         }
 
         $ip = substr($ip, 0, $pos);
         if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
-            throw new UriException(sprintf('the submitted host `%s` is invalid : the IP host is malformed', $host));
+            throw new UriException(sprintf('Host `%s` is invalid : the IP host is malformed', $host));
         }
 
         //Only the address block fe80::/10 can have a Zone ID attach to
@@ -416,7 +416,7 @@ abstract class AbstractUri implements UriInterface
             return $host;
         }
 
-        throw new UriException(sprintf('the submitted host `%s` is invalid : the IP host is malformed', $host));
+        throw new UriException(sprintf('Host `%s` is invalid : the IP host is malformed', $host));
     }
 
     /**
@@ -438,14 +438,14 @@ abstract class AbstractUri implements UriInterface
             (?<unreserved>[a-z0-9_~\-\.])|
             (?<sub_delims>[!$&\'()*+,;=])|
             (?<encoded>%[A-F0-9]{2})
-        )+$/ix';
+        )+$/x';
         if (preg_match($reg_name, $formatted_host)) {
             return $formatted_host;
         }
 
         static $gen_delims = '/[:\/?#\[\]@ ]/'; // Also includes space.
         if (preg_match($gen_delims, $formatted_host)) {
-            throw new UriException(sprintf('the submitted host `%s` is invalid : a registered name can not contain URI delimiters or spaces', $host));
+            throw new UriException(sprintf('Host `%s` is invalid : a registered name can not contain URI delimiters or spaces', $host));
         }
 
         $formatted_host = idn_to_ascii($formatted_host, 0, INTL_IDNA_VARIANT_UTS46, $arr);
@@ -453,7 +453,7 @@ abstract class AbstractUri implements UriInterface
             return $formatted_host;
         }
 
-        throw new UriException(sprintf('the submitted host `%s` is invalid : %s', $host, $this->getIDNAErrors($arr['errors'])));
+        throw new UriException(sprintf('Host `%s` is invalid : %s', $host, $this->getIDNAErrors($arr['errors'])));
     }
 
     /**
@@ -578,7 +578,7 @@ abstract class AbstractUri implements UriInterface
      *
      * @return string|null
      */
-    protected function formatQueryAndFragment(string $component = null)
+    protected function formatQueryAndFragment($component)
     {
         if (null === $component || '' === $component) {
             return $component;
@@ -1059,7 +1059,7 @@ abstract class AbstractUri implements UriInterface
             return $port;
         }
 
-        if ($port < 1) {
+        if ($port < 0) {
             throw UriException::createFromInvalidPort($port);
         }
 

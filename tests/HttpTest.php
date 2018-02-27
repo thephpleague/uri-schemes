@@ -46,6 +46,7 @@ class HttpTest extends TestCase
 
     /**
      * @covers ::isValidUri
+     * @covers ::filterPort
      * @dataProvider validUrlProvider
      *
      * @param string $expected
@@ -109,6 +110,7 @@ class HttpTest extends TestCase
 
     /**
      * @dataProvider portProvider
+     * @covers ::filterPort
      *
      * @param string   $uri
      * @param int|null $port
@@ -175,6 +177,7 @@ class HttpTest extends TestCase
      * @covers ::fetchUserInfo
      * @covers ::fetchHostname
      * @covers ::fetchRequestUri
+     * @covers ::filterPort
      * @dataProvider validServerArray
      *
      * @param string $expected
