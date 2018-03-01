@@ -59,6 +59,22 @@ class Http extends AbstractUri implements UriInterface
     }
 
     /**
+     * @inheritdoc
+     */
+    protected static function filterPort($port)
+    {
+        if (null === $port) {
+            return $port;
+        }
+
+        if (1 > $port || 65535 < $port) {
+            throw UriException::createFromInvalidPort($port);
+        }
+
+        return $port;
+    }
+
+    /**
      * Create a new instance from the environment
      *
      * @param array $server the server and execution environment information array typically ($_SERVER)
@@ -102,9 +118,7 @@ class Http extends AbstractUri implements UriInterface
         $user = $server['PHP_AUTH_USER'];
         $pass = $server['PHP_AUTH_PW'];
         if (0 === strpos(strtolower($server['HTTP_AUTHORIZATION']), 'basic')) {
-            $res = explode(':', base64_decode(substr($server['HTTP_AUTHORIZATION'], 6)), 2);
-            $user = array_shift($res);
-            $pass = array_shift($res);
+            list($user, $pass) = explode(':', base64_decode(substr($server['HTTP_AUTHORIZATION'], 6)), 2) + [1 => null];
         }
 
         if (null !== $user) {
@@ -165,9 +179,7 @@ class Http extends AbstractUri implements UriInterface
     {
         $server += ['IIS_WasUrlRewritten' => null, 'UNENCODED_URL' => '', 'PHP_SELF' => '', 'QUERY_STRING' => null];
         if ('1' === $server['IIS_WasUrlRewritten'] && '' !== $server['UNENCODED_URL']) {
-            $parts = explode('?', $server['UNENCODED_URL'], 2);
-
-            return [array_shift($parts), array_shift($parts)];
+            return explode('?', $server['UNENCODED_URL'], 2) + [1 => null];
         }
 
         if (isset($server['REQUEST_URI'])) {

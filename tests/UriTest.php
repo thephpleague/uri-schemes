@@ -35,6 +35,7 @@ class UriTest extends TestCase
     /**
      * @covers ::__toString
      * @covers ::formatHost
+     * @covers ::formatRegisteredName
      * @covers ::formatQueryAndFragment
      * @covers ::formatPort
      * @covers ::formatUserInfo
@@ -105,12 +106,15 @@ class UriTest extends TestCase
     /**
      * @covers ::getHost
      * @covers ::withHost
+     * @covers ::formatHost
+     * @covers ::formatIp
+     * @covers ::formatRegisteredName
      */
     public function testHost()
     {
         $this->assertSame('secure.example.com', $this->uri->getHost());
         $this->assertSame($this->uri, $this->uri->withHost('secure.example.com'));
-        $this->assertNotEquals($this->uri, $this->uri->withHost('shop.example.com'));
+        $this->assertNotEquals($this->uri, $this->uri->withHost('[::1]'));
     }
 
     /**
@@ -140,6 +144,7 @@ class UriTest extends TestCase
     /**
      * @covers ::getPort
      * @covers ::withPort
+     * @covers ::filterPort
      */
     public function testPort()
     {
@@ -197,12 +202,25 @@ class UriTest extends TestCase
         );
     }
 
+    /**
+     * @covers ::getIDNAErrors
+     * @covers ::formatHost
+     */
+    public function testCannotConvertInvalidHost()
+    {
+        $this->expectException(ParserException::class);
+        Uri::createFromString('http://_b%C3%A9bé.be-/foo/bar');
+    }
+
     public function testWithSchemeFailedWithInvalidSchemeValue()
     {
         $this->expectException(UriException::class);
         Uri::createFromString('http://example.com')->withScheme('tété');
     }
 
+    /**
+     * @covers ::filterString
+     */
     public function testWithInvalidCharacters()
     {
         $this->expectException(ParserException::class);
@@ -237,16 +255,7 @@ class UriTest extends TestCase
     }
 
     /**
-     * @covers ::withPort
-     * @covers ::filterPort
-     */
-    public function testModificationFailedWithUnsupportedPort()
-    {
-        $this->expectException(UriException::class);
-        Uri::createFromString('http://example.com/path')->withPort(12365894);
-    }
-
-    /**
+     * @covers ::formatRegisteredName
      * @covers ::withHost
      */
     public function testModificationFailedWithInvalidHost()
@@ -283,6 +292,7 @@ class UriTest extends TestCase
     /**
      * @covers ::__toString
      * @covers ::formatHost
+     * @covers ::formatRegisteredName
      * @covers ::formatQueryAndFragment
      * @covers ::formatPort
      * @covers ::formatUserInfo
@@ -311,6 +321,7 @@ class UriTest extends TestCase
 
     /**
      * @covers ::createFromComponents
+     * @covers ::formatRegisteredName
      */
     public function testCreateFromComponents()
     {
@@ -321,10 +332,103 @@ class UriTest extends TestCase
         );
     }
 
-    public function testCreateFromComponentsTrowsException()
+    /**
+     * @covers ::filterPort
+     * @covers ::withPort
+     */
+    public function testModificationFailedWithInvalidPort()
+    {
+        $this->expectException(UriException::class);
+        Uri::createFromString('http://example.com/path')->withPort(-1);
+    }
+
+
+    /**
+     * @covers ::formatIp
+     */
+    public function testCreateFromComponentsHandlesScopedIpv6()
+    {
+        $expected = '[fe80:1234::%251]';
+        $this->assertSame(
+            $expected,
+            Uri::createFromComponents(['host' => $expected])->getHost()
+        );
+    }
+
+    /**
+     * @covers ::formatIp
+     */
+    public function testCreateFromComponentsHandlesIpvFuture()
+    {
+        $expected = '[v1.ZZ.ZZ]';
+        $this->assertSame(
+            $expected,
+            Uri::createFromComponents(['host' => $expected])->getHost()
+        );
+    }
+
+
+    /**
+     * @covers ::formatIp
+     */
+    public function testCreateFromComponentsThrowsOnInvalidIpvFuture()
+    {
+        $this->expectException(ParserException::class);
+        Uri::createFromComponents(['host' => '[v4.1.2.3]']);
+    }
+
+    /**
+     * @covers ::filterString
+     */
+    public function testCreateFromComponentsThrowsExceptionWithInvalidChars()
+    {
+        $this->expectException(ParserException::class);
+        Uri::createFromComponents()->withFragment("\n\rtoto");
+    }
+
+    /**
+     * @covers ::formatIp
+     */
+    public function testCreateFromComponentsThrowsException()
     {
         $this->expectException(ParserException::class);
         Uri::createFromComponents(['host' => '[127.0.0.1]']);
+    }
+
+    /**
+     * @covers ::formatIp
+     */
+    public function testCreateFromComponentsThrowsException2()
+    {
+        $this->expectException(ParserException::class);
+        Uri::createFromComponents(['host' => '[127.0.0.1%251]']);
+    }
+
+    /**
+     * @covers ::formatIp
+     */
+    public function testCreateFromComponentsThrowsException3()
+    {
+        $this->expectException(ParserException::class);
+        Uri::createFromComponents(['host' => '[fe80:1234::%25 1]']);
+    }
+
+    /**
+     * @covers ::formatIp
+     */
+    public function testCreateFromComponentsThrowsException4()
+    {
+        $this->expectException(ParserException::class);
+        Uri::createFromComponents(['host' => '[::1%251]']);
+    }
+
+    /**
+     * @covers ::formatRegisteredName
+     */
+    public function testCreateFromComponentsThrowsException5()
+    {
+        $this->expectException(ParserException::class);
+        Uri::createFromComponents(['host' => 'a⒈com']);
     }
 
     /**

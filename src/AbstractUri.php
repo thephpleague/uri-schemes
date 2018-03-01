@@ -135,9 +135,7 @@ abstract class AbstractUri implements UriInterface
      */
     public static function __set_state(array $components): self
     {
-        $user_info = explode(':', $components['user_info'], 2);
-        $components['user'] = array_shift($user_info);
-        $components['pass'] = array_shift($user_info);
+        list($components['user'], $components['pass']) = explode(':', $components['user_info'], 2) + [1 => null];
 
         return new static(
             $components['scheme'],
@@ -175,24 +173,6 @@ abstract class AbstractUri implements UriInterface
     }
 
     /**
-     * Filter a string.
-     *
-     * @param string $str the value to evaluate as a string
-     *
-     * @throws UriException if the submitted data can not be converted to string
-     *
-     * @return string
-     */
-    protected static function filterString(string $str): string
-    {
-        if (strlen($str) !== strcspn($str, self::INVALID_CHARS)) {
-            throw UriException::createFromInvalidCharacters($str);
-        }
-
-        return $str;
-    }
-
-    /**
      * Create a new instance from a hash of parse_url parts
      *
      * @param array $components a hash representation of the URI similar
@@ -200,16 +180,12 @@ abstract class AbstractUri implements UriInterface
      *
      * @return static
      */
-    public static function createFromComponents(array $components): self
+    public static function createFromComponents(array $components = []): self
     {
         $components += [
             'scheme' => null, 'user' => null, 'pass' => null, 'host' => null,
             'port' => null, 'path' => '', 'query' => null, 'fragment' => null,
         ];
-
-        if (null !== $components['host'] && !is_host($components['host'])) {
-            throw UriException::createFromInvalidHost($components['host']);
-        }
 
         return new static(
             $components['scheme'],
@@ -257,38 +233,6 @@ abstract class AbstractUri implements UriInterface
     }
 
     /**
-     * @inheritdoc
-     */
-    public function __set(string $property, $value)
-    {
-        throw new BadMethodCallException(sprintf('"%s" is an undefined or inaccessible property', $property));
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function __isset(string $property)
-    {
-        throw new BadMethodCallException(sprintf('"%s" is an undefined or inaccessible property', $property));
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function __unset(string $property)
-    {
-        throw new BadMethodCallException(sprintf('"%s" is an undefined or inaccessible property', $property));
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function __get(string $property)
-    {
-        throw new BadMethodCallException(sprintf('"%s" is an undefined or inaccessible property', $property));
-    }
-
-    /**
      * Format the Scheme and Host component
      *
      * @param string|null $scheme
@@ -297,13 +241,14 @@ abstract class AbstractUri implements UriInterface
      */
     protected function formatScheme(string $scheme = null)
     {
-        if ($scheme === '' || $scheme === null) {
+        if ('' === $scheme || null === $scheme) {
             return $scheme;
         }
 
-        $component = strtolower($scheme);
-        if (is_scheme($scheme)) {
-            return $component;
+        $formatted_scheme = strtolower($scheme);
+        static $pattern = '/^[a-z][a-z\+\.\-]*$/';
+        if (preg_match($pattern, $formatted_scheme)) {
+            return $formatted_scheme;
         }
 
         throw new UriException(sprintf('The submitted scheme `%s` is invalid', $scheme));
@@ -323,21 +268,15 @@ abstract class AbstractUri implements UriInterface
             return $user;
         }
 
-        $user = preg_replace_callback(
-            '/(?:[^%'.self::REGEXP_CHARS_UNRESERVED.self::REGEXP_CHARS_SUBDELIM.']++|%(?![A-Fa-f0-9]{2}))/',
-            [AbstractUri::class, 'urlEncodeMatch'],
-            $user
-        );
-
+        static $user_pattern = '/(?:[^%'.self::REGEXP_CHARS_UNRESERVED.self::REGEXP_CHARS_SUBDELIM.']++|%(?![A-Fa-f0-9]{2}))/';
+        $user = preg_replace_callback($user_pattern, [AbstractUri::class, 'urlEncodeMatch'], $user);
         if (null === $password) {
             return $user;
         }
 
-        return $user.':'.preg_replace_callback(
-            '/(?:[^%:'.self::REGEXP_CHARS_UNRESERVED.self::REGEXP_CHARS_SUBDELIM.']++|%(?![A-Fa-f0-9]{2}))/',
-            [AbstractUri::class, 'urlEncodeMatch'],
-            $password
-        );
+        static $password_pattern = '/(?:[^%:'.self::REGEXP_CHARS_UNRESERVED.self::REGEXP_CHARS_SUBDELIM.']++|%(?![A-Fa-f0-9]{2}))/';
+
+        return $user.':'.preg_replace_callback($password_pattern, [AbstractUri::class, 'urlEncodeMatch'], $password);
     }
 
     /**
@@ -353,10 +292,7 @@ abstract class AbstractUri implements UriInterface
     }
 
     /**
-     * Format the Host component
-     *
-     * - convert each registered name label to its IDNA ASCII form only if it contains none valid label characters
-     * - convert each label to its lower case representation for normalization
+     * Validate and Format the Host component
      *
      * @param string|null $host
      *
@@ -364,31 +300,144 @@ abstract class AbstractUri implements UriInterface
      */
     protected function formatHost($host)
     {
-        static $pattern = '/^(?<name>[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)(?:\.(?&name))*$/i';
-
-        if ('' == $host || false !== strpos($host, ']')) {
+        if (null === $host || '' === $host) {
             return $host;
         }
 
-        if (!isset($host[253]) && preg_match($pattern, $host)) {
-            return strtolower($host);
+        if ('[' !== $host[0]) {
+            return $this->formatRegisteredName($host);
         }
 
-        $component = '';
-        $valid_ascii_label_characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-';
-        foreach (explode('.', mb_strtolower($host, 'UTF-8')) as $label) {
-            if (false !== strpos($label, '%')) {
-                $label = rawurldecode($label);
-            }
+        return $this->formatIp($host);
+    }
 
-            if (strlen($label) !== strspn($label, $valid_ascii_label_characters)) {
-                $label = (string) idn_to_ascii($label, IDNA_NONTRANSITIONAL_TO_ASCII, INTL_IDNA_VARIANT_UTS46);
-            }
+    /**
+     * Validate and format a registered name.
+     *
+     * The host is converted to its ascii representation if needed
+     *
+     * @param string $host
+     *
+     * @throws UriException if the submitted host is not a valid registered name
+     *
+     * @return string
+     */
+    private function formatRegisteredName(string $host)
+    {
+        $formatted_host = rawurldecode(strtolower($host));
 
-            $component .= $label.'.';
+        static $reg_name = '/^(
+            (?<unreserved>[a-z0-9_~\-\.])|
+            (?<sub_delims>[!$&\'()*+,;=])|
+            (?<encoded>%[A-F0-9]{2})
+        )+$/x';
+        if (preg_match($reg_name, $formatted_host)) {
+            return $formatted_host;
         }
 
-        return substr($component, 0, -1);
+        static $gen_delims = '/[:\/?#\[\]@ ]/'; // Also includes space.
+        if (preg_match($gen_delims, $formatted_host)) {
+            throw new UriException(sprintf('Host `%s` is invalid : a registered name can not contain URI delimiters or spaces', $host));
+        }
+
+        $formatted_host = idn_to_ascii($formatted_host, 0, INTL_IDNA_VARIANT_UTS46, $arr);
+        if (!$arr['errors']) {
+            return $formatted_host;
+        }
+
+        throw new UriException(sprintf('Host `%s` is invalid : %s', $host, $this->getIDNAErrors($arr['errors'])));
+    }
+
+    /**
+     * Retrieves and format IDNA conversion error message
+     *
+     * @see http://icu-project.org/apiref/icu4j/com/ibm/icu/text/IDNA.Error.html
+     *
+     * @param int $error_byte
+     *
+     * @return string
+     */
+    private function getIDNAErrors(int $error_byte): string
+    {
+        /**
+         * IDNA errors
+         */
+        static $idn_errors = [
+            IDNA_ERROR_EMPTY_LABEL => 'a non-final domain name label (or the whole domain name) is empty',
+            IDNA_ERROR_LABEL_TOO_LONG => 'a domain name label is longer than 63 bytes',
+            IDNA_ERROR_DOMAIN_NAME_TOO_LONG => 'a domain name is longer than 255 bytes in its storage form',
+            IDNA_ERROR_LEADING_HYPHEN => 'a label starts with a hyphen-minus ("-")',
+            IDNA_ERROR_TRAILING_HYPHEN => 'a label ends with a hyphen-minus ("-")',
+            IDNA_ERROR_HYPHEN_3_4 => 'a label contains hyphen-minus ("-") in the third and fourth positions',
+            IDNA_ERROR_LEADING_COMBINING_MARK => 'a label starts with a combining mark',
+            IDNA_ERROR_DISALLOWED => 'a label or domain name contains disallowed characters',
+            IDNA_ERROR_PUNYCODE => 'a label starts with "xn--" but does not contain valid Punycode',
+            IDNA_ERROR_LABEL_HAS_DOT => 'a label contains a dot=full stop',
+            IDNA_ERROR_INVALID_ACE_LABEL => 'An ACE label does not contain a valid label string',
+            IDNA_ERROR_BIDI => 'a label does not meet the IDNA BiDi requirements (for right-to-left characters)',
+            IDNA_ERROR_CONTEXTJ => 'a label does not meet the IDNA CONTEXTJ requirements',
+        ];
+
+        $res = [];
+        foreach ($idn_errors as $error => $reason) {
+            if ($error_byte & $error) {
+                $res[] = $reason;
+            }
+        }
+
+        return empty($res) ? 'Unknown IDNA conversion error.' : implode(', ', $res).'.';
+    }
+
+    /**
+     * Validate and Format the IPv6/IPvfuture host
+     *
+     * @param string $host
+     *
+     * @throws UriException if the submitted host is not a valid IPv6
+     *
+     * @return string
+     */
+    private function formatIp(string $host)
+    {
+        $ip = substr($host, 1, -1);
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+            return $host;
+        }
+
+        static $ip_future = '/^
+            v(?<version>[A-F0-9])+\.
+            (?:
+                (?<unreserved>[a-z0-9_~\-\.])|
+                (?<sub_delims>[!$&\'()*+,;=:])  # also include the : character
+            )+
+        $/ix';
+        if (preg_match($ip_future, $ip, $matches) && !in_array($matches['version'], ['4', '6'], true)) {
+            return $host;
+        }
+
+        if (false === ($pos = strpos($ip, '%'))) {
+            throw new UriException(sprintf('Host `%s` is invalid : the IP host is malformed', $host));
+        }
+
+        static $gen_delims = '/[:\/?#\[\]@ ]/'; // Also includes space.
+        if (preg_match($gen_delims, rawurldecode(substr($ip, $pos)))) {
+            throw new UriException(sprintf('Host `%s` is invalid : the IP host is malformed', $host));
+        }
+
+        $ip = substr($ip, 0, $pos);
+        if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+            throw new UriException(sprintf('Host `%s` is invalid : the IP host is malformed', $host));
+        }
+
+        //Only the address block fe80::/10 can have a Zone ID attach to
+        //let's detect the link local significant 10 bits
+        static $address_block = "\xfe\x80";
+
+        if (substr(inet_pton($ip) & $address_block, 0, 2) === $address_block) {
+            return $host;
+        }
+
+        throw new UriException(sprintf('Host `%s` is invalid : the IP host is malformed', $host));
     }
 
     /**
@@ -400,9 +449,33 @@ abstract class AbstractUri implements UriInterface
      */
     protected function formatPort($port)
     {
+        $port = $this->filterPort($port);
+
         if (isset(static::$supported_schemes[$this->scheme])
             && static::$supported_schemes[$this->scheme] === $port) {
             return null;
+        }
+
+        return $port;
+    }
+
+    /**
+     * Filter the Port component
+     *
+     * @param int|null $port
+     *
+     * @throws UriException if the port is invalid
+     *
+     * @return int|null
+     */
+    protected static function filterPort($port)
+    {
+        if (null === $port) {
+            return $port;
+        }
+
+        if ($port < 0) {
+            throw UriException::createFromInvalidPort($port);
         }
 
         return $port;
@@ -452,11 +525,8 @@ abstract class AbstractUri implements UriInterface
      */
     protected function formatPath(string $path): string
     {
-        return preg_replace_callback(
-            '/(?:[^'.self::REGEXP_CHARS_UNRESERVED.self::REGEXP_CHARS_SUBDELIM.'%:@\/}{]++|%(?![A-Fa-f0-9]{2}))/',
-            [AbstractUri::class, 'urlEncodeMatch'],
-            $path
-        );
+        static $pattern = '/(?:[^'.self::REGEXP_CHARS_UNRESERVED.self::REGEXP_CHARS_SUBDELIM.'%:@\/}{]++|%(?![A-Fa-f0-9]{2}))/';
+        return preg_replace_callback($pattern, [AbstractUri::class, 'urlEncodeMatch'], $path);
     }
 
     /**
@@ -475,15 +545,12 @@ abstract class AbstractUri implements UriInterface
      */
     protected function formatQueryAndFragment($component)
     {
-        if ('' == $component) {
+        if (null === $component || '' === $component) {
             return $component;
         }
 
-        return preg_replace_callback(
-            '/(?:[^'.self::REGEXP_CHARS_UNRESERVED.self::REGEXP_CHARS_SUBDELIM.'%:@\/\?]++|%(?![A-Fa-f0-9]{2}))/',
-            [AbstractUri::class, 'urlEncodeMatch'],
-            $component
-        );
+        static $pattern = '/(?:[^'.self::REGEXP_CHARS_UNRESERVED.self::REGEXP_CHARS_SUBDELIM.'%:@\/\?]++|%(?![A-Fa-f0-9]{2}))/';
+        return preg_replace_callback($pattern, [AbstractUri::class, 'urlEncodeMatch'], $component);
     }
 
     /**
@@ -499,7 +566,7 @@ abstract class AbstractUri implements UriInterface
     {
         $this->uri = null;
 
-        if (null !== $this->authority && ('' != $this->path && '/' != $this->path[0])) {
+        if (null !== $this->authority && ('' !== $this->path && '/' !== $this->path[0])) {
             throw new UriException(
                 'Invalid URI: if an authority is present the path must be empty or start with a `/`'
             );
@@ -599,15 +666,13 @@ abstract class AbstractUri implements UriInterface
      */
     public function __toString(): string
     {
-        if (null === $this->uri) {
-            $this->uri = $this->getUriString(
-                $this->scheme,
-                $this->authority,
-                $this->path,
-                $this->query,
-                $this->fragment
-            );
-        }
+        $this->uri = $this->uri ?? $this->getUriString(
+            $this->scheme,
+            $this->authority,
+            $this->path,
+            $this->query,
+            $this->fragment
+        );
 
         return $this->uri;
     }
@@ -815,9 +880,8 @@ abstract class AbstractUri implements UriInterface
      */
     public function withScheme($scheme): self
     {
-        $scheme = $this->filterString($scheme);
-        $scheme = $this->formatScheme($scheme);
-        if ('' == $scheme) {
+        $scheme = $this->formatScheme($this->filterString($scheme));
+        if ('' === $scheme) {
             $scheme = null;
         }
 
@@ -832,6 +896,25 @@ abstract class AbstractUri implements UriInterface
         $clone->assertValidState();
 
         return $clone;
+    }
+
+    /**
+     * Filter a string.
+     *
+     * @param string $str the value to evaluate as a string
+     *
+     * @throws UriException if the submitted data can not be converted to string
+     *
+     * @return string
+     */
+    protected static function filterString(string $str): string
+    {
+        static $pattern = '/[\x00-\x1f\x7f]/';
+        if (!preg_match($pattern, $str)) {
+            return $str;
+        }
+
+        throw UriException::createFromInvalidCharacters($str);
     }
 
     /**
@@ -855,7 +938,7 @@ abstract class AbstractUri implements UriInterface
     public function withUserInfo($user, $password = null): self
     {
         $user_info = null;
-        if ('' != $user) {
+        if (null !== $user && '' !== $user) {
             $user_info = $this->formatUserInfo($user, $password);
         }
 
@@ -888,16 +971,11 @@ abstract class AbstractUri implements UriInterface
      */
     public function withHost($host): self
     {
-        $host = $this->filterString($host);
-        if ('' == $host) {
+        $host = $this->formatHost($this->filterString($host));
+        if ('' === $host) {
             $host = null;
         }
 
-        if (null !== $host && !is_host($host)) {
-            throw UriException::createFromInvalidHost($host);
-        }
-
-        $host = $this->formatHost($host);
         if ($host === $this->host) {
             return $this;
         }
@@ -932,7 +1010,7 @@ abstract class AbstractUri implements UriInterface
      */
     public function withPort($port): self
     {
-        $port = $this->formatPort($this->filterPort($port));
+        $port = $this->formatPort($port);
         if ($port === $this->port) {
             return $this;
         }
@@ -943,24 +1021,6 @@ abstract class AbstractUri implements UriInterface
         $clone->assertValidState();
 
         return $clone;
-    }
-
-    /**
-     * Filter the Port component
-     *
-     * @param int|null $port
-     *
-     * @throws UriException if the port is invalid
-     *
-     * @return int|null
-     */
-    protected static function filterPort($port)
-    {
-        if (null !== $port && !is_port($port)) {
-            throw UriException::createFromInvalidPort($port);
-        }
-
-        return $port;
     }
 
     /**
@@ -990,8 +1050,7 @@ abstract class AbstractUri implements UriInterface
      */
     public function withPath($path): self
     {
-        $path = $this->filterString($path);
-        $path = $this->filterPath($path);
+        $path = $this->filterPath($this->filterString($path));
         if ($path === $this->path) {
             return $this;
         }
@@ -1023,8 +1082,11 @@ abstract class AbstractUri implements UriInterface
      */
     public function withQuery($query): self
     {
-        $query = $this->filterString($query);
-        $query = '' == $query ? null : $this->formatQueryAndFragment($query);
+        $query = $this->formatQueryAndFragment($this->filterString($query));
+        if ('' === $query) {
+            $query = null;
+        }
+
         if ($query === $this->query) {
             return $this;
         }
@@ -1056,8 +1118,11 @@ abstract class AbstractUri implements UriInterface
      */
     public function withFragment($fragment): self
     {
-        $fragment = $this->filterString($fragment);
-        $fragment = '' == $fragment ? null : $this->formatQueryAndFragment($fragment);
+        $fragment = $this->formatQueryAndFragment($this->filterString($fragment));
+        if ('' === $fragment) {
+            $fragment = null;
+        }
+
         if ($fragment === $this->fragment) {
             return $this;
         }
@@ -1067,5 +1132,37 @@ abstract class AbstractUri implements UriInterface
         $clone->assertValidState();
 
         return $clone;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function __set(string $property, $value)
+    {
+        throw new BadMethodCallException(sprintf('"%s" is an undefined or inaccessible property', $property));
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function __isset(string $property)
+    {
+        throw new BadMethodCallException(sprintf('"%s" is an undefined or inaccessible property', $property));
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function __unset(string $property)
+    {
+        throw new BadMethodCallException(sprintf('"%s" is an undefined or inaccessible property', $property));
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function __get(string $property)
+    {
+        throw new BadMethodCallException(sprintf('"%s" is an undefined or inaccessible property', $property));
     }
 }
