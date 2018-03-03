@@ -24,7 +24,7 @@ namespace League\Uri;
  * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
  * @since      1.1.0
  */
-class Ftp extends AbstractUri
+class Ftp extends Uri
 {
     /**
      * @inheritdoc

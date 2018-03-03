@@ -14,7 +14,7 @@ class DataTest extends TestCase
 {
     /**
      * @covers ::isValidUri
-     * @covers ::filterPath
+     * @covers ::formatPath
      */
     public function testDefaultConstructor()
     {
@@ -26,7 +26,7 @@ class DataTest extends TestCase
 
     /**
      * @covers ::isValidUri
-     * @covers ::filterPath
+     * @covers ::formatPath
      * @covers ::assertValidPath
      * @dataProvider validUrlProvider
      *
@@ -107,7 +107,7 @@ class DataTest extends TestCase
 
     /**
      * @covers ::assertValidPath
-     * @covers ::filterPath
+     * @covers ::formatPath
      */
     public function testCreateFromComponentsFailedWithInvalidArgumentException()
     {
@@ -118,7 +118,7 @@ class DataTest extends TestCase
     /**
      * @covers ::assertValidPath
      * @covers ::validateParameter
-     * @covers ::filterPath
+     * @covers ::formatPath
      */
     public function testCreateFromComponentsFailedInvalidMediatype()
     {
@@ -137,7 +137,7 @@ class DataTest extends TestCase
 
     /**
      * @covers ::assertValidPath
-     * @covers ::filterPath
+     * @covers ::formatPath
      */
     public function testWithPath()
     {

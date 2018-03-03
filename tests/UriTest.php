@@ -2,7 +2,6 @@
 
 namespace LeagueTest\Uri;
 
-use BadMethodCallException;
 use League\Uri\Exception as ParserException;
 use League\Uri\Http;
 use League\Uri\Uri;
@@ -11,7 +10,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * @group uri
- * @coversDefaultClass League\Uri\Schemes\AbstractUri
+ * @coversDefaultClass League\Uri\Uri
  */
 class UriTest extends TestCase
 {
@@ -432,43 +431,7 @@ class UriTest extends TestCase
     }
 
     /**
-     * @covers ::__set
-     */
-    public function testInvalidSetterThrowException()
-    {
-        $this->expectException(BadMethodCallException::class);
-        Uri::createFromString()->host = 'thephpleague.com';
-    }
-
-    /**
-     * @covers ::__get
-     */
-    public function testInvalidGetterThrowException()
-    {
-        $this->expectException(BadMethodCallException::class);
-        Uri::createFromString()->path;
-    }
-
-    /**
-     * @covers ::__isset
-     */
-    public function testInvalidIssetThrowException()
-    {
-        $this->expectException(BadMethodCallException::class);
-        isset(Uri::createFromString()->path);
-    }
-
-    /**
-     * @covers ::__unset
-     */
-    public function testInvalidUnssetThrowException()
-    {
-        $this->expectException(BadMethodCallException::class);
-        unset(Uri::createFromString()->path);
-    }
-
-    /**
-     * @covers ::filterPath
+     * @covers ::formatPath
      */
     public function testReservedCharsInPathUnencoded()
     {

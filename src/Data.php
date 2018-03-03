@@ -24,7 +24,7 @@ namespace League\Uri;
  * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
  * @since      1.1.0
  */
-class Data extends AbstractUri
+class Data extends Uri
 {
     /**
      * @inheritdoc
@@ -66,7 +66,7 @@ class Data extends AbstractUri
      *
      * @return string
      */
-    protected function filterPath(string $path): string
+    protected function formatPath(string $path): string
     {
         if ('' == $path) {
             return 'text/plain;charset=us-ascii,';
@@ -91,7 +91,7 @@ class Data extends AbstractUri
 
         $this->assertValidPath($mimetype, $parameters, $data);
 
-        return $this->formatPath($mimetype.';'.$parameters.','.$data);
+        return parent::formatPath($mimetype.';'.$parameters.','.$data);
     }
 
     /**
@@ -106,7 +106,7 @@ class Data extends AbstractUri
      * @throws UriException If the mediatype or the data are not compliant
      *                      with the RFC2397
      */
-    protected function assertValidPath(string $mimetype, string $parameters, string $data)
+    protected function assertValidPath(string $mimetype, string $parameters, string $data): void
     {
         if (!preg_match(',^\w+/[-.\w]+(?:\+[-.\w]+)?$,', $mimetype)) {
             throw new UriException(sprintf('The path mimetype `%s` is invalid', $mimetype));
@@ -153,7 +153,7 @@ class Data extends AbstractUri
      *
      * @return static
      */
-    public static function createFromPath(string $path): self
+    public static function createFromPath(string $path)
     {
         if (!file_exists($path) || !is_readable($path)) {
             throw new UriException(sprintf('The specified file `%s` does not exist or is not readable', $path));
@@ -167,7 +167,9 @@ class Data extends AbstractUri
             null,
             null,
             null,
-            $mimetype.';base64,'.base64_encode(file_get_contents($path))
+            $mimetype.';base64,'.base64_encode(file_get_contents($path)),
+            null,
+            null
         );
     }
 }

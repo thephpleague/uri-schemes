@@ -24,7 +24,7 @@ namespace League\Uri;
  * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
  * @since      1.1.0
  */
-class File extends AbstractUri
+class File extends Uri
 {
     /**
      * @inheritdoc
@@ -74,7 +74,7 @@ class File extends AbstractUri
      *
      * @return string|null
      */
-    protected function formatHost($host)
+    protected function formatHost(?string $host): ?string
     {
         if ('' === $host) {
             $host = 'localhost';
@@ -90,14 +90,14 @@ class File extends AbstractUri
      *
      * @return static
      */
-    public static function createFromUnixPath(string $uri = ''): self
+    public static function createFromUnixPath(string $uri = '')
     {
         $uri = implode('/', array_map('rawurlencode', explode('/', $uri)));
-        if ('/' === $uri[0] ?? null) {
-            return new static('file', null, null, 'localhost', null, $uri);
+        if ('/' === ($uri[0] ?? '')) {
+            return new static('file', null, null, 'localhost', null, $uri, null, null);
         }
 
-        return new static(null, null, null, null, null, $uri);
+        return new static(null, null, null, null, null, $uri, null, null);
     }
 
     /**
@@ -107,7 +107,7 @@ class File extends AbstractUri
      *
      * @return static
      */
-    public static function createFromWindowsPath(string $uri = ''): self
+    public static function createFromWindowsPath(string $uri = '')
     {
         $root = '';
         static $pattern = ',^(?<root>[a-zA-Z][:|\|]),';
@@ -120,15 +120,15 @@ class File extends AbstractUri
 
         //Local Windows absolute path
         if ('' !== $root) {
-            return new static('file', null, null, 'localhost', null, '/'.$root.$uri);
+            return new static('file', null, null, 'localhost', null, '/'.$root.$uri, null, null);
         }
 
         //UNC Windows Path
         if ('//' === substr($uri, 0, 2)) {
             $parts = explode('/', substr($uri, 2), 2) + [1 => null];
-            return new static('file', null, null, $parts[0], null, '/'.$parts[1]);
+            return new static('file', null, null, $parts[0], null, '/'.$parts[1], null, null);
         }
 
-        return new static(null, null, null, null, null, $uri);
+        return new static(null, null, null, null, null, $uri, null, null);
     }
 }

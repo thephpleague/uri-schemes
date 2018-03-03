@@ -24,7 +24,7 @@ namespace League\Uri;
  * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
  * @since      1.1.0
  */
-class Ws extends AbstractUri
+class Ws extends Uri
 {
     /**
      * @inheritdoc
@@ -60,7 +60,7 @@ class Ws extends AbstractUri
     /**
      * @inheritdoc
      */
-    protected static function filterPort($port)
+    protected function filterPort(?int $port): ?int
     {
         if (null === $port) {
             return $port;

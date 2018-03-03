@@ -63,9 +63,9 @@ class Factory
     /**
      * new instance
      *
-     * @param array $map An override map of URI classes indexed by their supported schemes.
+     * @param iterable $map An override map of URI classes indexed by their supported schemes.
      */
-    public function __construct($map = [])
+    public function __construct(iterable $map = [])
     {
         foreach ($map as $scheme => $className) {
             $this->addMap(strtolower($scheme), $className);
@@ -172,7 +172,7 @@ class Factory
      *
      * @return string
      */
-    protected function getClassName($scheme, $base_uri = null): string
+    protected function getClassName(?string $scheme, $base_uri = null): string
     {
         $scheme = strtolower($scheme ?? '');
         if (isset($base_uri) && in_array($scheme, [$base_uri->getScheme(), ''], true)) {
@@ -274,7 +274,7 @@ class Factory
      *
      * @return array
      */
-    protected function reducer(array $carry, string $segment)
+    protected function reducer(array $carry, string $segment): array
     {
         if ('..' === $segment) {
             array_pop($carry);
@@ -299,7 +299,7 @@ class Factory
      *
      * @return string[]
      */
-    protected function resolvePathAndQuery($uri, $base_uri)
+    protected function resolvePathAndQuery($uri, $base_uri): array
     {
         $target_path = $uri->getPath();
         $target_query = $uri->getQuery();

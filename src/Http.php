@@ -26,7 +26,7 @@ use Psr\Http\Message\UriInterface;
  * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
  * @since      1.1.0
  */
-class Http extends AbstractUri implements UriInterface
+class Http extends Uri implements UriInterface
 {
     /**
      * @inheritdoc
@@ -61,7 +61,7 @@ class Http extends AbstractUri implements UriInterface
     /**
      * @inheritdoc
      */
-    protected static function filterPort($port)
+    protected function filterPort(?int $port): ?int
     {
         if (null === $port) {
             return $port;
@@ -81,13 +81,13 @@ class Http extends AbstractUri implements UriInterface
      *
      * @return static
      */
-    public static function createFromServer(array $server): self
+    public static function createFromServer(array $server)
     {
         list($user, $pass) = static::fetchUserInfo($server);
         list($host, $port) = static::fetchHostname($server);
         list($path, $query) = static::fetchRequestUri($server);
 
-        return new static(static::fetchScheme($server), $user, $pass, $host, $port, $path, $query);
+        return new static(static::fetchScheme($server), $user, $pass, $host, $port, $path, $query, null);
     }
 
     /**
