@@ -125,7 +125,7 @@ class Uri implements UriInterface
      */
     public static function __set_state(array $components)
     {
-        list($components['user'], $components['pass']) = explode(':', $components['user_info'], 2) + [1 => null];
+        [$components['user'], $components['pass']] = explode(':', $components['user_info'], 2) + [1 => null];
 
         return new static(
             $components['scheme'],
