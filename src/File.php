@@ -93,7 +93,7 @@ class File extends AbstractUri
     public static function createFromUnixPath(string $uri = ''): self
     {
         $uri = implode('/', array_map('rawurlencode', explode('/', $uri)));
-        if ('/' === $uri[0] ?? null) {
+        if ('/' === ($uri[0] ?? '')) {
             return new static('file', null, null, 'localhost', null, $uri);
         }
 

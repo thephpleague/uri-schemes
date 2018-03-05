@@ -322,7 +322,7 @@ abstract class AbstractUri implements UriInterface
      *
      * @return string
      */
-    private function formatRegisteredName(string $host)
+    private function formatRegisteredName(string $host): string
     {
         $formatted_host = rawurldecode(strtolower($host));
 
@@ -397,7 +397,7 @@ abstract class AbstractUri implements UriInterface
      *
      * @return string
      */
-    private function formatIp(string $host)
+    private function formatIp(string $host): string
     {
         $ip = substr($host, 1, -1);
         if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
@@ -938,7 +938,7 @@ abstract class AbstractUri implements UriInterface
     public function withUserInfo($user, $password = null): self
     {
         $user_info = null;
-        if (null !== $user && '' !== $user) {
+        if ('' !== $user) {
             $user_info = $this->formatUserInfo($user, $password);
         }
 
