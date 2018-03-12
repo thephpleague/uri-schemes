@@ -345,7 +345,7 @@ abstract class AbstractUri implements UriInterface
             return $formatted_host;
         }
 
-        throw new UriException(sprintf('Host `%s` is invalid : %s', $host, $this->getIDNAErrors($arr['errors'])));
+        throw new UriException(sprintf('Host `%s` is invalid : %s', $host, $this->getIdnaErrors($arr['errors'])));
     }
 
     /**
@@ -357,7 +357,7 @@ abstract class AbstractUri implements UriInterface
      *
      * @return string
      */
-    private function getIDNAErrors(int $error_byte): string
+    private function getIdnaErrors(int $error_byte): string
     {
         /**
          * IDNA errors
