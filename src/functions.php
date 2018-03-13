@@ -7,7 +7,7 @@
  * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
  * @copyright  2017 Ignace Nyamagana Butera
  * @license    https://github.com/thephpleague/uri-manipulations/blob/master/LICENSE (MIT License)
- * @version    1.1.1
+ * @version    1.2.0
  * @link       https://github.com/thephpleague/uri-manipulations
  */
 declare(strict_types=1);

@@ -203,7 +203,7 @@ class UriTest extends TestCase
     }
 
     /**
-     * @covers ::getIDNAErrors
+     * @covers ::getIdnaErrorMessage
      * @covers ::formatHost
      */
     public function testCannotConvertInvalidHost()

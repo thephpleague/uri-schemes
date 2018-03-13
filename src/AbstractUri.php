@@ -6,7 +6,7 @@
  * @subpackage League\Uri\Schemes
  * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
  * @license    https://github.com/thephpleague/uri-components/blob/master/LICENSE (MIT License)
- * @version    1.1.1
+ * @version    1.2.0
  * @link       https://github.com/thephpleague/uri-components
  *
  * For the full copyright and license information, please view the LICENSE
@@ -339,6 +339,17 @@ abstract class AbstractUri implements UriInterface
         if (preg_match($gen_delims, $formatted_host)) {
             throw new UriException(sprintf('Host `%s` is invalid : a registered name can not contain URI delimiters or spaces', $host));
         }
+
+        static $idn_support = null;
+        $idn_support = $idn_support ?? function_exists('idn_to_ascii') && defined('INTL_IDNA_VARIANT_UTS46');
+        if (!$idn_support) {
+            // @codeCoverageIgnoreStart
+            // added because it is not possible in travis to disabled the ext/intl extension
+            // see travis issue https://github.com/travis-ci/travis-ci/issues/4701
+            throw new UriException(sprintf('the host `%s` could not be processed for IDN. Verify that ext/intl is installed for IDN support and that ICU is at least version 4.6.', $host));
+            // @codeCoverageIgnoreEnd
+        }
+
 
         $formatted_host = idn_to_ascii($formatted_host, 0, INTL_IDNA_VARIANT_UTS46, $arr);
         if (!$arr['errors']) {
