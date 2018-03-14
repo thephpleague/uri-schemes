@@ -340,7 +340,7 @@ abstract class AbstractUri implements UriInterface
         //to test IDN host non-ascii characters must be present in the host
         static $idn_pattern = '/[^\x20-\x7f]/';
         if (!preg_match($idn_pattern, $formatted_host)) {
-            throw new UriException(sprintf('Host `%s` is invalid : a registered name can not contain URI delimiters or spaces', $host));
+            throw new UriException(sprintf('Host `%s` is invalid : the registered name is malformed', $host));
         }
 
         static $idn_support = null;
@@ -352,7 +352,6 @@ abstract class AbstractUri implements UriInterface
             throw new MissingIdnSupport(sprintf('the host `%s` could not be processed for IDN. Verify that ext/intl is installed for IDN support and that ICU is at least version 4.6.', $host));
             // @codeCoverageIgnoreEnd
         }
-
 
         $formatted_host = idn_to_ascii($formatted_host, 0, INTL_IDNA_VARIANT_UTS46, $arr);
         if (0 === $arr['errors']) {
