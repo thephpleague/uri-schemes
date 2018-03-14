@@ -13,6 +13,7 @@ when the `intl` extension is missing or the ICU minimum version is not supported
 ### Fixed
 
 - `Factory::create` now always remove dot segments
+- `Factory::create` create with a relative path
 - Using PHPstan
 - Improve Host parsing according to RFC3986
 - Improve Parsing performance

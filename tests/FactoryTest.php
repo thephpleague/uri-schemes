@@ -203,6 +203,12 @@ class FactoryTest extends TestCase
                 'uri' => 'https://EXAMPLE.com/../x',
                 'base_uri' => null,
             ],
+            'relative path with absolute path' => [
+                'expected_class' => Uri\File::class,
+                'expected_uri' => 'file://localhost/',
+                'uri' => '..',
+                'base_uri' => 'file://C:/demo',
+            ],
         ];
     }
 

@@ -192,13 +192,21 @@ class Factory
      */
     protected function newInstance(array $components, string $className)
     {
-        return (new ReflectionClass($className))
+        $uri = (new ReflectionClass($className))
             ->newInstanceWithoutConstructor()
             ->withHost($components['host'] ?? '')
             ->withPort($components['port'] ?? null)
             ->withUserInfo($components['user'] ?? '', $components['pass'] ?? null)
             ->withScheme($components['scheme'] ?? '')
-            ->withPath($components['path'] ?? '')
+        ;
+
+        $path = $components['path'] ?? '';
+        if ('' !== $uri->getAuthority() && '' !== $path && '/' !== $path[0]) {
+            $path = '/'.$path;
+        }
+
+        return $uri
+            ->withPath($path)
             ->withQuery($components['query'] ?? '')
             ->withFragment($components['fragment'] ?? '')
         ;
