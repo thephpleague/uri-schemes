@@ -2,7 +2,7 @@
 
 All Notable changes to `League\Uri\Schemes` will be documented in this file
 
-## Next - TBD
+## 1.2.0 - 2018-03-14
 
 ### Added
 

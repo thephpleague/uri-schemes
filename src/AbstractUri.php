@@ -335,8 +335,9 @@ abstract class AbstractUri implements UriInterface
             return $formatted_host;
         }
 
-        static $gen_delims = '/[:\/?#\[\]@ ]/'; // Also includes space.
-        if (preg_match($gen_delims, $formatted_host)) {
+        //to test IDN host non-ascii characters must be present in the host
+        static $idn_pattern = '/[^\x20-\x7f]/';
+        if (!preg_match($idn_pattern, $formatted_host)) {
             throw new UriException(sprintf('Host `%s` is invalid : a registered name can not contain URI delimiters or spaces', $host));
         }
 
@@ -346,13 +347,13 @@ abstract class AbstractUri implements UriInterface
             // @codeCoverageIgnoreStart
             // added because it is not possible in travis to disabled the ext/intl extension
             // see travis issue https://github.com/travis-ci/travis-ci/issues/4701
-            throw new UriException(sprintf('the host `%s` could not be processed for IDN. Verify that ext/intl is installed for IDN support and that ICU is at least version 4.6.', $host));
+            throw new MissingIdnSupport(sprintf('the host `%s` could not be processed for IDN. Verify that ext/intl is installed for IDN support and that ICU is at least version 4.6.', $host));
             // @codeCoverageIgnoreEnd
         }
 
 
         $formatted_host = idn_to_ascii($formatted_host, 0, INTL_IDNA_VARIANT_UTS46, $arr);
-        if (!$arr['errors']) {
+        if (0 === $arr['errors']) {
             return $formatted_host;
         }
 

@@ -68,11 +68,12 @@ class Data extends AbstractUri
      */
     protected function filterPath(string $path): string
     {
-        if ('' == $path) {
+        if ('' === $path) {
             return 'text/plain;charset=us-ascii,';
         }
 
-        if (!mb_detect_encoding($path, 'US-ASCII', true) || false === strpos($path, ',')) {
+        static $idn_pattern = '/[^\x20-\x7f]/';
+        if (preg_match($idn_pattern, $path) || false === strpos($path, ',')) {
             throw new UriException(sprintf('The submitted path `%s` is invalid according to RFC2937', $path));
         }
 
