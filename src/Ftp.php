@@ -22,7 +22,7 @@ namespace League\Uri;
  * @package    League\Uri
  * @subpackage League\Uri\Schemes
  * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
- * @since      1.1.0
+ * @since      1.2.0
  */
 class Ftp extends AbstractUri
 {

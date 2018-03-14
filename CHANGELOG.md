@@ -6,12 +6,16 @@ All Notable changes to `League\Uri\Schemes` will be documented in this file
 
 ### Added
 
-- None
+- `MissingIdnSupport` exception which is thrown when trying to process a possible RFC3987 compliant host
+when the `intl` extension is missing or the ICU minimum version is not supported.
+- IPvFuture support
 
 ### Fixed
 
 - `Factory::create` now always remove dot segments
-- using PHPstan
+- Using PHPstan
+- Improve Host parsing according to RFC3986
+- Improve Parsing performance
 
 ### Deprecated
 
@@ -19,7 +23,7 @@ All Notable changes to `League\Uri\Schemes` will be documented in this file
 
 ### Remove
 
-- None
+- remove `mbstring` requirement
 
 ## 1.1.1 - 2017-12-01
 

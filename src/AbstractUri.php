@@ -25,11 +25,13 @@ use League\Uri\Interfaces\Uri as UriInterface;
  * @package    League\Uri
  * @subpackage League\Uri\Schemes
  * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
- * @since      1.1.0
+ * @since      1.2.0
  */
 abstract class AbstractUri implements UriInterface
 {
     /**
+     * @deprecated 1.2.0 will be removed in the next major point release
+     *
      * Invalid Characters
      *
      * @see http://tools.ietf.org/html/rfc3986#section-2
