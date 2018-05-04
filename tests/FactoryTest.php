@@ -4,6 +4,9 @@ namespace LeagueTest\Uri;
 
 use InvalidArgumentException;
 use League\Uri;
+use League\Uri\Factory;
+use League\Uri\Ftp;
+use League\Uri\Http;
 use PHPUnit\Framework\TestCase;
 use TypeError;
 
@@ -13,12 +16,12 @@ use TypeError;
 class FactoryTest extends TestCase
 {
     /**
-     * @covers \League\Uri\Factory::__construct
+     * @covers \League\Uri\Factory
      */
     public function testFactoryThrowTypeErrorOnConstruction()
     {
         $this->expectException(TypeError::class);
-        new Uri\Factory(date_create());
+        new Factory(date_create());
     }
 
     /**
@@ -117,6 +120,7 @@ class FactoryTest extends TestCase
      *
      * @covers \League\Uri\create
      * @covers \League\Uri\Factory
+     * @covers \League\Uri\Resolver
      *
      * @param string $expected_class
      * @param string $expected_uri
@@ -276,5 +280,26 @@ class FactoryTest extends TestCase
             'origin uri without path' => ['http://h:b@a', 'b/../y',   'http://h:b@a/y'],
             'uri without auhtority'   => ['mailto:f@a.b', 'b@c.d?subject=baz', 'mailto:b@c.d?subject=baz'],
         ];
+    }
+
+    /**
+     * @covers \League\Uri\resolve
+     */
+    public function testResolveLetThrowResolvedUriException()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $http = Http::createFromString('http://example.com/path/to/file');
+        $ftp = Ftp::createFromString('ftp//a/b/c/d;p');
+        Uri\resolve($ftp, $http);
+    }
+
+    /**
+     * @covers \League\Uri\resolve
+     * @covers \League\Uri\Resolver::filterUri
+     */
+    public function testResolveThrowExceptionOnConstructor()
+    {
+        $this->expectException(TypeError::class);
+        Uri\resolve('ftp//a/b/c/d;p', 'toto');
     }
 }

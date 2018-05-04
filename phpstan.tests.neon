@@ -3,3 +3,10 @@ includes:
     - vendor/phpstan/phpstan-phpunit/extension.neon
     - vendor/phpstan/phpstan-phpunit/rules.neon
     - vendor/phpstan/phpstan-phpunit/strictRules.neon
+parameters:
+    ignoreErrors:
+        - '#Parameter \#1 \$uri of function League\\Uri\\resolve expects League\\Uri\\UriInterface\|Psr\\Http\\Message\\UriInterface, string given\.#'
+        - '#Parameter \#2 \$base_uri of function League\\Uri\\resolve expects League\\Uri\\UriInterface\|Psr\\Http\\Message\\UriInterface, string given\.#'
+        - '#Parameter \#1 \$uri of function League\\Uri\\relativize expects League\\Uri\\UriInterface\|Psr\\Http\\Message\\UriInterface, string given\.#'
+        - '#Parameter \#2 \$base_uri of function League\\Uri\\relativize expects League\\Uri\\UriInterface\|Psr\\Http\\Message\\UriInterface, string given\.#'
+    reportUnmatchedIgnoredErrors: false
