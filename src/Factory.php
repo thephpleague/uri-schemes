@@ -104,14 +104,14 @@ final class Factory
      * <li>a string
      * </ul>
      *
-     * @param string $uri
-     * @param mixed  $base_uri
+     * @param mixed $uri
+     * @param mixed $base_uri
      *
      * @throws UriException if there's no base URI and the submitted URI is not absolute
      *
      * @return LeagueUriInterface|UriInterface
      */
-    public function create(string $uri, $base_uri = null)
+    public function create($uri, $base_uri = null)
     {
         $components = parse($uri);
         if (null !== $base_uri) {
@@ -121,7 +121,7 @@ final class Factory
             return resolve($this->newInstance($components, $className), $base_uri);
         }
 
-        if (null == $components['scheme']) {
+        if (null === $components['scheme'] || '' === $components['scheme']) {
             throw new UriException(sprintf('the submitted URI `%s` must be an absolute URI', $uri));
         }
 

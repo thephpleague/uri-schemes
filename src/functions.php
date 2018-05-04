@@ -25,12 +25,12 @@ use TypeError;
  * @see Uri\Factory::__construct
  * @see Uri\Factory::create
  *
- * @param string $uri
- * @param mixed  $base_uri
+ * @param mixed $uri
+ * @param mixed $base_uri
  *
  * @return LeagueUriInterface|UriInterface
  */
-function create(string $uri, $base_uri = null)
+function create($uri, $base_uri = null)
 {
     static $factory;
 
