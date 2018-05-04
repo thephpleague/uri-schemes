@@ -61,14 +61,14 @@ class Http extends Uri implements UriInterface
     /**
      * @inheritdoc
      */
-    protected function filterPort(?int $port): ?int
+    protected function filterPort(int $port = null)
     {
         if (null === $port) {
             return $port;
         }
 
         if (1 > $port || 65535 < $port) {
-            throw UriException::createFromInvalidPort($port);
+            throw new UriException(sprintf('Invalid Port `%s` for the HTTP(s) URI scheme', $port));
         }
 
         return $port;
@@ -83,9 +83,9 @@ class Http extends Uri implements UriInterface
      */
     public static function createFromServer(array $server)
     {
-        [$user, $pass] = static::fetchUserInfo($server);
-        [$host, $port] = static::fetchHostname($server);
-        [$path, $query] = static::fetchRequestUri($server);
+        list($user, $pass) = static::fetchUserInfo($server);
+        list($host, $port) = static::fetchHostname($server);
+        list($path, $query) = static::fetchRequestUri($server);
 
         return new static(static::fetchScheme($server), $user, $pass, $host, $port, $path, $query, null);
     }
@@ -118,7 +118,7 @@ class Http extends Uri implements UriInterface
         $user = $server['PHP_AUTH_USER'];
         $pass = $server['PHP_AUTH_PW'];
         if (0 === strpos(strtolower($server['HTTP_AUTHORIZATION']), 'basic')) {
-            [$user, $pass] = explode(':', base64_decode(substr($server['HTTP_AUTHORIZATION'], 6)), 2) + [1 => null];
+            list($user, $pass) = explode(':', base64_decode(substr($server['HTTP_AUTHORIZATION'], 6)), 2) + [1 => null];
         }
 
         if (null !== $user) {
@@ -183,7 +183,7 @@ class Http extends Uri implements UriInterface
         }
 
         if (isset($server['REQUEST_URI'])) {
-            [$path, ] = explode('?', $server['REQUEST_URI'], 2);
+            list($path, ) = explode('?', $server['REQUEST_URI'], 2);
             $query = ('' !== $server['QUERY_STRING']) ? $server['QUERY_STRING'] : null;
 
             return [$path, $query];

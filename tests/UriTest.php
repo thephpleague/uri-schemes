@@ -2,8 +2,8 @@
 
 namespace LeagueTest\Uri;
 
-use League\Uri\Exception as ParserException;
 use League\Uri\Http;
+use League\Uri\Parser\Exception as ParserException;
 use League\Uri\Uri;
 use League\Uri\UriException;
 use PHPUnit\Framework\TestCase;
@@ -372,7 +372,7 @@ class UriTest extends TestCase
      */
     public function testCreateFromComponentsThrowsOnInvalidIpvFuture()
     {
-        $this->expectException(ParserException::class);
+        $this->expectException(UriException::class);
         Uri::createFromComponents(['host' => '[v4.1.2.3]']);
     }
 
@@ -381,7 +381,7 @@ class UriTest extends TestCase
      */
     public function testCreateFromComponentsThrowsExceptionWithInvalidChars()
     {
-        $this->expectException(ParserException::class);
+        $this->expectException(UriException::class);
         Uri::createFromComponents()->withFragment("\n\rtoto");
     }
 
@@ -390,7 +390,7 @@ class UriTest extends TestCase
      */
     public function testCreateFromComponentsThrowsException()
     {
-        $this->expectException(ParserException::class);
+        $this->expectException(UriException::class);
         Uri::createFromComponents(['host' => '[127.0.0.1]']);
     }
 
@@ -399,7 +399,7 @@ class UriTest extends TestCase
      */
     public function testCreateFromComponentsThrowsException2()
     {
-        $this->expectException(ParserException::class);
+        $this->expectException(UriException::class);
         Uri::createFromComponents(['host' => '[127.0.0.1%251]']);
     }
 
@@ -408,7 +408,7 @@ class UriTest extends TestCase
      */
     public function testCreateFromComponentsThrowsException3()
     {
-        $this->expectException(ParserException::class);
+        $this->expectException(UriException::class);
         Uri::createFromComponents(['host' => '[fe80:1234::%25 1]']);
     }
 
@@ -417,16 +417,17 @@ class UriTest extends TestCase
      */
     public function testCreateFromComponentsThrowsException4()
     {
-        $this->expectException(ParserException::class);
+        $this->expectException(UriException::class);
         Uri::createFromComponents(['host' => '[::1%251]']);
     }
 
     /**
      * @covers ::formatRegisteredName
+     * @covers ::getIDNAErrors
      */
     public function testCreateFromComponentsThrowsException5()
     {
-        $this->expectException(ParserException::class);
+        $this->expectException(UriException::class);
         Uri::createFromComponents(['host' => 'a⒈com']);
     }
 

@@ -5,12 +5,22 @@ namespace LeagueTest\Uri;
 use InvalidArgumentException;
 use League\Uri;
 use PHPUnit\Framework\TestCase;
+use TypeError;
 
 /**
  * @group factory
  */
 class FactoryTest extends TestCase
 {
+    /**
+     * @covers \League\Uri\Factory::__construct
+     */
+    public function testFactoryThrowTypeErrorOnConstruction()
+    {
+        $this->expectException(TypeError::class);
+        new Uri\Factory(date_create());
+    }
+
     /**
      * @dataProvider invalidMapperData
      *

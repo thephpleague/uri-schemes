@@ -74,7 +74,7 @@ class File extends Uri
      *
      * @return string|null
      */
-    protected function formatHost(?string $host): ?string
+    protected function formatHost(string $host = null)
     {
         if ('' === $host) {
             $host = 'localhost';

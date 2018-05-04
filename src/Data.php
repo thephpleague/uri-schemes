@@ -106,7 +106,7 @@ class Data extends Uri
      * @throws UriException If the mediatype or the data are not compliant
      *                      with the RFC2397
      */
-    protected function assertValidPath(string $mimetype, string $parameters, string $data): void
+    protected function assertValidPath(string $mimetype, string $parameters, string $data)
     {
         if (!preg_match(',^\w+/[-.\w]+(?:\+[-.\w]+)?$,', $mimetype)) {
             throw new UriException(sprintf('The path mimetype `%s` is invalid', $mimetype));

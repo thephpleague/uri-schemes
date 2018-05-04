@@ -60,14 +60,14 @@ class Ws extends Uri
     /**
      * @inheritdoc
      */
-    protected function filterPort(?int $port): ?int
+    protected function filterPort(int $port = null)
     {
         if (null === $port) {
             return $port;
         }
 
         if (1 > $port || 65535 < $port) {
-            throw UriException::createFromInvalidPort($port);
+            throw new UriException(sprintf('Invalid Port `%s` for the WS(s) URI scheme', $port));
         }
 
         return $port;

@@ -16,8 +16,6 @@ declare(strict_types=1);
 
 namespace League\Uri;
 
-use League\Uri\Interfaces\Uri as UriInterface;
-
 /**
  * common URI Object properties and methods
  *
@@ -29,22 +27,22 @@ use League\Uri\Interfaces\Uri as UriInterface;
 class Uri implements UriInterface
 {
     /**
-     * RFC3986 Sub delimiter characters regular expression pattern
+     * @internal RFC3986 Sub delimiter characters regular expression pattern
      *
      * @see http://tools.ietf.org/html/rfc3986#section-2.2
      *
      * @var string
      */
-    private const REGEXP_CHARS_SUBDELIM = "\!\$&'\(\)\*\+,;\=%";
+    const REGEXP_CHARS_SUBDELIM = "\!\$&'\(\)\*\+,;\=%";
 
     /**
-     * RFC3986 unreserved characters regular expression pattern
+     * @internal RFC3986 unreserved characters regular expression pattern
      *
      * @see http://tools.ietf.org/html/rfc3986#section-2.3
      *
      * @var string
      */
-    private const REGEXP_CHARS_UNRESERVED = 'A-Za-z0-9_\-\.~';
+    const REGEXP_CHARS_UNRESERVED = 'A-Za-z0-9_\-\.~';
 
     /**
      * URI scheme component
@@ -125,7 +123,7 @@ class Uri implements UriInterface
      */
     public static function __set_state(array $components)
     {
-        [$components['user'], $components['pass']] = explode(':', $components['user_info'], 2) + [1 => null];
+        list($components['user'], $components['pass']) = explode(':', $components['user_info'], 2) + [1 => null];
 
         return new static(
             $components['scheme'],
@@ -202,14 +200,14 @@ class Uri implements UriInterface
      * @param string|null $fragment fragment component
      */
     protected function __construct(
-        ?string $scheme,
-        ?string $user,
-        ?string $pass,
-        ?string $host,
-        ?int $port,
+        string $scheme = null,
+        string $user = null,
+        string $pass = null,
+        string $host = null,
+        int $port = null,
         string $path,
-        ?string $query,
-        ?string $fragment
+        string $query = null,
+        string $fragment = null
     ) {
         $this->scheme = $this->formatScheme($scheme);
         $this->user_info = $this->formatUserInfo($user, $pass);
@@ -229,7 +227,7 @@ class Uri implements UriInterface
      *
      * @return string|null
      */
-    protected function formatScheme(?string $scheme): ?string
+    protected function formatScheme(string $scheme = null)
     {
         if ('' === $scheme || null === $scheme) {
             return $scheme;
@@ -252,7 +250,7 @@ class Uri implements UriInterface
      *
      * @return string|null
      */
-    protected function formatUserInfo(?string $user, ?string $password = null): ?string
+    protected function formatUserInfo(string $user = null, string $password = null)
     {
         if (null === $user) {
             return $user;
@@ -288,7 +286,7 @@ class Uri implements UriInterface
      *
      * @return string|null
      */
-    protected function formatHost(?string $host): ?string
+    protected function formatHost(string $host = null)
     {
         if (null === $host || '' === $host) {
             return $host;
@@ -437,7 +435,7 @@ class Uri implements UriInterface
      *
      * @return int|null
      */
-    protected function formatPort(?int $port): ?int
+    protected function formatPort(int $port = null)
     {
         $port = $this->filterPort($port);
 
@@ -458,14 +456,14 @@ class Uri implements UriInterface
      *
      * @return int|null
      */
-    protected function filterPort(?int $port): ?int
+    protected function filterPort(int $port = null)
     {
         if (null === $port) {
             return $port;
         }
 
         if ($port < 0) {
-            throw UriException::createFromInvalidPort($port);
+            throw new UriException(sprintf('Invalid Port `%s`', $port));
         }
 
         return $port;
@@ -476,7 +474,7 @@ class Uri implements UriInterface
      *
      * @return string|null
      */
-    protected function setAuthority(): ?string
+    protected function setAuthority()
     {
         $authority = null;
         if (null !== $this->user_info) {
@@ -521,7 +519,7 @@ class Uri implements UriInterface
      *
      * @return string|null
      */
-    protected function formatQueryAndFragment(?string $component): ?string
+    protected function formatQueryAndFragment(string $component = null)
     {
         if (null === $component || '' === $component) {
             return $component;
@@ -540,7 +538,7 @@ class Uri implements UriInterface
      * @throws UriException if the URI is in an invalid state according to RFC3986
      * @throws UriException if the URI is in an invalid state according to scheme specific rules
      */
-    protected function assertValidState(): void
+    protected function assertValidState()
     {
         $this->uri = null;
 
@@ -602,11 +600,11 @@ class Uri implements UriInterface
      * @return string
      */
     protected function getUriString(
-        ?string $scheme,
-        ?string $authority,
+        string $scheme = null,
+        string $authority = null,
         string $path,
-        ?string $query,
-        ?string $fragment
+        string $query = null,
+        string $fragment = null
     ): string {
         if (null !== $scheme) {
             $scheme = $scheme.':';
@@ -760,7 +758,7 @@ class Uri implements UriInterface
      *
      * @return null|int
      */
-    public function getPort(): ?int
+    public function getPort()
     {
         return $this->port;
     }
@@ -895,7 +893,7 @@ class Uri implements UriInterface
             return $str;
         }
 
-        throw UriException::createFromInvalidCharacters($str);
+        throw new UriException(sprintf('the submitted URI `%s` contains invalid characters', $str));
     }
 
     /**

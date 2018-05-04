@@ -16,6 +16,8 @@ declare(strict_types=1);
 
 namespace League\Uri;
 
+use InvalidArgumentException;
+
 /**
  * Base Exception class for League Uri Schemes
  *
@@ -23,6 +25,6 @@ namespace League\Uri;
  * @author  Ignace Nyamagana Butera <nyamsprod@gmail.com>
  * @since   1.1.0
  */
-class UriException extends Exception
+class UriException extends InvalidArgumentException
 {
 }

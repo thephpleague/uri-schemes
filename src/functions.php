@@ -14,7 +14,7 @@ declare(strict_types=1);
 
 namespace League\Uri;
 
-use League\Uri\Interfaces\Uri as LeagueUriInterface;
+use League\Uri\UriInterface as LeagueUriInterface;
 use Psr\Http\Message\UriInterface;
 
 /**
