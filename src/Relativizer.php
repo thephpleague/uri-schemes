@@ -1,15 +1,19 @@
 <?php
+
 /**
  * League.Uri (http://uri.thephpleague.com)
  *
- * @package    League.uri
- * @subpackage League\Uri\Modifiers
+ * @package    League\Uri
+ * @subpackage League\Uri\Schemes
  * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
- * @copyright  2017 Ignace Nyamagana Butera
- * @license    https://github.com/thephpleague/uri-manipulations/blob/master/LICENSE (MIT License)
+ * @license    https://github.com/thephpleague/uri-components/blob/master/LICENSE (MIT License)
  * @version    2.0.0
- * @link       https://github.com/thephpleague/uri-manipulations
+ * @link       https://github.com/thephpleague/uri-schemes
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
 declare(strict_types=1);
 
 namespace League\Uri;
@@ -18,20 +22,10 @@ use League\Uri\UriInterface as LeagueUriInterface;
 use Psr\Http\Message\UriInterface;
 use TypeError;
 
-/**
- * Resolve an URI according to a base URI using
- * RFC3986 rules.
- *
- * @package League\Uri
- * @author  Ignace Nyamagana Butera <nyamsprod@gmail.com>
- * @since   2.0.0
- *
- * @internal Use the function League\Uri\relativize instead
- */
 final class Relativizer
 {
     /**
-     * Process and return an Uri.
+     * Relativize an URI according to a base URI
      *
      * This method MUST retain the state of the submitted URI instance, and return
      * an URI instance of the same type that contains the applied modifications.

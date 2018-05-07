@@ -1,5 +1,19 @@
 <?php
 
+/**
+ * League.Uri (http://uri.thephpleague.com)
+ *
+ * @package    League\Uri
+ * @subpackage League\Uri\Schemes
+ * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
+ * @license    https://github.com/thephpleague/uri-components/blob/master/LICENSE (MIT License)
+ * @version    2.0.0
+ * @link       https://github.com/thephpleague/uri-schemes
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace LeagueTest\Uri;
 
 use InvalidArgumentException;
@@ -210,12 +224,6 @@ class FactoryTest extends TestCase
                 'expected_uri' => 'https://example.com/path/to/file',
                 'uri' => 'https://example.com/path/to/file',
                 'base_uri' => Uri\Ftp::createFromString('ftp://example.com/index.php'),
-            ],
-            'remove dot segments on URI without base URI' => [
-                'expected_class' => Uri\Http::class,
-                'expected_uri' => 'https://example.com/x',
-                'uri' => 'https://EXAMPLE.com/../x',
-                'base_uri' => null,
             ],
         ];
     }

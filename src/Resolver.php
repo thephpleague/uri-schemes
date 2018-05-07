@@ -1,15 +1,19 @@
 <?php
+
 /**
  * League.Uri (http://uri.thephpleague.com)
  *
- * @package    League.uri
- * @subpackage League\Uri\Modifiers
+ * @package    League\Uri
+ * @subpackage League\Uri\Schemes
  * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
- * @copyright  2017 Ignace Nyamagana Butera
- * @license    https://github.com/thephpleague/uri-manipulations/blob/master/LICENSE (MIT License)
+ * @license    https://github.com/thephpleague/uri-components/blob/master/LICENSE (MIT License)
  * @version    2.0.0
- * @link       https://github.com/thephpleague/uri-manipulations
+ * @link       https://github.com/thephpleague/uri-schemes
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
 declare(strict_types=1);
 
 namespace League\Uri;
@@ -18,25 +22,15 @@ use League\Uri\UriInterface as LeagueUriInterface;
 use Psr\Http\Message\UriInterface;
 use TypeError;
 
-/**
- * Factory class to ease loading URI object
- *
- * @package    League\Uri
- * @subpackage League\Uri\Schemes
- * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
- * @since      1.1.0
- */
 final class Resolver
 {
     /**
-     * Dot segments
-     *
      * @var array
      */
-    private static $dot_segments = ['.' => 1, '..' => 1];
+    const DOT_SEGMENTS = ['.' => 1, '..' => 1];
 
     /**
-     * Resolve an URI against a base URI.
+     * Resolve an URI against a base URI using RFC3986 rules.
      *
      * @param LeagueUriInterface|UriInterface $uri
      * @param LeagueUriInterface|UriInterface $base_uri
@@ -103,13 +97,16 @@ final class Resolver
 
         $old_segments = explode('/', $path);
         $new_path = implode('/', array_reduce($old_segments, [$this, 'reducer'], []));
-        if (isset(self::$dot_segments[end($old_segments)])) {
+        if (isset(self::DOT_SEGMENTS[end($old_segments)])) {
             $new_path .= '/';
         }
 
+        // @codeCoverageIgnoreStart
+        // added because some PSR-7 implementations do not respect RFC3986
         if (strpos($path, '/') === 0 && strpos($new_path, '/') !== 0) {
             return '/'.$new_path;
         }
+        // @codeCoverageIgnoreEnd
 
         return $new_path;
     }
@@ -130,7 +127,7 @@ final class Resolver
             return $carry;
         }
 
-        if (!isset(self::$dot_segments[$segment])) {
+        if (!isset(self::DOT_SEGMENTS[$segment])) {
             $carry[] = $segment;
         }
 

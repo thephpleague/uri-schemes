@@ -1,15 +1,19 @@
 <?php
+
 /**
  * League.Uri (http://uri.thephpleague.com)
  *
- * @package    League.uri
- * @subpackage League\Uri\Modifiers
+ * @package    League\Uri
+ * @subpackage League\Uri\Schemes
  * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
- * @copyright  2017 Ignace Nyamagana Butera
- * @license    https://github.com/thephpleague/uri-manipulations/blob/master/LICENSE (MIT License)
+ * @license    https://github.com/thephpleague/uri-components/blob/master/LICENSE (MIT License)
  * @version    2.0.0
- * @link       https://github.com/thephpleague/uri-manipulations
+ * @link       https://github.com/thephpleague/uri-schemes
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
 declare(strict_types=1);
 
 namespace League\Uri;
@@ -20,14 +24,6 @@ use ReflectionClass;
 use Traversable;
 use TypeError;
 
-/**
- * Factory class to ease loading URI object
- *
- * @package    League\Uri
- * @subpackage League\Uri\Schemes
- * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
- * @since      1.1.0
- */
 final class Factory
 {
     /**
@@ -116,22 +112,18 @@ final class Factory
         $components = parse($uri);
         if (null !== $base_uri) {
             $base_uri = $this->filterBaseUri($base_uri);
-            $className = $this->getClassName($components['scheme'], $base_uri);
 
-            return resolve($this->newInstance($components, $className), $base_uri);
+            return resolve(
+                $this->newInstance($components, $this->getClassName($components['scheme'], $base_uri)),
+                $base_uri
+            );
         }
 
         if (null === $components['scheme'] || '' === $components['scheme']) {
             throw new UriException(sprintf('the submitted URI `%s` must be an absolute URI', $uri));
         }
 
-        $className = $this->getClassName($components['scheme']);
-        $uri = $this->newInstance($components, $className);
-        if ('' === $uri->getAuthority()) {
-            return $uri;
-        }
-
-        return resolve($uri, $uri->withPath('')->withQuery(''));
+        return $this->newInstance($components, $this->getClassName($components['scheme']));
     }
 
     /**
