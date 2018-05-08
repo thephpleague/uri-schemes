@@ -102,7 +102,7 @@ final class Data extends Uri
      * @throws InvalidUri If the mediatype or the data are not compliant
      *                    with the RFC2397
      */
-    protected function assertValidPath(string $mimetype, string $parameters, string $data)
+    private function assertValidPath(string $mimetype, string $parameters, string $data)
     {
         if (!preg_match(',^\w+/[-.\w]+(?:\+[-.\w]+)?$,', $mimetype)) {
             throw new InvalidUri(sprintf('The path mimetype `%s` is invalid', $mimetype));
@@ -135,7 +135,7 @@ final class Data extends Uri
      *
      * @return bool
      */
-    protected function validateParameter(string $parameter): bool
+    private function validateParameter(string $parameter): bool
     {
         $properties = explode('=', $parameter);
 
@@ -147,7 +147,7 @@ final class Data extends Uri
      *
      * @param string $path the file path
      *
-     * @return static
+     * @return self
      */
     public static function createFromPath(string $path)
     {
@@ -163,9 +163,7 @@ final class Data extends Uri
             null,
             null,
             null,
-            $mimetype.';base64,'.base64_encode(file_get_contents($path)),
-            null,
-            null
+            $mimetype.';base64,'.base64_encode(file_get_contents($path))
         );
     }
 }

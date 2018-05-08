@@ -20,6 +20,6 @@ namespace League\Uri\Exception;
 
 use InvalidArgumentException;
 
-class CannotMapUriObject extends InvalidArgumentException
+class MappingUriFailed extends InvalidArgumentException
 {
 }

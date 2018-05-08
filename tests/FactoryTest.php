@@ -18,7 +18,8 @@ namespace LeagueTest\Uri;
 
 use InvalidArgumentException;
 use League\Uri;
-use League\Uri\Exception\CannotMapUriObject;
+use League\Uri\Exception\CreatingUriFailed;
+use League\Uri\Exception\MappingUriFailed;
 use League\Uri\Factory;
 use League\Uri\Ftp;
 use League\Uri\Http;
@@ -48,7 +49,7 @@ class FactoryTest extends TestCase
      */
     public function testFactoryThrowExceptionOnConstruction($data)
     {
-        $this->expectException(CannotMapUriObject::class);
+        $this->expectException(MappingUriFailed::class);
         new Uri\Factory($data);
     }
 
@@ -62,7 +63,7 @@ class FactoryTest extends TestCase
             ],
             'invalid class' => [
                 'data' => [
-                    'telnet' => CannotMapUriObject::class,
+                    'telnet' => MappingUriFailed::class,
                 ],
             ],
         ];
@@ -80,7 +81,7 @@ class FactoryTest extends TestCase
      */
     public function testCreateThrowExceptionWithBaseUriNotAbsolute()
     {
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(CreatingUriFailed::class);
         Uri\create('/path/to/you', Uri\Http::createFromString('//example.com'));
     }
 
@@ -90,7 +91,7 @@ class FactoryTest extends TestCase
      */
     public function testCreateThrowExceptionWithUriNotAbsolute()
     {
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(CreatingUriFailed::class);
         Uri\create('/path/to/you');
     }
 
@@ -151,7 +152,7 @@ class FactoryTest extends TestCase
 
     public function uriBaseUriProvider()
     {
-        $base_uri = Uri\Http::createFromString('https://example.com/index.php');
+        $base_uri = 'https://example.com/index.php';
 
         return [
             'empty URI' => [
@@ -310,5 +311,13 @@ class FactoryTest extends TestCase
     {
         $this->expectException(TypeError::class);
         Uri\resolve('ftp//a/b/c/d;p', 'toto');
+    }
+
+    public function testCreateAlwaysResolveUri()
+    {
+        $this->assertSame(
+            (string) Uri\create('../cats', 'http://www.example.com/dogs'),
+            (string) Uri\create('http://www.example.com/dogs/../cats')
+        );
     }
 }

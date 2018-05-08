@@ -58,15 +58,11 @@ final class Http extends Uri implements UriInterface
      */
     protected function filterPort(int $port = null)
     {
-        if (null === $port) {
+        if (null === $port || (1 < $port && 65535 > $port)) {
             return $port;
         }
 
-        if (1 > $port || 65535 < $port) {
-            throw new InvalidUri(sprintf('Invalid Port `%s` for the HTTP(s) URI scheme', $port));
-        }
-
-        return $port;
+        throw new InvalidUri(sprintf('Invalid Port `%s` for the HTTP(s) URI scheme', $port));
     }
 
     /**
@@ -74,15 +70,15 @@ final class Http extends Uri implements UriInterface
      *
      * @param array $server the server and execution environment information array typically ($_SERVER)
      *
-     * @return static
+     * @return self
      */
     public static function createFromServer(array $server)
     {
-        list($user, $pass) = static::fetchUserInfo($server);
-        list($host, $port) = static::fetchHostname($server);
-        list($path, $query) = static::fetchRequestUri($server);
+        list($user, $pass) = self::fetchUserInfo($server);
+        list($host, $port) = self::fetchHostname($server);
+        list($path, $query) = self::fetchRequestUri($server);
 
-        return new static(static::fetchScheme($server), $user, $pass, $host, $port, $path, $query, null);
+        return new static(self::fetchScheme($server), $user, $pass, $host, $port, $path, $query);
     }
 
     /**
@@ -92,7 +88,7 @@ final class Http extends Uri implements UriInterface
      *
      * @return string
      */
-    protected static function fetchScheme(array $server): string
+    private static function fetchScheme(array $server): string
     {
         $server += ['HTTPS' => ''];
         $res = filter_var($server['HTTPS'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
@@ -107,7 +103,7 @@ final class Http extends Uri implements UriInterface
      *
      * @return array
      */
-    protected static function fetchUserInfo(array $server): array
+    private static function fetchUserInfo(array $server): array
     {
         $server += ['PHP_AUTH_USER' => null, 'PHP_AUTH_PW' => null, 'HTTP_AUTHORIZATION' => ''];
         $user = $server['PHP_AUTH_USER'];
@@ -136,7 +132,7 @@ final class Http extends Uri implements UriInterface
      *
      * @return array
      */
-    protected static function fetchHostname(array $server): array
+    private static function fetchHostname(array $server): array
     {
         $server += ['SERVER_PORT' => null];
         if (null !== $server['SERVER_PORT']) {
@@ -170,7 +166,7 @@ final class Http extends Uri implements UriInterface
      *
      * @return array
      */
-    protected static function fetchRequestUri(array $server): array
+    private static function fetchRequestUri(array $server): array
     {
         $server += ['IIS_WasUrlRewritten' => null, 'UNENCODED_URL' => '', 'PHP_SELF' => '', 'QUERY_STRING' => null];
         if ('1' === $server['IIS_WasUrlRewritten'] && '' !== $server['UNENCODED_URL']) {

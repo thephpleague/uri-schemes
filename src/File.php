@@ -88,10 +88,10 @@ final class File extends Uri
     {
         $uri = implode('/', array_map('rawurlencode', explode('/', $uri)));
         if ('/' === ($uri[0] ?? '')) {
-            return new static('file', null, null, 'localhost', null, $uri, null, null);
+            return new static('file', null, null, 'localhost', null, $uri);
         }
 
-        return new static(null, null, null, null, null, $uri, null, null);
+        return new static(null, null, null, null, null, $uri);
     }
 
     /**
@@ -114,15 +114,15 @@ final class File extends Uri
 
         //Local Windows absolute path
         if ('' !== $root) {
-            return new static('file', null, null, 'localhost', null, '/'.$root.$uri, null, null);
+            return new static('file', null, null, 'localhost', null, '/'.$root.$uri);
         }
 
         //UNC Windows Path
         if ('//' === substr($uri, 0, 2)) {
             $parts = explode('/', substr($uri, 2), 2) + [1 => null];
-            return new static('file', null, null, $parts[0], null, '/'.$parts[1], null, null);
+            return new static('file', null, null, $parts[0], null, '/'.$parts[1]);
         }
 
-        return new static(null, null, null, null, null, $uri, null, null);
+        return new static(null, null, null, null, null, $uri);
     }
 }
