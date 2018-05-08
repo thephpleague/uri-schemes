@@ -745,7 +745,7 @@ class Uri implements UriInterface
      *
      * @return string
      */
-    protected static function filterString($str): string
+    private function filterString($str): string
     {
         if (!is_scalar($str) && !method_exists($str, '__toString')) {
             throw new TypeError(sprintf('the component must be a string, a scalar or a stringable object %s given', gettype($str)));
