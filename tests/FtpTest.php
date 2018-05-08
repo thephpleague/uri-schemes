@@ -16,8 +16,8 @@
 
 namespace LeagueTest\Uri;
 
+use League\Uri\Exception\InvalidUri;
 use League\Uri\Ftp;
-use League\Uri\UriException;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -76,7 +76,7 @@ class FtpTest extends TestCase
      */
     public function testConstructorThrowInvalidArgumentException($uri)
     {
-        $this->expectException(UriException::class);
+        $this->expectException(InvalidUri::class);
         Ftp::createFromString($uri);
     }
 
@@ -95,7 +95,7 @@ class FtpTest extends TestCase
      */
     public function testModificationFailedWithEmptyAuthority()
     {
-        $this->expectException(UriException::class);
+        $this->expectException(InvalidUri::class);
         Ftp::createFromString('ftp://example.com/path')
             ->withScheme('')
             ->withHost('')

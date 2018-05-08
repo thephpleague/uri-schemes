@@ -18,6 +18,8 @@ declare(strict_types=1);
 
 namespace League\Uri;
 
+use League\Uri\Exception\CannotMapUriObject;
+use League\Uri\Exception\InvalidUri;
 use League\Uri\UriInterface as LeagueUriInterface;
 use Psr\Http\Message\UriInterface;
 use ReflectionClass;
@@ -73,18 +75,18 @@ final class Factory
      * @param string $scheme    valid URI scheme
      * @param string $className classname which implements LeagueUriInterface or UriInterface
      *
-     * @throws UriException if the scheme is invalid
-     * @throws UriException if the class does not implements a supported interface
+     * @throws CannotMapUriObject if the scheme is invalid
+     * @throws CannotMapUriObject if the class does not implements a supported interface
      */
     private function addMap(string $scheme, string $className)
     {
         static $pattern = '/^[a-z][a-z\+\.\-]*$/';
         if (!preg_match($pattern, $scheme)) {
-            throw new UriException(sprintf('Please verify the submitted scheme `%s`', $scheme));
+            throw new CannotMapUriObject(sprintf('the scheme `%s` is invalid', $scheme));
         }
 
         if (empty(array_intersect((new ReflectionClass($className))->getInterfaceNames(), self::$uri_interfaces))) {
-            throw new UriException(sprintf('Please verify the submitted class `%s`', $className));
+            throw new CannotMapUriObject(sprintf('the class `%s` does not implement a supported class', $className));
         }
 
         $this->map[$scheme] = $className;
@@ -103,7 +105,7 @@ final class Factory
      * @param mixed $uri
      * @param mixed $base_uri
      *
-     * @throws UriException if there's no base URI and the submitted URI is not absolute
+     * @throws InvalidUri if there's no base URI and the submitted URI is not absolute
      *
      * @return LeagueUriInterface|UriInterface
      */
@@ -120,7 +122,7 @@ final class Factory
         }
 
         if (null === $components['scheme'] || '' === $components['scheme']) {
-            throw new UriException(sprintf('the submitted URI `%s` must be an absolute URI', $uri));
+            throw new InvalidUri(sprintf('the URI `%s` must be absolute', $uri));
         }
 
         return $this->newInstance($components, $this->getClassName($components['scheme']));
@@ -131,7 +133,7 @@ final class Factory
      *
      * @param LeagueUriInterface|UriInterface|string $uri
      *
-     * @throws UriException if the Base Uri is not an absolute URI
+     * @throws InvalidUri if the Base Uri is not an absolute URI
      *
      * @return LeagueUriInterface|UriInterface
      */
@@ -145,7 +147,7 @@ final class Factory
             return $uri;
         }
 
-        throw new UriException(sprintf('The submitted URI `%s` must be an absolute URI', $uri));
+        throw new InvalidUri(sprintf('the URI `%s` must be absolute', $uri));
     }
 
     /**

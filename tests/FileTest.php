@@ -16,8 +16,8 @@
 
 namespace LeagueTest\Uri;
 
+use League\Uri\Exception\InvalidUri;
 use League\Uri\File;
-use League\Uri\UriException;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -97,7 +97,7 @@ class FileTest extends TestCase
      */
     public function testConstructorThrowsException($uri)
     {
-        $this->expectException(UriException::class);
+        $this->expectException(InvalidUri::class);
         File::createFromString($uri);
     }
 

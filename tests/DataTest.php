@@ -17,7 +17,7 @@
 namespace LeagueTest\Uri;
 
 use League\Uri\Data;
-use League\Uri\UriException;
+use League\Uri\Exception\InvalidUri;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -86,7 +86,7 @@ class DataTest extends TestCase
      */
     public function testCreateFromStringFailed($uri)
     {
-        $this->expectException(UriException::class);
+        $this->expectException(InvalidUri::class);
         Data::createFromString($uri);
     }
 
@@ -108,7 +108,7 @@ class DataTest extends TestCase
      */
     public function testCreateFromPathFailed($path)
     {
-        $this->expectException(UriException::class);
+        $this->expectException(InvalidUri::class);
         Data::createFromPath($path);
     }
 
@@ -125,7 +125,7 @@ class DataTest extends TestCase
      */
     public function testCreateFromComponentsFailedWithInvalidArgumentException()
     {
-        $this->expectException(UriException::class);
+        $this->expectException(InvalidUri::class);
         Data::createFromString('data:image/png;base64,°28');
     }
 
@@ -136,7 +136,7 @@ class DataTest extends TestCase
      */
     public function testCreateFromComponentsFailedInvalidMediatype()
     {
-        $this->expectException(UriException::class);
+        $this->expectException(InvalidUri::class);
         Data::createFromString('data:image/png;base64=toto;base64,dsqdfqfd');
     }
 
@@ -145,7 +145,7 @@ class DataTest extends TestCase
      */
     public function testCreateFromComponentsFailedWithException()
     {
-        $this->expectException(UriException::class);
+        $this->expectException(InvalidUri::class);
         Data::createFromString('data:text/plain;charset=us-ascii,Bonjour%20le%20monde%21#fragment');
     }
 
@@ -186,7 +186,7 @@ class DataTest extends TestCase
      */
     public function testInvalidUri()
     {
-        $this->expectException(UriException::class);
+        $this->expectException(InvalidUri::class);
         Data::createFromString('http:text/plain;charset=us-ascii,Bonjour%20le%20monde%21');
     }
 }

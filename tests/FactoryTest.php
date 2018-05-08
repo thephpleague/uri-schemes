@@ -18,6 +18,7 @@ namespace LeagueTest\Uri;
 
 use InvalidArgumentException;
 use League\Uri;
+use League\Uri\Exception\CannotMapUriObject;
 use League\Uri\Factory;
 use League\Uri\Ftp;
 use League\Uri\Http;
@@ -47,7 +48,7 @@ class FactoryTest extends TestCase
      */
     public function testFactoryThrowExceptionOnConstruction($data)
     {
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(CannotMapUriObject::class);
         new Uri\Factory($data);
     }
 
@@ -61,7 +62,7 @@ class FactoryTest extends TestCase
             ],
             'invalid class' => [
                 'data' => [
-                    'telnet' => InvalidArgumentException::class,
+                    'telnet' => CannotMapUriObject::class,
                 ],
             ],
         ];
@@ -293,7 +294,7 @@ class FactoryTest extends TestCase
     /**
      * @covers \League\Uri\resolve
      */
-    public function testResolveLetThrowResolvedUriException()
+    public function testResolveLetThrowResolvedInvalidUri()
     {
         $this->expectException(InvalidArgumentException::class);
         $http = Http::createFromString('http://example.com/path/to/file');

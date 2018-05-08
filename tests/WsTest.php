@@ -16,7 +16,7 @@
 
 namespace LeagueTest\Uri;
 
-use League\Uri\UriException;
+use League\Uri\Exception\InvalidUri;
 use League\Uri\Ws;
 use PHPUnit\Framework\TestCase;
 
@@ -44,7 +44,7 @@ class WsTest extends TestCase
      */
     public function testModificationFailedWithUnsupportedPort()
     {
-        $this->expectException(UriException::class);
+        $this->expectException(InvalidUri::class);
         Ws::createFromString('wss://example.com/path')->withPort(12365894);
     }
 
@@ -85,7 +85,7 @@ class WsTest extends TestCase
      */
     public function testConstructorThrowInvalidArgumentException($uri)
     {
-        $this->expectException(UriException::class);
+        $this->expectException(InvalidUri::class);
         Ws::createFromString($uri);
     }
 
@@ -104,7 +104,7 @@ class WsTest extends TestCase
      */
     public function testModificationFailedWithEmptyAuthority()
     {
-        $this->expectException(UriException::class);
+        $this->expectException(InvalidUri::class);
         Ws::createFromString('wss://example.com/path')
             ->withScheme('')
             ->withHost('')

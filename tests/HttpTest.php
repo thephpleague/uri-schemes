@@ -16,8 +16,8 @@
 
 namespace LeagueTest\Uri;
 
+use League\Uri\Exception\InvalidUri;
 use League\Uri\Http;
-use League\Uri\UriException;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -54,7 +54,7 @@ class HttpTest extends TestCase
      */
     public function testModificationFailedWithUnsupportedPort()
     {
-        $this->expectException(UriException::class);
+        $this->expectException(InvalidUri::class);
         Http::createFromString('http://example.com/path')->withPort(12365894);
     }
 
@@ -105,7 +105,7 @@ class HttpTest extends TestCase
      */
     public function testIsValid($uri)
     {
-        $this->expectException(UriException::class);
+        $this->expectException(InvalidUri::class);
         Http::createFromString($uri);
     }
 
@@ -152,7 +152,7 @@ class HttpTest extends TestCase
      */
     public function testPathIsInvalid($path)
     {
-        $this->expectException(UriException::class);
+        $this->expectException(InvalidUri::class);
         Http::createFromString('')->withPath($path);
     }
 
@@ -173,7 +173,7 @@ class HttpTest extends TestCase
      */
     public function testCreateFromInvalidUrlKO($uri)
     {
-        $this->expectException(UriException::class);
+        $this->expectException(InvalidUri::class);
         Http::createFromString($uri);
     }
 
@@ -352,7 +352,7 @@ class HttpTest extends TestCase
      */
     public function testFailCreateFromServerWithoutHost()
     {
-        $this->expectException(UriException::class);
+        $this->expectException(InvalidUri::class);
         Http::createFromServer([
             'PHP_SELF' => '',
             'REQUEST_URI' => '',
@@ -366,7 +366,7 @@ class HttpTest extends TestCase
      */
     public function testModificationFailedWithEmptyAuthority()
     {
-        $this->expectException(UriException::class);
+        $this->expectException(InvalidUri::class);
         Http::createFromString('http://example.com/path')
             ->withScheme('')
             ->withHost('')
