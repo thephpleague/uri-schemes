@@ -552,14 +552,15 @@ class Uri implements UriInterface
 
         if (null !== $this->authority && ('' !== $this->path && '/' !== $this->path[0])) {
             throw new InvalidUri(
-                'Invalid URI: if an authority is present the path must be empty or start with a `/`'
+                'If an authority is present the path must be empty or start with a `/`'
             );
         }
 
         if (null === $this->authority && 0 === strpos($this->path, '//')) {
-            throw new InvalidUri(
-                'Invalid URI: if there is no authority the path `%s` can not start with a `//`'
-            );
+            throw new InvalidUri(sprintf(
+                'If there is no authority the path `%s` can not start with a `//`',
+                $this->path
+            ));
         }
 
         if (null === $this->authority
@@ -568,13 +569,13 @@ class Uri implements UriInterface
             && false === strpos(substr($this->path, 0, $pos), '/')
         ) {
             throw new InvalidUri(
-                'Invalid URI: in absence of a scheme and an authority the first path segment cannot contain a colon (":") character.'
+                'In absence of a scheme and an authority the first path segment cannot contain a colon (":") character.'
             );
         }
 
         if (!$this->isValidUri()) {
             throw new InvalidUri(sprintf(
-                'Invalid URI: The submitted uri `%s` is invalid for the following scheme(s): `%s`',
+                'The uri `%s` is invalid for the following scheme(s): `%s`',
                 $this->getUriString($this->scheme, $this->authority, $this->path, $this->query, $this->fragment),
                 implode(', ', array_keys(static::$supported_schemes))
             ));
