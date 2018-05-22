@@ -17,7 +17,7 @@ declare(strict_types=1);
 namespace League\Uri;
 
 use BadMethodCallException;
-use League\Uri\Interfaces\Uri as UriInterface;
+use League\Uri\Interfaces\Uri as DeprecatedLeagueUriInterface;
 
 /**
  * common URI Object properties and methods
@@ -27,7 +27,7 @@ use League\Uri\Interfaces\Uri as UriInterface;
  * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
  * @since      1.2.0
  */
-abstract class AbstractUri implements UriInterface
+abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
 {
     /**
      * @deprecated 1.2.0 will be removed in the next major point release

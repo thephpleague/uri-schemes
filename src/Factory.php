@@ -14,8 +14,8 @@ declare(strict_types=1);
 
 namespace League\Uri;
 
-use League\Uri\Interfaces\Uri as LeagueUriInterface;
-use Psr\Http\Message\UriInterface;
+use League\Uri\Interfaces\Uri as DeprecatedLeagueUriInterface;
+use Psr\Http\Message\UriInterface as Psr7UriInterface;
 use ReflectionClass;
 
 /**
@@ -56,8 +56,9 @@ class Factory
      * @var array
      */
     protected static $uri_interfaces = [
-        LeagueUriInterface::class,
+        DeprecatedLeagueUriInterface::class,
         UriInterface::class,
+        Psr7UriInterface::class,
     ];
 
     /**
@@ -76,7 +77,7 @@ class Factory
      * Add a new classname for a given scheme URI
      *
      * @param string $scheme    valid URI scheme
-     * @param string $className classname which implements LeagueUriInterface or UriInterface
+     * @param string $className classname which implements DeprecatedLeagueUriInterface or UriInterface
      *
      * @throws Exception if the scheme is invalid
      * @throws Exception if the class does not implements a supported interface
@@ -100,7 +101,7 @@ class Factory
      * The base URI can be
      * <ul>
      * <li>UriInterface
-     * <li>LeagueUriInterface
+     * <li>DeprecatedLeagueUriInterface
      * <li>a string
      * </ul>
      *
@@ -109,7 +110,7 @@ class Factory
      *
      * @throws Exception if there's no base URI and the submitted URI is not absolute
      *
-     * @return LeagueUriInterface|UriInterface
+     * @return DeprecatedLeagueUriInterface|UriInterface
      */
     public function create(string $uri, $base_uri = null)
     {
@@ -145,15 +146,17 @@ class Factory
     /**
      * Returns the Base URI.
      *
-     * @param LeagueUriInterface|UriInterface|string $uri
+     * @param DeprecatedLeagueUriInterface|UriInterface|string $uri
      *
      * @throws Exception if the Base Uri is not an absolute URI
      *
-     * @return LeagueUriInterface|UriInterface
+     * @return DeprecatedLeagueUriInterface|UriInterface
      */
     protected function filterBaseUri($uri)
     {
-        if (!$uri instanceof UriInterface && !$uri instanceof LeagueUriInterface) {
+        if (!$uri instanceof Psr7UriInterface
+            && !$uri instanceof UriInterface
+            && !$uri instanceof DeprecatedLeagueUriInterface) {
             return $this->create($uri);
         }
 
@@ -188,7 +191,7 @@ class Factory
      * @param array  $components
      * @param string $className
      *
-     * @return LeagueUriInterface|UriInterface
+     * @return DeprecatedLeagueUriInterface|UriInterface
      */
     protected function newInstance(array $components, string $className)
     {
@@ -215,10 +218,10 @@ class Factory
     /**
      * Resolve an URI against a base URI.
      *
-     * @param LeagueUriInterface|UriInterface $uri
-     * @param LeagueUriInterface|UriInterface $base_uri
+     * @param DeprecatedLeagueUriInterface|UriInterface $uri
+     * @param DeprecatedLeagueUriInterface|UriInterface $base_uri
      *
-     * @return LeagueUriInterface|UriInterface
+     * @return DeprecatedLeagueUriInterface|UriInterface
      */
     protected function resolve($uri, $base_uri)
     {
@@ -302,8 +305,8 @@ class Factory
      *
      * @internal used internally to create an URI object
      *
-     * @param LeagueUriInterface|UriInterface $uri
-     * @param LeagueUriInterface|UriInterface $base_uri
+     * @param DeprecatedLeagueUriInterface|UriInterface $uri
+     * @param DeprecatedLeagueUriInterface|UriInterface $base_uri
      *
      * @return string[]
      */

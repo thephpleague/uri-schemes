@@ -16,7 +16,7 @@ declare(strict_types=1);
 
 namespace League\Uri;
 
-use Psr\Http\Message\UriInterface;
+use Psr\Http\Message\UriInterface as Psr7UriInterface;
 
 /**
  * Immutable Value object representing a HTTP(s) Uri.
@@ -26,7 +26,7 @@ use Psr\Http\Message\UriInterface;
  * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
  * @since      1.2.0
  */
-class Http extends AbstractUri implements UriInterface
+class Http extends AbstractUri implements Psr7UriInterface
 {
     /**
      * @inheritdoc

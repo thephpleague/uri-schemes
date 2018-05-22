@@ -14,8 +14,8 @@ declare(strict_types=1);
 
 namespace League\Uri;
 
-use League\Uri\Interfaces\Uri as LeagueUriInterface;
-use Psr\Http\Message\UriInterface;
+use League\Uri\Interfaces\Uri as DeprecatedLeagueUriInterface;
+use Psr\Http\Message\UriInterface as Psr7UriInterface;
 
 /**
  * Create a new URI optionally according to
@@ -27,7 +27,7 @@ use Psr\Http\Message\UriInterface;
  * @param string $uri
  * @param mixed  $base_uri
  *
- * @return LeagueUriInterface|UriInterface
+ * @return Psr7UriInterface|DeprecatedLeagueUriInterface|UriInterface
  */
 function create(string $uri, $base_uri = null)
 {

@@ -32,9 +32,9 @@
     "require": {
         "php": ">=7.0.13",
         "ext-fileinfo": "*",
-        "psr/http-message": "^1.0",
+        "league/uri-interfaces": "^1.1",
         "league/uri-parser": "^1.4.0",
-        "league/uri-interfaces": "^1.0"
+        "psr/http-message": "^1.0"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^2.0",
