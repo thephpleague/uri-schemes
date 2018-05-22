@@ -18,11 +18,12 @@ declare(strict_types=1);
 
 namespace League\Uri;
 
+use JsonSerializable;
 use League\Uri\Exception\InvalidUri;
 use League\Uri\Exception\MissingIdnSupport;
 use TypeError;
 
-class Uri implements UriInterface
+class Uri implements UriInterface, JsonSerializable
 {
     /**
      * @internal RFC3986 Sub delimiter characters regular expression pattern
@@ -647,6 +648,22 @@ class Uri implements UriInterface
         );
 
         return $this->uri;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function jsonSerialize()
+    {
+        return $this->__toString();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function __debugInfo()
+    {
+        return ['uri' => $this->__toString()];
     }
 
     /**
