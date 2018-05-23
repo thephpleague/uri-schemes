@@ -313,11 +313,6 @@ class FunctionsTest extends TestCase
                 Http::createFromString('http://example.com'),
                 true,
             ],
-            '2 identical URIs after normalization' => [
-                Http::createFromString('HtTp://مثال.إختبار:80/%7efoo/%7efoo/'),
-                Http::createFromString('http://xn--mgbh0fb.xn--kgbechtv/%7Efoo/~foo/'),
-                true,
-            ],
             '2 identical URIs after removing dot segment' => [
                 Http::createFromString('http://example.org/~foo/'),
                 Http::createFromString('http://example.ORG/bar/./../~foo/'),
@@ -331,6 +326,26 @@ class FunctionsTest extends TestCase
             '2 identical relative URIs' => [
                 Http::createFromString('../%7efoo/'),
                 Http::createFromString('../~foo/'),
+                true,
+            ],
+            '2 identical URIs after normalization (1)' => [
+                Http::createFromString('HtTp://مثال.إختبار:80/%7efoo/%7efoo/'),
+                Http::createFromString('http://xn--mgbh0fb.xn--kgbechtv/%7Efoo/~foo/'),
+                true,
+            ],
+            '2 identical URIs after normalization (2)' => [
+                Http::createFromString('http://www.example.com'),
+                Http::createFromString('http://www.example.com/'),
+                true,
+            ],
+            '2 identical URIs after normalization (3)' => [
+                Http::createFromString('http://www.example.com'),
+                Http::createFromString('http://www.example.com:/'),
+                true,
+            ],
+            '2 identical URIs after normalization (4)' => [
+                Http::createFromString('http://www.example.com'),
+                Http::createFromString('http://www.example.com:80/'),
                 true,
             ],
         ];

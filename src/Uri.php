@@ -20,6 +20,7 @@ namespace League\Uri;
 
 use JsonSerializable;
 use League\Uri\Exception\InvalidUri;
+use League\Uri\Exception\InvalidUriComponent;
 use League\Uri\Exception\MissingIdnSupport;
 use TypeError;
 
@@ -224,6 +225,8 @@ class Uri implements UriInterface, JsonSerializable
      *
      * @param string|null $scheme
      *
+     * @throws InvalidUriComponent if the scheme is invalid
+     *
      * @return string|null
      */
     protected function formatScheme(string $scheme = null)
@@ -238,7 +241,7 @@ class Uri implements UriInterface, JsonSerializable
             return $formatted_scheme;
         }
 
-        throw new InvalidUri(sprintf('The scheme `%s` is invalid', $scheme));
+        throw new InvalidUriComponent(sprintf('The scheme `%s` is invalid', $scheme));
     }
 
     /**
@@ -305,7 +308,7 @@ class Uri implements UriInterface, JsonSerializable
      *
      * @param string $host
      *
-     * @throws InvalidUri if the submitted host is not a valid registered name
+     * @throws InvalidUriComponent if the submitted host is not a valid registered name
      *
      * @return string
      */
@@ -324,7 +327,7 @@ class Uri implements UriInterface, JsonSerializable
 
         static $gen_delims = '/[:\/?#\[\]@ ]/'; // Also includes space.
         if (preg_match($gen_delims, $formatted_host)) {
-            throw new InvalidUri(sprintf('The host `%s` is invalid : a registered name can not contain URI delimiters or spaces', $host));
+            throw new InvalidUriComponent(sprintf('The host `%s` is invalid : a registered name can not contain URI delimiters or spaces', $host));
         }
 
         // @codeCoverageIgnoreStart
@@ -342,7 +345,7 @@ class Uri implements UriInterface, JsonSerializable
             return $formatted_host;
         }
 
-        throw new InvalidUri(sprintf('The host `%s` is invalid : %s', $host, $this->getIDNAErrors($arr['errors'])));
+        throw new InvalidUriComponent(sprintf('The host `%s` is invalid : %s', $host, $this->getIDNAErrors($arr['errors'])));
     }
 
     /**
@@ -390,7 +393,7 @@ class Uri implements UriInterface, JsonSerializable
      *
      * @param string $host
      *
-     * @throws InvalidUri if the submitted host is not a valid IPv6
+     * @throws InvalidUriComponent if the submitted host is not a valid IP host
      *
      * @return string
      */
@@ -413,17 +416,17 @@ class Uri implements UriInterface, JsonSerializable
         }
 
         if (false === ($pos = strpos($ip, '%'))) {
-            throw new InvalidUri(sprintf('The host `%s` is invalid : the IP host is malformed', $host));
+            throw new InvalidUriComponent(sprintf('The host `%s` is invalid : the IP host is malformed', $host));
         }
 
         static $gen_delims = '/[:\/?#\[\]@ ]/'; // Also includes space.
         if (preg_match($gen_delims, rawurldecode(substr($ip, $pos)))) {
-            throw new InvalidUri(sprintf('The host `%s` is invalid : the IP host is malformed', $host));
+            throw new InvalidUriComponent(sprintf('The host `%s` is invalid : the IP host is malformed', $host));
         }
 
         $ip = substr($ip, 0, $pos);
         if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
-            throw new InvalidUri(sprintf('The host `%s` is invalid : the IP host is malformed', $host));
+            throw new InvalidUriComponent(sprintf('The host `%s` is invalid : the IP host is malformed', $host));
         }
 
         //Only the address block fe80::/10 can have a Zone ID attach to
@@ -434,7 +437,7 @@ class Uri implements UriInterface, JsonSerializable
             return $host;
         }
 
-        throw new InvalidUri(sprintf('The host `%s` is invalid : the IP host is malformed', $host));
+        throw new InvalidUriComponent(sprintf('The host `%s` is invalid : the IP host is malformed', $host));
     }
 
     /**
@@ -461,7 +464,7 @@ class Uri implements UriInterface, JsonSerializable
      *
      * @param int|null $port
      *
-     * @throws InvalidUri if the port is invalid
+     * @throws InvalidUriComponent if the port is invalid
      *
      * @return int|null
      */
@@ -472,7 +475,7 @@ class Uri implements UriInterface, JsonSerializable
         }
 
         if ($port < 0) {
-            throw new InvalidUri(sprintf('The port `%s` is invalid', $port));
+            throw new InvalidUriComponent(sprintf('The port `%s` is invalid', $port));
         }
 
         return $port;
@@ -774,7 +777,7 @@ class Uri implements UriInterface, JsonSerializable
     private function filterString($str): string
     {
         if (!is_scalar($str) && !method_exists($str, '__toString')) {
-            throw new TypeError(sprintf('the component must be a string, a scalar or a stringable object %s given', gettype($str)));
+            throw new TypeError(sprintf('The component must be a string, a scalar or a stringable object %s given', gettype($str)));
         }
 
         $str = (string) $str;
@@ -783,7 +786,7 @@ class Uri implements UriInterface, JsonSerializable
             return $str;
         }
 
-        throw new InvalidUri(sprintf('the submitted URI `%s` contains invalid characters', $str));
+        throw new InvalidUriComponent(sprintf('The component `%s` contains invalid characters', $str));
     }
 
     /**

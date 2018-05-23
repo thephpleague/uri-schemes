@@ -17,6 +17,7 @@
 namespace LeagueTest\Uri;
 
 use League\Uri\Exception\InvalidUri;
+use League\Uri\Exception\InvalidUriComponent;
 use League\Uri\Http;
 use PHPUnit\Framework\TestCase;
 
@@ -54,7 +55,7 @@ class HttpTest extends TestCase
      */
     public function testModificationFailedWithUnsupportedPort()
     {
-        $this->expectException(InvalidUri::class);
+        $this->expectException(InvalidUriComponent::class);
         Http::createFromString('http://example.com/path')->withPort(12365894);
     }
 

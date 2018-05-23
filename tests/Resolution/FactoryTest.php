@@ -18,8 +18,7 @@ namespace LeagueTest\Uri\Resolution;
 
 use InvalidArgumentException;
 use League\Uri;
-use League\Uri\Exception\CreatingUriFailed;
-use League\Uri\Exception\MappingUriFailed;
+use League\Uri\Exception\InvalidUri;
 use League\Uri\Ftp;
 use League\Uri\Http;
 use League\Uri\Resolution\Factory;
@@ -49,7 +48,7 @@ class FactoryTest extends TestCase
      */
     public function testFactoryThrowExceptionOnConstruction($data)
     {
-        $this->expectException(MappingUriFailed::class);
+        $this->expectException(InvalidUri::class);
         new Uri\Resolution\Factory($data);
     }
 
@@ -63,7 +62,7 @@ class FactoryTest extends TestCase
             ],
             'invalid class' => [
                 'data' => [
-                    'telnet' => MappingUriFailed::class,
+                    'telnet' => InvalidUri::class,
                 ],
             ],
         ];
@@ -81,7 +80,7 @@ class FactoryTest extends TestCase
      */
     public function testCreateThrowExceptionWithBaseUriNotAbsolute()
     {
-        $this->expectException(CreatingUriFailed::class);
+        $this->expectException(InvalidUri::class);
         Uri\create('/path/to/you', Uri\Http::createFromString('//example.com'));
     }
 
@@ -91,7 +90,7 @@ class FactoryTest extends TestCase
      */
     public function testCreateThrowExceptionWithUriNotAbsolute()
     {
-        $this->expectException(CreatingUriFailed::class);
+        $this->expectException(InvalidUri::class);
         Uri\create('/path/to/you');
     }
 

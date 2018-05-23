@@ -114,6 +114,10 @@ function normalize($uri)
 
     list($path, $query, $fragment) = preg_replace_callback($pattern, $replace, [$path, implode('&', $pairs), $uri->getFragment()]);
 
+    if ('' !== $uri->getAuthority() && '' === $path) {
+        $path = '/';
+    }
+
     return $uri
         ->withHost(Uri::createFromComponents(['host' => $uri->getHost()])->getHost())
         ->withPath($path)

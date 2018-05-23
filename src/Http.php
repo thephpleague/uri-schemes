@@ -19,6 +19,7 @@ declare(strict_types=1);
 namespace League\Uri;
 
 use League\Uri\Exception\InvalidUri;
+use League\Uri\Exception\InvalidUriComponent;
 use Psr\Http\Message\UriInterface;
 
 final class Http extends Uri implements UriInterface
@@ -62,7 +63,7 @@ final class Http extends Uri implements UriInterface
             return $port;
         }
 
-        throw new InvalidUri(sprintf('Invalid Port `%s` for the HTTP(s) URI scheme', $port));
+        throw new InvalidUriComponent(sprintf('Invalid Port `%s` for the HTTP(s) URI scheme', $port));
     }
 
     /**

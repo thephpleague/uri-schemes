@@ -19,6 +19,7 @@ declare(strict_types=1);
 namespace League\Uri;
 
 use League\Uri\Exception\InvalidUri;
+use League\Uri\Exception\InvalidUriComponent;
 
 final class Data extends Uri
 {
@@ -99,13 +100,13 @@ final class Data extends Uri
      *
      * @see https://tools.ietf.org/html/rfc2397
      *
-     * @throws InvalidUri If the mediatype or the data are not compliant
-     *                    with the RFC2397
+     * @throws InvalidUriComponent If the mediatype or the data are not compliant
+     *                             with the RFC2397
      */
     private function assertValidPath(string $mimetype, string $parameters, string $data)
     {
         if (!preg_match(',^\w+/[-.\w]+(?:\+[-.\w]+)?$,', $mimetype)) {
-            throw new InvalidUri(sprintf('The path mimetype `%s` is invalid', $mimetype));
+            throw new InvalidUriComponent(sprintf('The path mimetype `%s` is invalid', $mimetype));
         }
 
         $is_binary = preg_match(',(;|^)base64$,', $parameters, $matches);
@@ -115,7 +116,7 @@ final class Data extends Uri
 
         $res = array_filter(array_filter(explode(';', $parameters), [$this, 'validateParameter']));
         if (!empty($res)) {
-            throw new InvalidUri(sprintf('The path paremeters `%s` is invalid', $parameters));
+            throw new InvalidUriComponent(sprintf('The path paremeters `%s` is invalid', $parameters));
         }
 
         if (!$is_binary) {
@@ -124,7 +125,7 @@ final class Data extends Uri
 
         $res = base64_decode($data, true);
         if (false === $res || $data !== base64_encode($res)) {
-            throw new InvalidUri(sprintf('The path data `%s` is invalid', $data));
+            throw new InvalidUriComponent(sprintf('The path data `%s` is invalid', $data));
         }
     }
 

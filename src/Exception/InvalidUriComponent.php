@@ -18,8 +18,6 @@ declare(strict_types=1);
 
 namespace League\Uri\Exception;
 
-use InvalidArgumentException;
-
-class MappingUriFailed extends InvalidArgumentException
+class InvalidUriComponent extends InvalidUri
 {
 }

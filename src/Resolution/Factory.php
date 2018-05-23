@@ -20,8 +20,8 @@ namespace League\Uri\Resolution;
 
 use League\Uri;
 use League\Uri\Data;
-use League\Uri\Exception\CreatingUriFailed;
-use League\Uri\Exception\MappingUriFailed;
+use League\Uri\Exception\InvalidUri;
+use League\Uri\Exception\InvalidUriComponent;
 use League\Uri\File;
 use League\Uri\Ftp;
 use League\Uri\Http;
@@ -86,17 +86,17 @@ final class Factory
      * @param string $scheme    valid URI scheme
      * @param string $className classname which implements LeagueUriInterface or UriInterface
      *
-     * @throws MappingUriFailed if the scheme is invalid
-     * @throws MappingUriFailed if the class does not implements a supported interface
+     * @throws InvalidUriComponent if the scheme is invalid
+     * @throws InvalidUri          if the class does not implements a supported interface
      */
     private function addMap(string $scheme, string $className)
     {
         if (!preg_match(self::REGEXP_SCHEME, $scheme)) {
-            throw new MappingUriFailed(sprintf('the scheme `%s` is invalid', $scheme));
+            throw new InvalidUriComponent(sprintf('the scheme `%s` is invalid', $scheme));
         }
 
         if (empty(array_intersect((new ReflectionClass($className))->getInterfaceNames(), self::$uri_interfaces))) {
-            throw new MappingUriFailed(sprintf('the class `%s` does not implement a supported class', $className));
+            throw new InvalidUri(sprintf('the class `%s` does not implement a supported class', $className));
         }
 
         $this->map[$scheme] = $className;
@@ -115,7 +115,7 @@ final class Factory
      * @param mixed $uri
      * @param mixed $base_uri
      *
-     * @throws CreatingUriFailed if there's no base URI and the submitted URI is not absolute
+     * @throws InvalidUri if there's no base URI and the submitted URI is not absolute
      *
      * @return LeagueUriInterface|UriInterface
      */
@@ -144,7 +144,7 @@ final class Factory
         }
 
         if ('' === $uri->getScheme()) {
-            throw new CreatingUriFailed(sprintf('the URI `%s` must be absolute', $uri));
+            throw new InvalidUri(sprintf('the URI `%s` must be absolute', $uri));
         }
 
         if ('' === $uri->getAuthority()) {

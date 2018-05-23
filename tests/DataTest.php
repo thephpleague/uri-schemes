@@ -18,6 +18,7 @@ namespace LeagueTest\Uri;
 
 use League\Uri\Data;
 use League\Uri\Exception\InvalidUri;
+use League\Uri\Exception\InvalidUriComponent;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -95,11 +96,31 @@ class DataTest extends TestCase
         return [
             'invalid format' => ['foo:bar'],
             'invalid data' => ['data:image/png;base64,°28'],
-            'invalid data 2' => ['data:image/png;base64,zzz28'],
+        ];
+    }
+
+
+    /**
+     * @covers ::assertValidPath
+     * @covers ::isValidUri
+     * @dataProvider invalidComponentProvider
+     * @param string $uri
+     */
+    public function testCreateFromStringFailedWithWrongComponent($uri)
+    {
+        $this->expectException(InvalidUriComponent::class);
+        Data::createFromString($uri);
+    }
+
+    public function invalidComponentProvider()
+    {
+        return [
+            'invalid data' => ['data:image/png;base64,zzz28'],
             'invalid mime type' => ['data:image_png;base64,zzz'],
             'invalid parameter' => ['data:image/png;base64;base64,zzz'],
         ];
     }
+
 
     /**
      * @covers ::createFromPath
@@ -136,7 +157,7 @@ class DataTest extends TestCase
      */
     public function testCreateFromComponentsFailedInvalidMediatype()
     {
-        $this->expectException(InvalidUri::class);
+        $this->expectException(InvalidUriComponent::class);
         Data::createFromString('data:image/png;base64=toto;base64,dsqdfqfd');
     }
 
