@@ -334,6 +334,24 @@ class UriTest extends TestCase
     }
 
     /**
+     * @covers ::__debugInfo
+     */
+    public function testDebugInfo()
+    {
+        $uri = Uri::createFromString('https://a:b@c:442/d?q=r#f');
+        $debugInfo = $uri->__debugInfo();
+        $this->assertSame('a:***', $debugInfo['user_info']);
+        $this->assertCount(7, $debugInfo);
+    }
+
+    public function testJsonSerialize()
+    {
+        $uri = Uri::createFromString('https://a:b@c:442/d?q=r#f');
+        $this->assertJsonStringEqualsJsonString(json_encode((string) $uri), json_encode($uri));
+    }
+
+
+    /**
      * @covers ::createFromComponents
      * @covers ::formatRegisteredName
      */
