@@ -16,7 +16,7 @@
 
 declare(strict_types=1);
 
-namespace League\Uri;
+namespace League\Uri\Resolution;
 
 use League\Uri\UriInterface as LeagueUriInterface;
 use Psr\Http\Message\UriInterface;

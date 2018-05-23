@@ -663,7 +663,15 @@ class Uri implements UriInterface, JsonSerializable
      */
     public function __debugInfo()
     {
-        return ['uri' => $this->__toString()];
+        return [
+            'scheme' => $this->scheme,
+            'user_info' => isset($this->user_info) ? preg_replace(',\:(.*).?$,', ':***', $this->user_info) : null,
+            'host' => $this->host,
+            'port' => $this->port,
+            'path' => $this->path,
+            'query' => $this->query,
+            'fragment' => $this->fragment,
+        ];
     }
 
     /**

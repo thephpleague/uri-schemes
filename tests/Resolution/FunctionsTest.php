@@ -14,7 +14,7 @@
  * file that was distributed with this source code.
  */
 
-namespace LeagueTest\Uri;
+namespace LeagueTest\Uri\Resolution;
 
 use League\Uri;
 use League\Uri\Ftp;
@@ -34,7 +34,7 @@ class FunctionsTest extends TestCase
 
     /**
      * @covers \League\Uri\relativize
-     * @covers \League\Uri\Relativizer
+     * @covers \League\Uri\Resolution\Relativizer
      *
      * @dataProvider relativizeProvider
      *
@@ -94,7 +94,7 @@ class FunctionsTest extends TestCase
 
     /**
      * @covers \League\Uri\relativize
-     * @covers \League\Uri\Relativizer
+     * @covers \League\Uri\Resolution\Relativizer
      */
     public function testRelativizerThrowExceptionOnConstructor()
     {
@@ -104,9 +104,9 @@ class FunctionsTest extends TestCase
 
     /**
      * @covers \League\Uri\relativize
-     * @covers \League\Uri\Relativizer
+     * @covers \League\Uri\Resolution\Relativizer
      * @covers \League\Uri\resolve
-     * @covers \League\Uri\Factory
+     * @covers \League\Uri\Resolution\Factory
      *
      * @dataProvider relativizeAndResolveProvider
      *
@@ -235,7 +235,7 @@ class FunctionsTest extends TestCase
      * @dataProvider failedUriProvider
      *
      * @covers \League\Uri\is_same_document
-     * @covers \League\Uri\normalize     *
+     * @covers \League\Uri\normalize
      * @param mixed $uri
      * @param mixed $base_uri
      */

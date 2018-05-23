@@ -18,6 +18,9 @@ declare(strict_types=1);
 
 namespace League\Uri;
 
+use League\Uri\Resolution\Factory;
+use League\Uri\Resolution\Relativizer;
+use League\Uri\Resolution\Resolver;
 use League\Uri\UriInterface as LeagueUriInterface;
 use Psr\Http\Message\UriInterface;
 use TypeError;

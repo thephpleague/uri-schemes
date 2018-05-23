@@ -16,11 +16,17 @@
 
 declare(strict_types=1);
 
-namespace League\Uri;
+namespace League\Uri\Resolution;
 
+use League\Uri;
+use League\Uri\Data;
 use League\Uri\Exception\CreatingUriFailed;
 use League\Uri\Exception\MappingUriFailed;
+use League\Uri\File;
+use League\Uri\Ftp;
+use League\Uri\Http;
 use League\Uri\UriInterface as LeagueUriInterface;
+use League\Uri\Ws;
 use Psr\Http\Message\UriInterface;
 use ReflectionClass;
 use Traversable;
@@ -115,71 +121,37 @@ final class Factory
      */
     public function create($uri, $base_uri = null)
     {
-        $components = parse($uri);
-        $base_uri = $this->filterBaseUri($base_uri);
+        if (null !== $base_uri) {
+            $base_uri = $this->create($base_uri);
+        }
+
+        if (!$uri instanceof UriInterface && !$uri instanceof LeagueUriInterface) {
+            $components = Uri\parse($uri);
+            $uri = (new ReflectionClass($this->getClassName($components['scheme'], $base_uri)))
+                ->newInstanceWithoutConstructor()
+                ->withHost($components['host'] ?? '')
+                ->withPort($components['port'])
+                ->withUserInfo($components['user'] ?? '', $components['pass'])
+                ->withScheme($components['scheme'] ?? '')
+                ->withPath($components['path'] ?? '')
+                ->withQuery($components['query'] ?? '')
+                ->withFragment($components['fragment'] ?? '')
+            ;
+        }
 
         if (null !== $base_uri) {
-            return resolve($this->newInstance($components, $base_uri), $base_uri);
+            return Uri\resolve($uri, $base_uri);
         }
 
-        if ('' === (string) $components['scheme']) {
+        if ('' === $uri->getScheme()) {
             throw new CreatingUriFailed(sprintf('the URI `%s` must be absolute', $uri));
         }
 
-        $new = $this->newInstance($components, $base_uri);
-        if ('' === $new->getAuthority()) {
-            return $new;
-        }
-
-        return resolve($new, $new->withFragment('')->withQuery('')->withPath(''));
-    }
-
-    /**
-     * Returns the Base URI.
-     *
-     * @param mixed $uri
-     *
-     * @throws CreatingUriFailed if the base URI is not an absolute URI
-     *
-     * @return LeagueUriInterface|UriInterface|null
-     */
-    private function filterBaseUri($uri)
-    {
-        if ($uri instanceof UriInterface || $uri instanceof LeagueUriInterface) {
-            if ('' !== $uri->getScheme()) {
-                return $uri;
-            }
-
-            throw new CreatingUriFailed(sprintf('the URI `%s` must be absolute', $uri));
-        }
-
-        if (null === $uri) {
+        if ('' === $uri->getAuthority()) {
             return $uri;
         }
 
-        return $this->create($uri);
-    }
-
-    /**
-     * Creates a new URI object from its name using Reflection.
-     *
-     * @param array $components
-     * @param mixed $base_uri
-     *
-     * @return LeagueUriInterface|UriInterface
-     */
-    private function newInstance(array $components, $base_uri)
-    {
-        return (new ReflectionClass($this->getClassName($components['scheme'], $base_uri)))
-            ->newInstanceWithoutConstructor()
-            ->withHost($components['host'] ?? '')
-            ->withPort($components['port'])
-            ->withUserInfo($components['user'] ?? '', $components['pass'])
-            ->withScheme($components['scheme'] ?? '')
-            ->withPath($components['path'] ?? '')
-            ->withQuery($components['query'] ?? '')
-            ->withFragment($components['fragment'] ?? '')
-        ;
+        return Uri\resolve($uri, $uri->withFragment('')->withQuery('')->withPath(''));
     }
 
     /**
@@ -193,10 +165,10 @@ final class Factory
     private function getClassName(string $scheme = null, $base_uri): string
     {
         $scheme = strtolower($scheme ?? '');
-        if (isset($base_uri) && in_array($scheme, [$base_uri->getScheme(), ''], true)) {
+        if (null !== $base_uri && in_array($scheme, [$base_uri->getScheme(), ''], true)) {
             return get_class($base_uri);
         }
 
-        return $this->map[$scheme] ?? Uri::class;
+        return $this->map[$scheme] ?? Uri\Uri::class;
     }
 }

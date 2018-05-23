@@ -14,15 +14,15 @@
  * file that was distributed with this source code.
  */
 
-namespace LeagueTest\Uri;
+namespace LeagueTest\Uri\Resolution;
 
 use InvalidArgumentException;
 use League\Uri;
 use League\Uri\Exception\CreatingUriFailed;
 use League\Uri\Exception\MappingUriFailed;
-use League\Uri\Factory;
 use League\Uri\Ftp;
 use League\Uri\Http;
+use League\Uri\Resolution\Factory;
 use PHPUnit\Framework\TestCase;
 use TypeError;
 
@@ -32,7 +32,7 @@ use TypeError;
 class FactoryTest extends TestCase
 {
     /**
-     * @covers \League\Uri\Factory
+     * @covers \League\Uri\Resolution\Factory
      */
     public function testFactoryThrowTypeErrorOnConstruction()
     {
@@ -43,14 +43,14 @@ class FactoryTest extends TestCase
     /**
      * @dataProvider invalidMapperData
      *
-     * @covers \League\Uri\Factory
+     * @covers \League\Uri\Resolution\Factory
      *
      * @param mixed $data
      */
     public function testFactoryThrowExceptionOnConstruction($data)
     {
         $this->expectException(MappingUriFailed::class);
-        new Uri\Factory($data);
+        new Uri\Resolution\Factory($data);
     }
 
     public function invalidMapperData()
@@ -71,13 +71,13 @@ class FactoryTest extends TestCase
 
     public function testFactoryAddMapper()
     {
-        $factory = new Uri\Factory(['http' => Uri\Uri::class]);
+        $factory = new Uri\Resolution\Factory(['http' => Uri\Uri::class]);
         $this->assertInstanceOf(Uri\Uri::class, $factory->create('http://example.com'));
     }
 
     /**
      * @covers \League\Uri\create
-     * @covers \League\Uri\Factory
+     * @covers \League\Uri\Resolution\Factory
      */
     public function testCreateThrowExceptionWithBaseUriNotAbsolute()
     {
@@ -87,7 +87,7 @@ class FactoryTest extends TestCase
 
     /**
      * @covers \League\Uri\create
-     * @covers \League\Uri\Factory
+     * @covers \League\Uri\Resolution\Factory
      */
     public function testCreateThrowExceptionWithUriNotAbsolute()
     {
@@ -99,7 +99,7 @@ class FactoryTest extends TestCase
      * @dataProvider uriProvider
      *
      * @covers \League\Uri\create
-     * @covers \League\Uri\Factory
+     * @covers \League\Uri\Resolution\Factory
      *
      * @param string $expected
      * @param string $uri
@@ -135,8 +135,8 @@ class FactoryTest extends TestCase
      * @dataProvider uriBaseUriProvider
      *
      * @covers \League\Uri\create
-     * @covers \League\Uri\Factory
-     * @covers \League\Uri\Resolver
+     * @covers \League\Uri\Resolution\Factory
+     * @covers \League\Uri\Resolution\Resolver
      *
      * @param string $expected_class
      * @param string $expected_uri
@@ -232,7 +232,7 @@ class FactoryTest extends TestCase
 
     /**
      * @covers \League\Uri\create
-     * @covers \League\Uri\Factory
+     * @covers \League\Uri\Resolution\Factory
      *
      * @dataProvider resolveProvider
      *
@@ -305,7 +305,7 @@ class FactoryTest extends TestCase
 
     /**
      * @covers \League\Uri\resolve
-     * @covers \League\Uri\Resolver::filterUri
+     * @covers \League\Uri\Resolution\Resolver::filterUri
      */
     public function testResolveThrowExceptionOnConstructor()
     {

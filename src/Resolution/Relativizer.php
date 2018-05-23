@@ -16,8 +16,9 @@
 
 declare(strict_types=1);
 
-namespace League\Uri;
+namespace League\Uri\Resolution;
 
+use League\Uri;
 use League\Uri\UriInterface as LeagueUriInterface;
 use Psr\Http\Message\UriInterface;
 use TypeError;
@@ -78,7 +79,7 @@ final class Relativizer
             throw new TypeError(sprintf('The uri must be a valid URI object received `%s`', gettype($uri)));
         }
 
-        return $uri->withHost(Uri::createFromComponents(['host' => $uri->getHost()])->getHost());
+        return $uri->withHost(Uri\Uri::createFromComponents(['host' => $uri->getHost()])->getHost());
     }
 
     /**
@@ -93,7 +94,7 @@ final class Relativizer
     {
         return $base_uri->getScheme() === $uri->getScheme()
             && $base_uri->getAuthority() === $uri->getAuthority()
-            && !is_relative_path($uri)
+            && !Uri\is_relative_path($uri)
         ;
     }
 
