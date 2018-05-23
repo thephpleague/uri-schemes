@@ -19,8 +19,7 @@ declare(strict_types=1);
 namespace League\Uri;
 
 use JsonSerializable;
-use League\Uri\Exception\InvalidUri;
-use League\Uri\Exception\InvalidUriComponent;
+use League\Uri\Exception\MalformedUri;
 use League\Uri\Exception\MissingIdnSupport;
 use TypeError;
 
@@ -225,7 +224,7 @@ class Uri implements UriInterface, JsonSerializable
      *
      * @param string|null $scheme
      *
-     * @throws InvalidUriComponent if the scheme is invalid
+     * @throws MalformedUri if the scheme is invalid
      *
      * @return string|null
      */
@@ -241,7 +240,7 @@ class Uri implements UriInterface, JsonSerializable
             return $formatted_scheme;
         }
 
-        throw new InvalidUriComponent(sprintf('The scheme `%s` is invalid', $scheme));
+        throw new MalformedUri(sprintf('The scheme `%s` is invalid', $scheme));
     }
 
     /**
@@ -308,7 +307,7 @@ class Uri implements UriInterface, JsonSerializable
      *
      * @param string $host
      *
-     * @throws InvalidUriComponent if the submitted host is not a valid registered name
+     * @throws MalformedUri if the submitted host is not a valid registered name
      *
      * @return string
      */
@@ -327,7 +326,7 @@ class Uri implements UriInterface, JsonSerializable
 
         static $gen_delims = '/[:\/?#\[\]@ ]/'; // Also includes space.
         if (preg_match($gen_delims, $formatted_host)) {
-            throw new InvalidUriComponent(sprintf('The host `%s` is invalid : a registered name can not contain URI delimiters or spaces', $host));
+            throw new MalformedUri(sprintf('The host `%s` is invalid : a registered name can not contain URI delimiters or spaces', $host));
         }
 
         // @codeCoverageIgnoreStart
@@ -345,7 +344,7 @@ class Uri implements UriInterface, JsonSerializable
             return $formatted_host;
         }
 
-        throw new InvalidUriComponent(sprintf('The host `%s` is invalid : %s', $host, $this->getIDNAErrors($arr['errors'])));
+        throw new MalformedUri(sprintf('The host `%s` is invalid : %s', $host, $this->getIDNAErrors($arr['errors'])));
     }
 
     /**
@@ -393,7 +392,7 @@ class Uri implements UriInterface, JsonSerializable
      *
      * @param string $host
      *
-     * @throws InvalidUriComponent if the submitted host is not a valid IP host
+     * @throws MalformedUri if the submitted host is not a valid IP host
      *
      * @return string
      */
@@ -416,17 +415,17 @@ class Uri implements UriInterface, JsonSerializable
         }
 
         if (false === ($pos = strpos($ip, '%'))) {
-            throw new InvalidUriComponent(sprintf('The host `%s` is invalid : the IP host is malformed', $host));
+            throw new MalformedUri(sprintf('The host `%s` is invalid : the IP host is malformed', $host));
         }
 
         static $gen_delims = '/[:\/?#\[\]@ ]/'; // Also includes space.
         if (preg_match($gen_delims, rawurldecode(substr($ip, $pos)))) {
-            throw new InvalidUriComponent(sprintf('The host `%s` is invalid : the IP host is malformed', $host));
+            throw new MalformedUri(sprintf('The host `%s` is invalid : the IP host is malformed', $host));
         }
 
         $ip = substr($ip, 0, $pos);
         if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
-            throw new InvalidUriComponent(sprintf('The host `%s` is invalid : the IP host is malformed', $host));
+            throw new MalformedUri(sprintf('The host `%s` is invalid : the IP host is malformed', $host));
         }
 
         //Only the address block fe80::/10 can have a Zone ID attach to
@@ -437,7 +436,7 @@ class Uri implements UriInterface, JsonSerializable
             return $host;
         }
 
-        throw new InvalidUriComponent(sprintf('The host `%s` is invalid : the IP host is malformed', $host));
+        throw new MalformedUri(sprintf('The host `%s` is invalid : the IP host is malformed', $host));
     }
 
     /**
@@ -464,7 +463,7 @@ class Uri implements UriInterface, JsonSerializable
      *
      * @param int|null $port
      *
-     * @throws InvalidUriComponent if the port is invalid
+     * @throws MalformedUri if the port is invalid
      *
      * @return int|null
      */
@@ -475,7 +474,7 @@ class Uri implements UriInterface, JsonSerializable
         }
 
         if ($port < 0) {
-            throw new InvalidUriComponent(sprintf('The port `%s` is invalid', $port));
+            throw new MalformedUri(sprintf('The port `%s` is invalid', $port));
         }
 
         return $port;
@@ -547,21 +546,21 @@ class Uri implements UriInterface, JsonSerializable
      * @see https://tools.ietf.org/html/rfc3986#section-3
      * @see https://tools.ietf.org/html/rfc3986#section-3.3
      *
-     * @throws InvalidUri if the URI is in an invalid state according to RFC3986
-     * @throws InvalidUri if the URI is in an invalid state according to scheme specific rules
+     * @throws MalformedUri if the URI is in an invalid state according to RFC3986
+     * @throws MalformedUri if the URI is in an invalid state according to scheme specific rules
      */
     protected function assertValidState()
     {
         $this->uri = null;
 
         if (null !== $this->authority && ('' !== $this->path && '/' !== $this->path[0])) {
-            throw new InvalidUri(
+            throw new MalformedUri(
                 'If an authority is present the path must be empty or start with a `/`'
             );
         }
 
         if (null === $this->authority && 0 === strpos($this->path, '//')) {
-            throw new InvalidUri(sprintf(
+            throw new MalformedUri(sprintf(
                 'If there is no authority the path `%s` can not start with a `//`',
                 $this->path
             ));
@@ -572,13 +571,13 @@ class Uri implements UriInterface, JsonSerializable
             && false !== ($pos = strpos($this->path, ':'))
             && false === strpos(substr($this->path, 0, $pos), '/')
         ) {
-            throw new InvalidUri(
+            throw new MalformedUri(
                 'In absence of a scheme and an authority the first path segment cannot contain a colon (":") character.'
             );
         }
 
         if (!$this->isValidUri()) {
-            throw new InvalidUri(sprintf(
+            throw new MalformedUri(sprintf(
                 'The uri `%s` is invalid for the following scheme(s): `%s`',
                 $this->getUriString($this->scheme, $this->authority, $this->path, $this->query, $this->fragment),
                 implode(', ', array_keys(static::$supported_schemes))
@@ -770,7 +769,7 @@ class Uri implements UriInterface, JsonSerializable
      *
      * @param mixed $str the value to evaluate as a string
      *
-     * @throws InvalidUri if the submitted data can not be converted to string
+     * @throws MalformedUri if the submitted data can not be converted to string
      *
      * @return string
      */
@@ -786,7 +785,7 @@ class Uri implements UriInterface, JsonSerializable
             return $str;
         }
 
-        throw new InvalidUriComponent(sprintf('The component `%s` contains invalid characters', $str));
+        throw new MalformedUri(sprintf('The component `%s` contains invalid characters', $str));
     }
 
     /**

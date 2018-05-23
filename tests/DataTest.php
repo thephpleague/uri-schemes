@@ -18,7 +18,7 @@ namespace LeagueTest\Uri;
 
 use League\Uri\Data;
 use League\Uri\Exception\InvalidUri;
-use League\Uri\Exception\InvalidUriComponent;
+use League\Uri\Exception\MalformedUri;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -108,7 +108,7 @@ class DataTest extends TestCase
      */
     public function testCreateFromStringFailedWithWrongComponent($uri)
     {
-        $this->expectException(InvalidUriComponent::class);
+        $this->expectException(MalformedUri::class);
         Data::createFromString($uri);
     }
 
@@ -157,7 +157,7 @@ class DataTest extends TestCase
      */
     public function testCreateFromComponentsFailedInvalidMediatype()
     {
-        $this->expectException(InvalidUriComponent::class);
+        $this->expectException(MalformedUri::class);
         Data::createFromString('data:image/png;base64=toto;base64,dsqdfqfd');
     }
 

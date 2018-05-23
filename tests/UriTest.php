@@ -16,9 +16,8 @@
 
 namespace LeagueTest\Uri;
 
-use League\Uri\Exception\FailedUriParsing;
 use League\Uri\Exception\InvalidUri;
-use League\Uri\Exception\InvalidUriComponent;
+use League\Uri\Exception\MalformedUri;
 use League\Uri\Http;
 use League\Uri\Uri;
 use PHPUnit\Framework\TestCase;
@@ -223,13 +222,13 @@ class UriTest extends TestCase
      */
     public function testCannotConvertInvalidHost()
     {
-        $this->expectException(FailedUriParsing::class);
+        $this->expectException(InvalidUri::class);
         Uri::createFromString('http://_b%C3%A9bé.be-/foo/bar');
     }
 
     public function testWithSchemeFailedWithInvalidSchemeValue()
     {
-        $this->expectException(InvalidUriComponent::class);
+        $this->expectException(MalformedUri::class);
         Uri::createFromString('http://example.com')->withScheme('tété');
     }
 
@@ -275,7 +274,7 @@ class UriTest extends TestCase
      */
     public function testModificationFailedWithInvalidHost()
     {
-        $this->expectException(InvalidUriComponent::class);
+        $this->expectException(MalformedUri::class);
         Uri::createFromString('http://example.com/path')->withHost('%23');
     }
 
@@ -371,7 +370,7 @@ class UriTest extends TestCase
      */
     public function testModificationFailedWithInvalidPort()
     {
-        $this->expectException(InvalidUriComponent::class);
+        $this->expectException(MalformedUri::class);
         Uri::createFromString('http://example.com/path')->withPort(-1);
     }
 
@@ -406,7 +405,7 @@ class UriTest extends TestCase
      */
     public function testCreateFromComponentsThrowsOnInvalidIpvFuture()
     {
-        $this->expectException(InvalidUriComponent::class);
+        $this->expectException(MalformedUri::class);
         Uri::createFromComponents(['host' => '[v4.1.2.3]']);
     }
 
@@ -415,7 +414,7 @@ class UriTest extends TestCase
      */
     public function testCreateFromComponentsThrowsExceptionWithInvalidChars()
     {
-        $this->expectException(InvalidUriComponent::class);
+        $this->expectException(MalformedUri::class);
         Uri::createFromComponents()->withFragment("\n\rtoto");
     }
 
@@ -424,7 +423,7 @@ class UriTest extends TestCase
      */
     public function testCreateFromComponentsThrowsException()
     {
-        $this->expectException(InvalidUriComponent::class);
+        $this->expectException(MalformedUri::class);
         Uri::createFromComponents(['host' => '[127.0.0.1]']);
     }
 
@@ -433,7 +432,7 @@ class UriTest extends TestCase
      */
     public function testCreateFromComponentsThrowsException2()
     {
-        $this->expectException(InvalidUriComponent::class);
+        $this->expectException(MalformedUri::class);
         Uri::createFromComponents(['host' => '[127.0.0.1%251]']);
     }
 
@@ -442,7 +441,7 @@ class UriTest extends TestCase
      */
     public function testCreateFromComponentsThrowsException3()
     {
-        $this->expectException(InvalidUriComponent::class);
+        $this->expectException(MalformedUri::class);
         Uri::createFromComponents(['host' => '[fe80:1234::%25 1]']);
     }
 
@@ -451,7 +450,7 @@ class UriTest extends TestCase
      */
     public function testCreateFromComponentsThrowsException4()
     {
-        $this->expectException(InvalidUriComponent::class);
+        $this->expectException(MalformedUri::class);
         Uri::createFromComponents(['host' => '[::1%251]']);
     }
 
@@ -461,7 +460,7 @@ class UriTest extends TestCase
      */
     public function testCreateFromComponentsThrowsException5()
     {
-        $this->expectException(InvalidUriComponent::class);
+        $this->expectException(MalformedUri::class);
         Uri::createFromComponents(['host' => 'a⒈com']);
     }
 

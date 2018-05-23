@@ -19,7 +19,7 @@ declare(strict_types=1);
 namespace League\Uri;
 
 use League\Uri\Exception\InvalidUri;
-use League\Uri\Exception\InvalidUriComponent;
+use League\Uri\Exception\MalformedUri;
 use Psr\Http\Message\UriInterface;
 
 final class Http extends Uri implements UriInterface
@@ -63,7 +63,7 @@ final class Http extends Uri implements UriInterface
             return $port;
         }
 
-        throw new InvalidUriComponent(sprintf('Invalid Port `%s` for the HTTP(s) URI scheme', $port));
+        throw new MalformedUri(sprintf('Invalid Port `%s` for the HTTP(s) URI scheme', $port));
     }
 
     /**
@@ -150,7 +150,7 @@ final class Http extends Uri implements UriInterface
         }
 
         if (!isset($server['SERVER_ADDR'])) {
-            throw new InvalidUri('Hostname could not be detected');
+            throw new InvalidUri('The host could not be detected');
         }
 
         if (!filter_var($server['SERVER_ADDR'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {

@@ -18,7 +18,7 @@ declare(strict_types=1);
 
 namespace League\Uri;
 
-use League\Uri\Exception\InvalidUriComponent;
+use League\Uri\Exception\MalformedUri;
 
 final class Ws extends Uri
 {
@@ -63,7 +63,7 @@ final class Ws extends Uri
         }
 
         if (1 > $port || 65535 < $port) {
-            throw new InvalidUriComponent(sprintf('The port `%s` is invalid for the WS(s) URI scheme', $port));
+            throw new MalformedUri(sprintf('The port `%s` is invalid for the WS(s) URI scheme', $port));
         }
 
         return $port;
