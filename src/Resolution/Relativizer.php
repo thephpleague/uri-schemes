@@ -18,13 +18,22 @@ declare(strict_types=1);
 
 namespace League\Uri\Resolution;
 
-use League\Uri;
-use League\Uri\UriInterface as LeagueUriInterface;
-use Psr\Http\Message\UriInterface;
+use League\Uri\Uri;
+use League\Uri\UriInterface;
+use Psr\Http\Message\UriInterface as Psr7UriInterface;
 use TypeError;
+use function League\Uri\is_relative_path;
 
 final class Relativizer
 {
+
+    /**
+     * @codeCoverageIgnore
+     */
+    private function __construct()
+    {
+    }
+
     /**
      * Relativize an URI according to a base URI
      *
@@ -34,23 +43,23 @@ final class Relativizer
      * This method MUST be transparent when dealing with error and exceptions.
      * It MUST not alter of silence them apart from validating its own parameters.
      *
-     * @param LeagueUriInterface|UriInterface $uri
-     * @param LeagueUriInterface|UriInterface $base_uri
+     * @param Psr7UriInterface|UriInterface $uri
+     * @param Psr7UriInterface|UriInterface $base_uri
      *
-     * @return LeagueUriInterface|UriInterface
+     * @return Psr7UriInterface|UriInterface
      */
-    public function relativize($uri, $base_uri)
+    public static function relativize($uri, $base_uri)
     {
-        $uri = $this->filterUri($uri);
-        $base_uri = $this->filterUri($base_uri);
-        if (!$this->isRelativizable($uri, $base_uri)) {
+        $uri = self::filterUri($uri);
+        $base_uri = self::filterUri($base_uri);
+        if (!self::isRelativizable($uri, $base_uri)) {
             return $uri;
         }
 
         $uri = $uri->withScheme('')->withPort(null)->withUserInfo('')->withHost('');
         $target_path = $uri->getPath();
         if ($target_path !== $base_uri->getPath()) {
-            return $uri->withPath($this->relativizePath($target_path, $base_uri->getPath()));
+            return $uri->withPath(self::relativizePath($target_path, $base_uri->getPath()));
         }
 
         if ($uri->getQuery() === $base_uri->getQuery()) {
@@ -58,7 +67,7 @@ final class Relativizer
         }
 
         if ('' === $uri->getQuery()) {
-            return $uri->withPath($this->formatPathWithEmptyBaseQuery($target_path));
+            return $uri->withPath(self::formatPathWithEmptyBaseQuery($target_path));
         }
 
         return $uri->withPath('');
@@ -71,30 +80,30 @@ final class Relativizer
      *
      * @throws TypeError if the URI object does not implements the supported interfaces.
      *
-     * @return LeagueUriInterface|UriInterface
+     * @return Psr7UriInterface|UriInterface
      */
-    private function filterUri($uri)
+    private static function filterUri($uri)
     {
-        if (!$uri instanceof LeagueUriInterface && !$uri instanceof UriInterface) {
+        if (!$uri instanceof Psr7UriInterface && !$uri instanceof UriInterface) {
             throw new TypeError(sprintf('The uri must be a valid URI object received `%s`', gettype($uri)));
         }
 
-        return $uri->withHost(Uri\Uri::createFromComponents(['host' => $uri->getHost()])->getHost());
+        return $uri->withHost(Uri::createFromComponents(['host' => $uri->getHost()])->getHost());
     }
 
     /**
      * Tell whether the submitted URI object can be relativize.
      *
-     * @param LeagueUriInterface|UriInterface $uri
-     * @param LeagueUriInterface|UriInterface $base_uri
+     * @param Psr7UriInterface|UriInterface $uri
+     * @param Psr7UriInterface|UriInterface $base_uri
      *
      * @return bool
      */
-    private function isRelativizable($uri, $base_uri): bool
+    private static function isRelativizable($uri, $base_uri): bool
     {
         return $base_uri->getScheme() === $uri->getScheme()
             && $base_uri->getAuthority() === $uri->getAuthority()
-            && !Uri\is_relative_path($uri)
+            && !is_relative_path($uri)
         ;
     }
 
@@ -106,10 +115,10 @@ final class Relativizer
      *
      * @return string
      */
-    private function relativizePath(string $path, string $basepath): string
+    private static function relativizePath(string $path, string $basepath): string
     {
-        $base_segments = $this->getSegments($basepath);
-        $target_segments = $this->getSegments($path);
+        $base_segments = self::getSegments($basepath);
+        $target_segments = self::getSegments($path);
         $target_basename = array_pop($target_segments);
         array_pop($base_segments);
         foreach ($base_segments as $offset => $segment) {
@@ -120,7 +129,7 @@ final class Relativizer
         }
         $target_segments[] = $target_basename;
 
-        return $this->formatPath(
+        return self::formatPath(
             str_repeat('../', count($base_segments)).implode('/', $target_segments),
             $basepath
         );
@@ -133,7 +142,7 @@ final class Relativizer
      *
      * @return array
      */
-    private function getSegments(string $path): array
+    private static function getSegments(string $path): array
     {
         if ('' !== $path && '/' === $path[0]) {
             $path = substr($path, 1);
@@ -150,7 +159,7 @@ final class Relativizer
      *
      * @return string
      */
-    private function formatPath(string $path, string $basepath): string
+    private static function formatPath(string $path, string $basepath): string
     {
         if ('' === $path) {
             return in_array($basepath, ['', '/'], true) ? $basepath : './';
@@ -175,9 +184,9 @@ final class Relativizer
      *
      * @return string
      */
-    private function formatPathWithEmptyBaseQuery(string $path): string
+    private static function formatPathWithEmptyBaseQuery(string $path): string
     {
-        $target_segments = $this->getSegments($path);
+        $target_segments = self::getSegments($path);
         $basename = end($target_segments);
 
         return '' === $basename ? './' : $basename;

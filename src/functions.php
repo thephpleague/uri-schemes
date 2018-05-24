@@ -58,11 +58,7 @@ function create($uri, $base_uri = null)
  */
 function resolve($uri, $base_uri)
 {
-    static $resolver;
-
-    $resolver = $resolver ?? new Resolver();
-
-    return $resolver->resolve($uri, $base_uri);
+    return Resolver::resolve($uri, $base_uri);
 }
 
 /**
@@ -77,11 +73,7 @@ function resolve($uri, $base_uri)
  */
 function relativize($uri, $base_uri)
 {
-    static $relativizer;
-
-    $relativizer = $relativizer ?? new Relativizer();
-
-    return $relativizer->relativize($uri, $base_uri);
+    return Relativizer::relativize($uri, $base_uri);
 }
 
 /**

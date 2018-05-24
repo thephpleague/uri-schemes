@@ -22,6 +22,13 @@ use League\Uri\Http;
 use League\Uri\UriInterface;
 use PHPUnit\Framework\TestCase;
 use TypeError;
+use function League\Uri\is_absolute;
+use function League\Uri\is_absolute_path;
+use function League\Uri\is_network_path;
+use function League\Uri\is_relative_path;
+use function League\Uri\is_same_document;
+use function League\Uri\normalize;
+use function League\Uri\relativize;
 
 /**
  * @group uri
@@ -46,7 +53,7 @@ class FunctionsTest extends TestCase
     {
         $uri      = Http::createFromString($uri);
         $resolved = Http::createFromString($resolved);
-        $this->assertSame($expected, (string) Uri\relativize($resolved, $uri));
+        $this->assertSame($expected, (string) relativize($resolved, $uri));
     }
 
     public function relativizeProvider()
@@ -99,7 +106,7 @@ class FunctionsTest extends TestCase
     public function testRelativizerThrowExceptionOnConstructor()
     {
         $this->expectException(TypeError::class);
-        Uri\relativize('ftp//a/b/c/d;p', 'toto');
+        relativize('ftp//a/b/c/d;p', 'toto');
     }
 
     /**
@@ -124,7 +131,7 @@ class FunctionsTest extends TestCase
         $baseUri = Http::createFromString($baseUri);
         $uri = Http::createFromString($uri);
 
-        $relativeUri = Uri\relativize($uri, $baseUri);
+        $relativeUri = relativize($uri, $baseUri);
         $this->assertSame($expectedRelativize, (string) $relativeUri);
     }
 
@@ -162,12 +169,12 @@ class FunctionsTest extends TestCase
     public function testStat($uri, $base_uri, array $infos)
     {
         if (null !== $base_uri) {
-            $this->assertSame($infos['same_document'], Uri\is_same_document($uri, $base_uri));
+            $this->assertSame($infos['same_document'], is_same_document($uri, $base_uri));
         }
-        $this->assertSame($infos['relative_path'], Uri\is_relative_path($uri));
-        $this->assertSame($infos['absolute_path'], Uri\is_absolute_path($uri));
-        $this->assertSame($infos['absolute_uri'], Uri\is_absolute($uri));
-        $this->assertSame($infos['network_path'], Uri\is_network_path($uri));
+        $this->assertSame($infos['relative_path'], is_relative_path($uri));
+        $this->assertSame($infos['absolute_path'], is_absolute_path($uri));
+        $this->assertSame($infos['absolute_uri'], is_absolute($uri));
+        $this->assertSame($infos['network_path'], is_network_path($uri));
     }
 
     public function uriProvider()
@@ -242,7 +249,7 @@ class FunctionsTest extends TestCase
     public function testStatThrowsInvalidArgumentException($uri, $base_uri)
     {
         $this->expectException(TypeError::class);
-        Uri\is_same_document($uri, $base_uri);
+        is_same_document($uri, $base_uri);
     }
 
     public function failedUriProvider()
@@ -297,7 +304,7 @@ class FunctionsTest extends TestCase
      */
     public function testSameValueAs($uri1, $uri2, bool $expected)
     {
-        $this->assertSame($expected, (string) Uri\normalize($uri1) == (string) Uri\normalize($uri2));
+        $this->assertSame($expected, (string) normalize($uri1) == (string) normalize($uri2));
     }
 
     public function sameValueAsProvider()
@@ -359,7 +366,7 @@ class FunctionsTest extends TestCase
         $rawUrl = 'HtTp://vonNN.com/ipsam-nulla-adipisci-laboriosam-dignissimos-accusamus-eum-voluptatem';
         $this->assertSame(
             'http://vonnn.com/ipsam-nulla-adipisci-laboriosam-dignissimos-accusamus-eum-voluptatem',
-            (string) Uri\normalize(Http::createFromString($rawUrl))
+            (string) normalize(Http::createFromString($rawUrl))
         );
     }
 }
