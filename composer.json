@@ -32,7 +32,6 @@
     "require": {
         "php": ">=7.0.10",
         "ext-mbstring" : "*",
-        "ext-intl" : "*",
         "ext-fileinfo": "*",
         "psr/http-message": "^1.0",
         "league/uri-parser": "dev-develop",
@@ -72,7 +71,8 @@
         ]
     },
     "suggest": {
-        "league/uri-manipulations" : "Needed to easily manipulate URI objects"
+        "league/uri-components" : "Needed to easily manipulate URI objects",
+        "ext-intl" : "*",
     },
     "extra": {
         "branch-alias": {

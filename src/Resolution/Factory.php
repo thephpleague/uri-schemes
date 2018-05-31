@@ -18,19 +18,21 @@ declare(strict_types=1);
 
 namespace League\Uri\Resolution;
 
-use League\Uri;
 use League\Uri\Data;
 use League\Uri\Exception\InvalidUri;
 use League\Uri\Exception\MalformedUri;
 use League\Uri\File;
 use League\Uri\Ftp;
 use League\Uri\Http;
-use League\Uri\UriInterface as LeagueUriInterface;
+use League\Uri\Uri;
+use League\Uri\UriInterface;
 use League\Uri\Ws;
-use Psr\Http\Message\UriInterface;
+use Psr\Http\Message\UriInterface as Psr7UriInterface;
 use ReflectionClass;
 use Traversable;
 use TypeError;
+use function League\Uri\parse;
+use function League\Uri\resolve;
 
 final class Factory
 {
@@ -60,7 +62,7 @@ final class Factory
      * @var array
      */
     private static $uri_interfaces = [
-        LeagueUriInterface::class,
+        Psr7UriInterface::class,
         UriInterface::class,
     ];
 
@@ -84,7 +86,7 @@ final class Factory
      * Add a new classname for a given scheme URI
      *
      * @param string $scheme    valid URI scheme
-     * @param string $className classname which implements LeagueUriInterface or UriInterface
+     * @param string $className classname which implements Psr7UriInterface or UriInterface
      *
      * @throws MalformedUri if the scheme is invalid
      * @throws InvalidUri   if the class does not implements a supported interface
@@ -108,7 +110,7 @@ final class Factory
      * The base URI can be
      * <ul>
      * <li>UriInterface
-     * <li>LeagueUriInterface
+     * <li>Psr7UriInterface
      * <li>a string
      * </ul>
      *
@@ -117,7 +119,7 @@ final class Factory
      *
      * @throws MalformedUri if there's no base URI and the submitted URI is not absolute
      *
-     * @return LeagueUriInterface|UriInterface
+     * @return Psr7UriInterface|UriInterface
      */
     public function create($uri, $base_uri = null)
     {
@@ -125,8 +127,8 @@ final class Factory
             $base_uri = $this->create($base_uri);
         }
 
-        if (!$uri instanceof UriInterface && !$uri instanceof LeagueUriInterface) {
-            $components = Uri\parse($uri);
+        if (!$uri instanceof UriInterface && !$uri instanceof Psr7UriInterface) {
+            $components = parse($uri);
             $uri = (new ReflectionClass($this->getClassName($components['scheme'], $base_uri)))
                 ->newInstanceWithoutConstructor()
                 ->withHost($components['host'] ?? '')
@@ -140,7 +142,7 @@ final class Factory
         }
 
         if (null !== $base_uri) {
-            return Uri\resolve($uri, $base_uri);
+            return resolve($uri, $base_uri);
         }
 
         if ('' === $uri->getScheme()) {
@@ -151,7 +153,7 @@ final class Factory
             return $uri;
         }
 
-        return Uri\resolve($uri, $uri->withFragment('')->withQuery('')->withPath(''));
+        return resolve($uri, $uri->withFragment('')->withQuery('')->withPath(''));
     }
 
     /**
@@ -169,6 +171,6 @@ final class Factory
             return get_class($base_uri);
         }
 
-        return $this->map[$scheme] ?? Uri\Uri::class;
+        return $this->map[$scheme] ?? Uri::class;
     }
 }

@@ -18,8 +18,8 @@ declare(strict_types=1);
 
 namespace League\Uri\Resolution;
 
-use League\Uri\UriInterface as LeagueUriInterface;
-use Psr\Http\Message\UriInterface;
+use League\Uri\UriInterface;
+use Psr\Http\Message\UriInterface as Psr7UriInterface;
 use TypeError;
 
 final class Resolver
@@ -30,34 +30,41 @@ final class Resolver
     const DOT_SEGMENTS = ['.' => 1, '..' => 1];
 
     /**
+     * @codeCoverageIgnore
+     */
+    private function __construct()
+    {
+    }
+
+    /**
      * Resolve an URI against a base URI using RFC3986 rules.
      *
-     * @param LeagueUriInterface|UriInterface $uri
-     * @param LeagueUriInterface|UriInterface $base_uri
+     * @param Psr7UriInterface|UriInterface $uri
+     * @param Psr7UriInterface|UriInterface $base_uri
      *
-     * @return LeagueUriInterface|UriInterface
+     * @return Psr7UriInterface|UriInterface
      */
-    public function resolve($uri, $base_uri)
+    public static function resolve($uri, $base_uri)
     {
-        $this->filterUri($uri);
-        $this->filterUri($base_uri);
+        self::filterUri($uri);
+        self::filterUri($base_uri);
 
         if ('' !== $uri->getScheme()) {
             return $uri
-                ->withPath($this->removeDotSegments($uri->getPath()));
+                ->withPath(self::removeDotSegments($uri->getPath()));
         }
 
         if ('' !== $uri->getAuthority()) {
             return $uri
                 ->withScheme($base_uri->getScheme())
-                ->withPath($this->removeDotSegments($uri->getPath()));
+                ->withPath(self::removeDotSegments($uri->getPath()));
         }
 
         list($base_uri_user, $base_uri_pass) = explode(':', $base_uri->getUserInfo(), 2) + [1 => null];
-        list($uri_path, $uri_query) = $this->resolvePathAndQuery($uri, $base_uri);
+        list($uri_path, $uri_query) = self::resolvePathAndQuery($uri, $base_uri);
 
         return $uri
-            ->withPath($this->removeDotSegments($uri_path))
+            ->withPath(self::removeDotSegments($uri_path))
             ->withQuery($uri_query)
             ->withHost($base_uri->getHost())
             ->withPort($base_uri->getPort())
@@ -73,9 +80,9 @@ final class Resolver
      *
      * @throws TypeError if the URI object does not implements the supported interfaces.
      */
-    private function filterUri($uri)
+    private static function filterUri($uri)
     {
-        if (!$uri instanceof LeagueUriInterface && !$uri instanceof UriInterface) {
+        if (!$uri instanceof Psr7UriInterface && !$uri instanceof UriInterface) {
             throw new TypeError(sprintf('The uri must be a valid URI object received `%s`', gettype($uri)));
         }
     }
@@ -89,14 +96,14 @@ final class Resolver
      *
      * @return string
      */
-    private function removeDotSegments(string $path): string
+    private static function removeDotSegments(string $path): string
     {
         if (false === strpos($path, '.')) {
             return $path;
         }
 
         $old_segments = explode('/', $path);
-        $new_path = implode('/', array_reduce($old_segments, [$this, 'reducer'], []));
+        $new_path = implode('/', array_reduce($old_segments, [Resolver::class, 'reducer'], []));
         if (isset(self::DOT_SEGMENTS[end($old_segments)])) {
             $new_path .= '/';
         }
@@ -119,7 +126,7 @@ final class Resolver
      *
      * @return array
      */
-    private function reducer(array $carry, string $segment): array
+    private static function reducer(array $carry, string $segment): array
     {
         if ('..' === $segment) {
             array_pop($carry);
@@ -139,12 +146,12 @@ final class Resolver
      *
      * @internal used internally to create an URI object
      *
-     * @param LeagueUriInterface|UriInterface $uri
-     * @param LeagueUriInterface|UriInterface $base_uri
+     * @param Psr7UriInterface|UriInterface $uri
+     * @param Psr7UriInterface|UriInterface $base_uri
      *
      * @return string[]
      */
-    private function resolvePathAndQuery($uri, $base_uri): array
+    private static function resolvePathAndQuery($uri, $base_uri): array
     {
         $target_path = $uri->getPath();
         $target_query = $uri->getQuery();

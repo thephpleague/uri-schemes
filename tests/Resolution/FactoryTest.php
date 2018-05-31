@@ -17,13 +17,15 @@
 namespace LeagueTest\Uri\Resolution;
 
 use InvalidArgumentException;
-use League\Uri;
 use League\Uri\Exception\InvalidUri;
 use League\Uri\Ftp;
 use League\Uri\Http;
 use League\Uri\Resolution\Factory;
+use League\Uri\Uri;
 use PHPUnit\Framework\TestCase;
 use TypeError;
+use function League\Uri\create;
+use function League\Uri\resolve;
 
 /**
  * @group factory
@@ -49,7 +51,7 @@ class FactoryTest extends TestCase
     public function testFactoryThrowExceptionOnConstruction($data)
     {
         $this->expectException(InvalidUri::class);
-        new Uri\Resolution\Factory($data);
+        new Factory($data);
     }
 
     public function invalidMapperData()
@@ -57,7 +59,7 @@ class FactoryTest extends TestCase
         return [
             'invalid scheme' => [
                 'data' => [
-                    'tété' => Uri\Http::class,
+                    'tété' => Http::class,
                 ],
             ],
             'invalid class' => [
@@ -70,8 +72,8 @@ class FactoryTest extends TestCase
 
     public function testFactoryAddMapper()
     {
-        $factory = new Uri\Resolution\Factory(['http' => Uri\Uri::class]);
-        $this->assertInstanceOf(Uri\Uri::class, $factory->create('http://example.com'));
+        $factory = new Factory(['http' => Uri::class]);
+        $this->assertInstanceOf(Uri::class, $factory->create('http://example.com'));
     }
 
     /**
@@ -81,7 +83,7 @@ class FactoryTest extends TestCase
     public function testCreateThrowExceptionWithBaseUriNotAbsolute()
     {
         $this->expectException(InvalidUri::class);
-        Uri\create('/path/to/you', Uri\Http::createFromString('//example.com'));
+        create('/path/to/you', Http::createFromString('//example.com'));
     }
 
     /**
@@ -91,7 +93,7 @@ class FactoryTest extends TestCase
     public function testCreateThrowExceptionWithUriNotAbsolute()
     {
         $this->expectException(InvalidUri::class);
-        Uri\create('/path/to/you');
+        create('/path/to/you');
     }
 
     /**
@@ -105,26 +107,26 @@ class FactoryTest extends TestCase
      */
     public function testCreate($expected, $uri)
     {
-        $this->assertInstanceOf($expected, Uri\create($uri));
+        $this->assertInstanceOf($expected, create($uri));
     }
 
     public function uriProvider()
     {
         return [
             'http' => [
-                'expected' => Uri\Http::class,
+                'expected' => Http::class,
                 'uri' => 'http://www.example.com',
             ],
             'https' => [
-                'expected' => Uri\Http::class,
+                'expected' => Http::class,
                 'uri' => 'https://www.example.com',
             ],
             'ftp' => [
-                'expected' => Uri\Ftp::class,
+                'expected' => Ftp::class,
                 'uri' => 'ftp://www.example.com',
             ],
             'generic' => [
-                'expected' => Uri\Uri::class,
+                'expected' => Uri::class,
                 'uri' => 'mailto:info@thephpleague.com',
             ],
         ];
@@ -144,7 +146,7 @@ class FactoryTest extends TestCase
      */
     public function testCreateWithBaseUri($expected_class, $expected_uri, $uri, $base_uri)
     {
-        $obj = Uri\create($uri, $base_uri);
+        $obj = create($uri, $base_uri);
         $this->assertInstanceOf($expected_class, $obj);
         $this->assertSame($expected_uri, (string) $obj);
     }
@@ -155,76 +157,76 @@ class FactoryTest extends TestCase
 
         return [
             'empty URI' => [
-                'expected_class' => Uri\Http::class,
+                'expected_class' => Http::class,
                 'expected_uri' => 'https://example.com/index.php',
                 'uri' => '',
                 'base_uri' => $base_uri,
             ],
             'uri with absolute path' => [
-                'expected_class' => Uri\Http::class,
+                'expected_class' => Http::class,
                 'expected_uri' => 'https://example.com/path/to/file',
                 'uri' => '/path/to/file',
                 'base_uri' => $base_uri,
             ],
             'uri with authority' => [
-                'expected_class' => Uri\Http::class,
+                'expected_class' => Http::class,
                 'expected_uri' => 'https://toto.com/path/to/file',
                 'uri' => '//toto.com/path/to/file',
                 'base_uri' => $base_uri,
             ],
             'uri with relative path' => [
-                'expected_class' => Uri\Http::class,
+                'expected_class' => Http::class,
                 'expected_uri' => 'https://example.com/path/here.png',
                 'uri' => 'path/here.png',
                 'base_uri' => $base_uri,
             ],
             'uri with query' => [
-                'expected_class' => Uri\Http::class,
+                'expected_class' => Http::class,
                 'expected_uri' => 'https://example.com/index.php?foo=bar',
                 'uri' => '?foo=bar',
                 'base_uri' => $base_uri,
             ],
             'uri with another scheme' => [
-                'expected_class' => Uri\Ftp::class,
+                'expected_class' => Ftp::class,
                 'expected_uri' => 'ftp://example.com/to/file.csv',
                 'uri' => 'ftp://example.com/to/file.csv',
                 'base_uri' => $base_uri,
             ],
             'uri with dot segments (1)' => [
-                'expected_class' => Uri\Http::class,
+                'expected_class' => Http::class,
                 'expected_uri' => 'https://example.com/to/the/sky.php',
                 'uri' => '/path/../to/the/./sky.php',
                 'base_uri' => $base_uri,
             ],
             'uri with dot segments (2)' => [
-                'expected_class' => Uri\Http::class,
+                'expected_class' => Http::class,
                 'expected_uri' => 'https://example.com/to/the/sky/',
                 'uri' => '/path/../to/the/./sky/.',
                 'base_uri' => $base_uri,
             ],
             'uri with dot segments (3)' => [
-                'expected_class' => Uri\Http::class,
+                'expected_class' => Http::class,
                 'expected_uri' => 'http://h:b@a/y',
                 'uri' => 'b/../y',
-                'base_uri' => Uri\Http::createFromString('http://h:b@a'),
+                'base_uri' => Http::createFromString('http://h:b@a'),
             ],
             'uri with dot segments (4)' => [
-                'expected_class' => Uri\Http::class,
+                'expected_class' => Http::class,
                 'expected_uri' => 'http://a/b/c/g',
                 'uri' => './g',
-                'base_uri' => Uri\Http::createFromString('http://a/b/c/d;p?q'),
+                'base_uri' => Http::createFromString('http://a/b/c/d;p?q'),
             ],
             'uri with a base URI as string' => [
-                'expected_class' => Uri\Http::class,
+                'expected_class' => Http::class,
                 'expected_uri' => 'https://example.com/path/to/file',
                 'uri' => 'https://example.com/path/to/file',
                 'base_uri' => 'ftp://example.com/index.php',
             ],
             'uri with a base URI as league URI' => [
-                'expected_class' => Uri\Http::class,
+                'expected_class' => Http::class,
                 'expected_uri' => 'https://example.com/path/to/file',
                 'uri' => 'https://example.com/path/to/file',
-                'base_uri' => Uri\Ftp::createFromString('ftp://example.com/index.php'),
+                'base_uri' => Ftp::createFromString('ftp://example.com/index.php'),
             ],
         ];
     }
@@ -241,7 +243,7 @@ class FactoryTest extends TestCase
      */
     public function testCreateResolve(string $base_uri, string $uri, string $expected)
     {
-        $this->assertSame($expected, (string) Uri\create($uri, $base_uri));
+        $this->assertSame($expected, (string) create($uri, $base_uri));
     }
 
     public function resolveProvider()
@@ -299,7 +301,7 @@ class FactoryTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $http = Http::createFromString('http://example.com/path/to/file');
         $ftp = Ftp::createFromString('ftp//a/b/c/d;p');
-        Uri\resolve($ftp, $http);
+        resolve($ftp, $http);
     }
 
     /**
@@ -309,14 +311,14 @@ class FactoryTest extends TestCase
     public function testResolveThrowExceptionOnConstructor()
     {
         $this->expectException(TypeError::class);
-        Uri\resolve('ftp//a/b/c/d;p', 'toto');
+        resolve('ftp//a/b/c/d;p', 'toto');
     }
 
     public function testCreateAlwaysResolveUri()
     {
         $this->assertSame(
-            (string) Uri\create('../cats', 'http://www.example.com/dogs'),
-            (string) Uri\create('http://www.example.com/dogs/../cats')
+            (string) create('../cats', 'http://www.example.com/dogs'),
+            (string) create('http://www.example.com/dogs/../cats')
         );
     }
 }
