@@ -18,8 +18,6 @@ declare(strict_types=1);
 
 namespace League\Uri;
 
-use League\Uri\Exception\MalformedUri;
-
 final class Ws extends Uri
 {
     /**
@@ -50,22 +48,7 @@ final class Ws extends Uri
         return null === $this->fragment
             && '' !== $this->host
             && (null === $this->scheme || isset(static::$supported_schemes[$this->scheme]))
-            && !('' != $this->scheme && null === $this->host);
-    }
-
-    /**
-     * @inheritdoc
-     */
-    protected function filterPort(int $port = null)
-    {
-        if (null === $port) {
-            return $port;
-        }
-
-        if (1 > $port || 65535 < $port) {
-            throw new MalformedUri(sprintf('The port `%s` is invalid for the WS(s) URI scheme', $port));
-        }
-
-        return $port;
+            && !('' != $this->scheme && null === $this->host)
+            && (null === $this->port || (0 < $this->port && 65536 > $this->port));
     }
 }

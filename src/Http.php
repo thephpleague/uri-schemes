@@ -19,7 +19,6 @@ declare(strict_types=1);
 namespace League\Uri;
 
 use League\Uri\Exception\InvalidUri;
-use League\Uri\Exception\MalformedUri;
 use Psr\Http\Message\UriInterface;
 
 final class Http extends Uri implements UriInterface
@@ -51,19 +50,8 @@ final class Http extends Uri implements UriInterface
     {
         return '' !== $this->host
             && (null === $this->scheme || isset(static::$supported_schemes[$this->scheme]))
-            && !('' != $this->scheme && null === $this->host);
-    }
-
-    /**
-     * @inheritdoc
-     */
-    protected function filterPort(int $port = null)
-    {
-        if (null === $port || (1 < $port && 65535 > $port)) {
-            return $port;
-        }
-
-        throw new MalformedUri(sprintf('Invalid Port `%s` for the HTTP(s) URI scheme', $port));
+            && !('' != $this->scheme && null === $this->host)
+            && (null === $this->port || (0 < $this->port && 65536 > $this->port));
     }
 
     /**
