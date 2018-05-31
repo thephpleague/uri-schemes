@@ -72,7 +72,7 @@
     },
     "suggest": {
         "league/uri-components" : "Needed to easily manipulate URI objects",
-        "ext-intl" : "*",
+        "ext-intl" : "*"
     },
     "extra": {
         "branch-alias": {
