@@ -158,7 +158,7 @@ class UriTest extends TestCase
     /**
      * @covers ::getPort
      * @covers ::withPort
-     * @covers ::filterPort
+     * @covers ::formatPort
      */
     public function testPort()
     {
@@ -365,7 +365,7 @@ class UriTest extends TestCase
     }
 
     /**
-     * @covers ::filterPort
+     * @covers ::formatPort
      * @covers ::withPort
      */
     public function testModificationFailedWithInvalidPort()
@@ -374,6 +374,15 @@ class UriTest extends TestCase
         Uri::createFromString('http://example.com/path')->withPort(-1);
     }
 
+    /**
+     * @covers ::formatPort
+     * @covers ::withPort
+     */
+    public function testModificationFailedWithInvalidPort2()
+    {
+        $this->expectException(MalformedUri::class);
+        Uri::createFromString('http://example.com/path')->withPort('-1');
+    }
 
     /**
      * @covers ::formatIp

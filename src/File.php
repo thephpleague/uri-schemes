@@ -77,6 +77,21 @@ final class File extends Uri
         return parent::formatHost($host);
     }
 
+
+    protected function formatPath(string $path): string
+    {
+        $path = parent::formatPath($path);
+        if ('' === $path) {
+            return $path;
+        }
+
+        static $pattern = ',^(?<delim>/)?(?<root>[a-zA-Z][:|\|])(?<rest>.*)?,';
+
+        return preg_replace_callback($pattern, function (array $matches): string {
+            return $matches['delim'].str_replace('|', ':', $matches['root']).$matches['rest'];
+        }, $path);
+    }
+
     /**
      * Create a new instance from a Unix path string
      *
@@ -109,8 +124,8 @@ final class File extends Uri
             $root = substr($matches['root'], 0, -1).':';
             $uri = substr($uri, strlen($root));
         }
-
-        $uri = implode('/', array_map('rawurlencode', explode('\\', $uri)));
+        $uri = str_replace('\\', '/', $uri);
+        $uri = implode('/', array_map('rawurlencode', explode('/', $uri)));
 
         //Local Windows absolute path
         if ('' !== $root) {

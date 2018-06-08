@@ -37,6 +37,7 @@ class FileTest extends TestCase
     /**
      * @covers ::isValidUri
      * @covers ::formatHost
+     * @covers ::formatPath
      * @dataProvider validUrlProvider
      *
      * @param string $uri
@@ -85,6 +86,10 @@ class FileTest extends TestCase
             'with empty host and scheme' => [
                 'FiLe:///path',
                 'file://localhost/path',
+            ],
+            'with windows path' => [
+                'file:///C|/demo',
+                'file://localhost/C:/demo',
             ],
         ];
     }

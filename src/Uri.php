@@ -442,39 +442,28 @@ class Uri implements UriInterface, JsonSerializable
     /**
      * Format the Port component
      *
-     * @param int|null $port
+     * @param mixed $port
      *
      * @return int|null
      */
-    protected function formatPort(int $port = null)
+    protected function formatPort($port = null)
     {
-        $port = $this->filterPort($port);
+        if (null === $port || '' === $port) {
+            return null;
+        }
+
+        if (!is_int($port) && !(is_string($port) && preg_match('/^\d*$/', $port))) {
+            throw new MalformedUri(sprintf('The port `%s` is invalid', $port));
+        }
+
+        $port = (int) $port;
+        if (0 > $port) {
+            throw new MalformedUri(sprintf('The port `%s` is invalid', $port));
+        }
 
         if (isset(static::$supported_schemes[$this->scheme])
             && static::$supported_schemes[$this->scheme] === $port) {
             return null;
-        }
-
-        return $port;
-    }
-
-    /**
-     * Filter the Port component
-     *
-     * @param int|null $port
-     *
-     * @throws MalformedUri if the port is invalid
-     *
-     * @return int|null
-     */
-    protected function filterPort(int $port = null)
-    {
-        if (null === $port) {
-            return $port;
-        }
-
-        if ($port < 0) {
-            throw new MalformedUri(sprintf('The port `%s` is invalid', $port));
         }
 
         return $port;
@@ -512,7 +501,7 @@ class Uri implements UriInterface, JsonSerializable
      */
     protected function formatPath(string $path): string
     {
-        static $pattern = '/(?:[^'.self::REGEXP_CHARS_UNRESERVED.self::REGEXP_CHARS_SUBDELIM.'%:@\/}{]++|%(?![A-Fa-f0-9]{2}))/';
+        static $pattern = '/(?:[^'.self::REGEXP_CHARS_UNRESERVED.self::REGEXP_CHARS_SUBDELIM.'%:@\/}{]++\|%(?![A-Fa-f0-9]{2}))/';
         return preg_replace_callback($pattern, [Uri::class, 'urlEncodeMatch'], $path);
     }
 

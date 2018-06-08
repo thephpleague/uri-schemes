@@ -41,7 +41,7 @@ class WsTest extends TestCase
 
     /**
      * @covers ::withPort
-     * @covers ::filterPort
+     * @covers ::formatPort
      */
     public function testModificationFailedWithUnsupportedPort()
     {
