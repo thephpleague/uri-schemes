@@ -1,5 +1,19 @@
 <?php
 
+/**
+ * League.Uri (http://uri.thephpleague.com).
+ *
+ * @package    League\Uri
+ * @subpackage League\Uri\Schemes
+ * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
+ * @license    https://github.com/thephpleague/uri-schemes/blob/master/LICENSE (MIT License)
+ * @version    1.2.1
+ * @link       https://github.com/thephpleague/uri-schemes
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace LeagueTest\Uri;
 
 use League\Uri\Ftp;
@@ -21,7 +35,7 @@ class FtpTest extends TestCase
      */
     public function testCreateFromString($uri, $expected)
     {
-        $this->assertSame($expected, (string) Ftp::createFromString($uri));
+        self::assertSame($expected, (string) Ftp::createFromString($uri));
     }
 
     public function validUrlProvider()
@@ -62,7 +76,7 @@ class FtpTest extends TestCase
      */
     public function testConstructorThrowInvalidArgumentException($uri)
     {
-        $this->expectException(UriException::class);
+        self::expectException(UriException::class);
         Ftp::createFromString($uri);
     }
 
@@ -81,7 +95,7 @@ class FtpTest extends TestCase
      */
     public function testModificationFailedWithEmptyAuthority()
     {
-        $this->expectException(UriException::class);
+        self::expectException(UriException::class);
         Ftp::createFromString('ftp://example.com/path')
             ->withScheme('')
             ->withHost('')
@@ -96,7 +110,7 @@ class FtpTest extends TestCase
      */
     public function testPort($uri, $port)
     {
-        $this->assertSame($port, Ftp::createFromString($uri)->getPort());
+        self::assertSame($port, Ftp::createFromString($uri)->getPort());
     }
 
     public function portProvider()

@@ -1,15 +1,19 @@
 <?php
+
 /**
- * League.Uri (http://uri.thephpleague.com)
+ * League.Uri (http://uri.thephpleague.com).
  *
- * @package    League.uri
- * @subpackage League\Uri\Modifiers
+ * @package    League\Uri
+ * @subpackage League\Uri\Schemes
  * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
- * @copyright  2017 Ignace Nyamagana Butera
- * @license    https://github.com/thephpleague/uri-manipulations/blob/master/LICENSE (MIT License)
- * @version    1.2.0
- * @link       https://github.com/thephpleague/uri-manipulations
+ * @license    https://github.com/thephpleague/uri-schemes/blob/master/LICENSE (MIT License)
+ * @version    1.2.1
+ * @link       https://github.com/thephpleague/uri-schemes
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
 declare(strict_types=1);
 
 namespace League\Uri;
@@ -17,9 +21,19 @@ namespace League\Uri;
 use League\Uri\Interfaces\Uri as DeprecatedLeagueUriInterface;
 use Psr\Http\Message\UriInterface as Psr7UriInterface;
 use ReflectionClass;
+use function array_intersect;
+use function array_pop;
+use function array_reduce;
+use function explode;
+use function get_class;
+use function implode;
+use function in_array;
+use function sprintf;
+use function strpos;
+use function strtolower;
 
 /**
- * Factory class to ease loading URI object
+ * Factory class to ease loading URI object.
  *
  * @package    League\Uri
  * @subpackage League\Uri\Schemes
@@ -29,7 +43,7 @@ use ReflectionClass;
 class Factory
 {
     /**
-     * Supported schemes
+     * Supported schemes.
      *
      * @var string[]
      */
@@ -44,14 +58,14 @@ class Factory
     ];
 
     /**
-     * Dot segments
+     * Dot segments.
      *
      * @var array
      */
     protected static $dot_segments = ['.' => 1, '..' => 1];
 
     /**
-     * supported URI interfaces
+     * supported URI interfaces.
      *
      * @var array
      */
@@ -62,7 +76,7 @@ class Factory
     ];
 
     /**
-     * new instance
+     * new instance.
      *
      * @param array $map An override map of URI classes indexed by their supported schemes.
      */
@@ -74,10 +88,7 @@ class Factory
     }
 
     /**
-     * Add a new classname for a given scheme URI
-     *
-     * @param string $scheme    valid URI scheme
-     * @param string $className classname which implements DeprecatedLeagueUriInterface or UriInterface
+     * Add a new classname for a given scheme URI.
      *
      * @throws Exception if the scheme is invalid
      * @throws Exception if the class does not implements a supported interface
@@ -105,8 +116,7 @@ class Factory
      * <li>a string
      * </ul>
      *
-     * @param string $uri
-     * @param mixed  $base_uri
+     * @param mixed $base_uri an optional base uri
      *
      * @throws Exception if there's no base URI and the submitted URI is not absolute
      *
@@ -170,10 +180,8 @@ class Factory
     /**
      * Returns the className to use to instantiate the URI object.
      *
-     * @param string|null $scheme   URI scheme component
-     * @param mixed       $base_uri base URI object
-     *
-     * @return string
+     * @param string|null $scheme
+     * @param null|mixed  $base_uri
      */
     protected function getClassName($scheme, $base_uri = null): string
     {
@@ -187,9 +195,6 @@ class Factory
 
     /**
      * Creates a new URI object from its name using Reflection.
-     *
-     * @param array  $components
-     * @param string $className
      *
      * @return DeprecatedLeagueUriInterface|UriInterface
      */
@@ -253,10 +258,6 @@ class Factory
      * Remove dot segments from the URI path.
      *
      * @internal used internally to create an URI object
-     *
-     * @param string $path
-     *
-     * @return string
      */
     protected function removeDotSegments(string $path): string
     {
@@ -279,9 +280,6 @@ class Factory
 
     /**
      * Remove dot segments.
-     *
-     * @param array  $carry
-     * @param string $segment
      *
      * @return array
      */

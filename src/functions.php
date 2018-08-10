@@ -1,15 +1,19 @@
 <?php
+
 /**
- * League.Uri (http://uri.thephpleague.com)
+ * League.Uri (http://uri.thephpleague.com).
  *
- * @package    League.uri
- * @subpackage League\Uri\Modifiers
+ * @package    League\Uri
+ * @subpackage League\Uri\Schemes
  * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
- * @copyright  2017 Ignace Nyamagana Butera
- * @license    https://github.com/thephpleague/uri-manipulations/blob/master/LICENSE (MIT License)
- * @version    1.2.0
- * @link       https://github.com/thephpleague/uri-manipulations
+ * @license    https://github.com/thephpleague/uri-schemes/blob/master/LICENSE (MIT License)
+ * @version    1.2.1
+ * @link       https://github.com/thephpleague/uri-schemes
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
 declare(strict_types=1);
 
 namespace League\Uri;
@@ -19,14 +23,12 @@ use Psr\Http\Message\UriInterface as Psr7UriInterface;
 
 /**
  * Create a new URI optionally according to
- * a base URI object
+ * a base URI object.
  *
  * @see Uri\Factory::__construct
  * @see Uri\Factory::create
  *
- * @param string $uri
- * @param mixed  $base_uri
- *
+ * @param  null|mixed                                                 $base_uri
  * @return Psr7UriInterface|DeprecatedLeagueUriInterface|UriInterface
  */
 function create(string $uri, $base_uri = null)

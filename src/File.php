@@ -1,20 +1,30 @@
 <?php
+
 /**
- * League.Uri (http://uri.thephpleague.com)
+ * League.Uri (http://uri.thephpleague.com).
  *
  * @package    League\Uri
  * @subpackage League\Uri\Schemes
  * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
- * @license    https://github.com/thephpleague/uri-components/blob/master/LICENSE (MIT License)
- * @version    1.2.0
- * @link       https://github.com/thephpleague/uri-components
+ * @license    https://github.com/thephpleague/uri-schemes/blob/master/LICENSE (MIT License)
+ * @version    1.2.1
+ * @link       https://github.com/thephpleague/uri-schemes
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
 declare(strict_types=1);
 
 namespace League\Uri;
+
+use function array_map;
+use function explode;
+use function implode;
+use function in_array;
+use function preg_match;
+use function strlen;
+use function substr;
 
 /**
  * Immutable Value object representing a File Uri.
@@ -48,8 +58,6 @@ class File extends AbstractUri
      * </ul>
      *
      * @see https://tools.ietf.org/html/rfc2397#section-3
-     *
-     * @return bool
      */
     protected function isValidUri(): bool
     {
@@ -62,7 +70,7 @@ class File extends AbstractUri
     }
 
     /**
-     * Format the Host component
+     * Format the Host component.
      *
      * @see https://tools.ietf.org/html/rfc1738#section-3.10
      *
@@ -84,9 +92,7 @@ class File extends AbstractUri
     }
 
     /**
-     * Create a new instance from a Unix path string
-     *
-     * @param string $uri
+     * Create a new instance from a Unix path string.
      *
      * @return static
      */
@@ -101,9 +107,7 @@ class File extends AbstractUri
     }
 
     /**
-     * Create a new instance from a local Windows path string
-     *
-     * @param string $uri
+     * Create a new instance from a local Windows path string.
      *
      * @return static
      */

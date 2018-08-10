@@ -1,5 +1,19 @@
 <?php
 
+/**
+ * League.Uri (http://uri.thephpleague.com).
+ *
+ * @package    League\Uri
+ * @subpackage League\Uri\Schemes
+ * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
+ * @license    https://github.com/thephpleague/uri-schemes/blob/master/LICENSE (MIT License)
+ * @version    1.2.1
+ * @link       https://github.com/thephpleague/uri-schemes
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace LeagueTest\Uri;
 
 use League\Uri\Data;
@@ -18,7 +32,7 @@ class DataTest extends TestCase
      */
     public function testDefaultConstructor()
     {
-        $this->assertSame(
+        self::assertSame(
             'data:text/plain;charset=us-ascii,',
             (string) Data::createFromString('data:')
         );
@@ -35,7 +49,7 @@ class DataTest extends TestCase
      */
     public function testCreateFromString($uri, $path)
     {
-        $this->assertSame($path, Data::createFromString($uri)->getPath());
+        self::assertSame($path, Data::createFromString($uri)->getPath());
     }
 
     public function validUrlProvider()
@@ -72,7 +86,7 @@ class DataTest extends TestCase
      */
     public function testCreateFromStringFailed($uri)
     {
-        $this->expectException(UriException::class);
+        self::expectException(UriException::class);
         Data::createFromString($uri);
     }
 
@@ -94,7 +108,7 @@ class DataTest extends TestCase
      */
     public function testCreateFromPathFailed($path)
     {
-        $this->expectException(UriException::class);
+        self::expectException(UriException::class);
         Data::createFromPath($path);
     }
 
@@ -111,7 +125,7 @@ class DataTest extends TestCase
      */
     public function testCreateFromComponentsFailedWithInvalidArgumentException()
     {
-        $this->expectException(UriException::class);
+        self::expectException(UriException::class);
         Data::createFromString('data:image/png;base64,°28');
     }
 
@@ -122,7 +136,7 @@ class DataTest extends TestCase
      */
     public function testCreateFromComponentsFailedInvalidMediatype()
     {
-        $this->expectException(UriException::class);
+        self::expectException(UriException::class);
         Data::createFromString('data:image/png;base64=toto;base64,dsqdfqfd');
     }
 
@@ -131,7 +145,7 @@ class DataTest extends TestCase
      */
     public function testCreateFromComponentsFailedWithException()
     {
-        $this->expectException(UriException::class);
+        self::expectException(UriException::class);
         Data::createFromString('data:text/plain;charset=us-ascii,Bonjour%20le%20monde%21#fragment');
     }
 
@@ -143,7 +157,7 @@ class DataTest extends TestCase
     {
         $path = 'text/plain;charset=us-ascii,Bonjour%20le%20monde%21';
         $uri = Data::createFromString('data:'.$path);
-        $this->assertSame($uri, $uri->withPath($path));
+        self::assertSame($uri, $uri->withPath($path));
     }
 
     /**
@@ -156,7 +170,7 @@ class DataTest extends TestCase
     public function testCreateFromPath($path, $expected)
     {
         $uri = Data::createFromPath(__DIR__.'/data/'.$path);
-        $this->assertContains($expected, $uri->getPath());
+        self::assertContains($expected, $uri->getPath());
     }
 
     public function validFilePath()
@@ -172,7 +186,7 @@ class DataTest extends TestCase
      */
     public function testInvalidUri()
     {
-        $this->expectException(UriException::class);
+        self::expectException(UriException::class);
         Data::createFromString('http:text/plain;charset=us-ascii,Bonjour%20le%20monde%21');
     }
 }

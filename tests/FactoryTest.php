@@ -1,5 +1,19 @@
 <?php
 
+/**
+ * League.Uri (http://uri.thephpleague.com).
+ *
+ * @package    League\Uri
+ * @subpackage League\Uri\Schemes
+ * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
+ * @license    https://github.com/thephpleague/uri-schemes/blob/master/LICENSE (MIT License)
+ * @version    1.2.1
+ * @link       https://github.com/thephpleague/uri-schemes
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace LeagueTest\Uri;
 
 use InvalidArgumentException;
@@ -16,11 +30,10 @@ class FactoryTest extends TestCase
      *
      * @covers \League\Uri\Factory
      *
-     * @param mixed $data
      */
     public function testFactoryThrowExceptionOnConstruction($data)
     {
-        $this->expectException(InvalidArgumentException::class);
+        self::expectException(InvalidArgumentException::class);
         new Uri\Factory($data);
     }
 
@@ -43,7 +56,7 @@ class FactoryTest extends TestCase
     public function testFactoryAddMapper()
     {
         $factory = new Uri\Factory(['http' => Uri\Uri::class]);
-        $this->assertInstanceOf(Uri\Uri::class, $factory->create('http://example.com'));
+        self::assertInstanceOf(Uri\Uri::class, $factory->create('http://example.com'));
     }
 
     /**
@@ -52,7 +65,7 @@ class FactoryTest extends TestCase
      */
     public function testCreateThrowExceptionWithBaseUriNotAbsolute()
     {
-        $this->expectException(InvalidArgumentException::class);
+        self::expectException(InvalidArgumentException::class);
         Uri\create('/path/to/you', Uri\Http::createFromString('//example.com'));
     }
 
@@ -62,7 +75,7 @@ class FactoryTest extends TestCase
      */
     public function testCreateThrowExceptionWithUriNotAbsolute()
     {
-        $this->expectException(InvalidArgumentException::class);
+        self::expectException(InvalidArgumentException::class);
         Uri\create('/path/to/you');
     }
 
@@ -77,7 +90,7 @@ class FactoryTest extends TestCase
      */
     public function testCreate($expected, $uri)
     {
-        $this->assertInstanceOf($expected, Uri\create($uri));
+        self::assertInstanceOf($expected, Uri\create($uri));
     }
 
     public function uriProvider()
@@ -111,13 +124,12 @@ class FactoryTest extends TestCase
      * @param string $expected_class
      * @param string $expected_uri
      * @param string $uri
-     * @param mixed  $base_uri
      */
     public function testCreateWithBaseUri($expected_class, $expected_uri, $uri, $base_uri)
     {
         $obj = Uri\create($uri, $base_uri);
-        $this->assertInstanceOf($expected_class, $obj);
-        $this->assertSame($expected_uri, (string) $obj);
+        self::assertInstanceOf($expected_class, $obj);
+        self::assertSame($expected_uri, (string) $obj);
     }
 
     public function uriBaseUriProvider()
@@ -218,13 +230,10 @@ class FactoryTest extends TestCase
      *
      * @dataProvider resolveProvider
      *
-     * @param string $base_uri
-     * @param string $uri
-     * @param string $expected
      */
     public function testCreateResolve(string $base_uri, string $uri, string $expected)
     {
-        $this->assertSame($expected, (string) Uri\create($uri, $base_uri));
+        self::assertSame($expected, (string) Uri\create($uri, $base_uri));
     }
 
     public function resolveProvider()

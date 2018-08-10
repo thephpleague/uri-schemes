@@ -1,20 +1,36 @@
 <?php
+
 /**
- * League.Uri (http://uri.thephpleague.com)
+ * League.Uri (http://uri.thephpleague.com).
  *
  * @package    League\Uri
  * @subpackage League\Uri\Schemes
  * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
- * @license    https://github.com/thephpleague/uri-components/blob/master/LICENSE (MIT License)
- * @version    1.2.0
- * @link       https://github.com/thephpleague/uri-components
+ * @license    https://github.com/thephpleague/uri-schemes/blob/master/LICENSE (MIT License)
+ * @version    1.2.1
+ * @link       https://github.com/thephpleague/uri-schemes
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
 declare(strict_types=1);
 
 namespace League\Uri;
+
+use function array_filter;
+use function base64_decode;
+use function base64_encode;
+use function count;
+use function explode;
+use function file_exists;
+use function file_get_contents;
+use function is_readable;
+use function preg_match;
+use function sprintf;
+use function strpos;
+use function strtolower;
+use function substr;
 
 /**
  * Immutable Value object representing a Data Uri.
@@ -44,8 +60,6 @@ class Data extends AbstractUri
      * </ul>
      *
      * @see https://tools.ietf.org/html/rfc2397#section-3
-     *
-     * @return bool
      */
     protected function isValidUri(): bool
     {
@@ -56,15 +70,11 @@ class Data extends AbstractUri
     }
 
     /**
-     * Filter the Path component
-     *
-     * @param string $path
+     * Filter the Path component.
      *
      * @see https://tools.ietf.org/html/rfc2397
      *
      * @throws UriException If the path is not compliant with RFC2397
-     *
-     * @return string
      */
     protected function filterPath(string $path): string
     {
@@ -96,11 +106,7 @@ class Data extends AbstractUri
     }
 
     /**
-     * Assert the path is a compliant with RFC2397
-     *
-     * @param string $mimetype   the path mediatype mimetype
-     * @param string $parameters the path mediatype parameters
-     * @param string $data       the path data
+     * Assert the path is a compliant with RFC2397.
      *
      * @see https://tools.ietf.org/html/rfc2397
      *
@@ -134,11 +140,7 @@ class Data extends AbstractUri
     }
 
     /**
-     * Validate mediatype parameter
-     *
-     * @param string $parameter a mediatype parameter
-     *
-     * @return bool
+     * Validate mediatype parameter.
      */
     protected function validateParameter(string $parameter): bool
     {
@@ -148,9 +150,7 @@ class Data extends AbstractUri
     }
 
     /**
-     * Create a new instance from a file path
-     *
-     * @param string $path the file path
+     * Create a new instance from a file path.
      *
      * @return static
      */

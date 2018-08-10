@@ -1,5 +1,19 @@
 <?php
 
+/**
+ * League.Uri (http://uri.thephpleague.com).
+ *
+ * @package    League\Uri
+ * @subpackage League\Uri\Schemes
+ * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
+ * @license    https://github.com/thephpleague/uri-schemes/blob/master/LICENSE (MIT License)
+ * @version    1.2.1
+ * @link       https://github.com/thephpleague/uri-schemes
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace LeagueTest\Uri;
 
 use League\Uri\File;
@@ -17,7 +31,7 @@ class FileTest extends TestCase
      */
     public function testDefaultConstructor()
     {
-        $this->assertSame('', (string) File::createFromString());
+        self::assertSame('', (string) File::createFromString());
     }
 
     /**
@@ -30,7 +44,7 @@ class FileTest extends TestCase
      */
     public function testCreateFromString($uri, $expected)
     {
-        $this->assertSame($expected, (string) File::createFromString($uri));
+        self::assertSame($expected, (string) File::createFromString($uri));
     }
 
     public function validUrlProvider()
@@ -83,7 +97,7 @@ class FileTest extends TestCase
      */
     public function testConstructorThrowsException($uri)
     {
-        $this->expectException(UriException::class);
+        self::expectException(UriException::class);
         File::createFromString($uri);
     }
 
@@ -108,7 +122,7 @@ class FileTest extends TestCase
      */
     public function testCreateFromUnixPath($uri, $expected)
     {
-        $this->assertSame($expected, (string) File::createFromUnixPath($uri));
+        self::assertSame($expected, (string) File::createFromUnixPath($uri));
     }
 
     public function unixpathProvider()
@@ -146,7 +160,7 @@ class FileTest extends TestCase
      */
     public function testCreateFromWindowsLocalPath($uri, $expected)
     {
-        $this->assertSame($expected, (string) File::createFromWindowsPath($uri));
+        self::assertSame($expected, (string) File::createFromWindowsPath($uri));
     }
 
     public function windowLocalPathProvider()

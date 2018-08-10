@@ -1,10 +1,25 @@
 <?php
 
+/**
+ * League.Uri (http://uri.thephpleague.com).
+ *
+ * @package    League\Uri
+ * @subpackage League\Uri\Schemes
+ * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
+ * @license    https://github.com/thephpleague/uri-schemes/blob/master/LICENSE (MIT License)
+ * @version    1.2.1
+ * @link       https://github.com/thephpleague/uri-schemes
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace LeagueTest\Uri;
 
 use League\Uri\Http;
 use League\Uri\UriException;
 use PHPUnit\Framework\TestCase;
+use function base64_encode;
 
 /**
  * @group http
@@ -31,7 +46,7 @@ class HttpTest extends TestCase
 
     public function testDefaultConstructor()
     {
-        $this->assertSame('', (string) Http::createFromString());
+        self::assertSame('', (string) Http::createFromString());
     }
 
     /**
@@ -40,7 +55,7 @@ class HttpTest extends TestCase
      */
     public function testModificationFailedWithUnsupportedPort()
     {
-        $this->expectException(UriException::class);
+        self::expectException(UriException::class);
         Http::createFromString('http://example.com/path')->withPort(12365894);
     }
 
@@ -54,7 +69,7 @@ class HttpTest extends TestCase
      */
     public function testCreateFromString($expected, $uri)
     {
-        $this->assertSame($expected, (string) Http::createFromString($uri));
+        self::assertSame($expected, (string) Http::createFromString($uri));
     }
 
     public function validUrlProvider()
@@ -91,7 +106,7 @@ class HttpTest extends TestCase
      */
     public function testIsValid($uri)
     {
-        $this->expectException(UriException::class);
+        self::expectException(UriException::class);
         Http::createFromString($uri);
     }
 
@@ -117,7 +132,7 @@ class HttpTest extends TestCase
      */
     public function testPort($uri, $port)
     {
-        $this->assertSame($port, Http::createFromString($uri)->getPort());
+        self::assertSame($port, Http::createFromString($uri)->getPort());
     }
 
     public function portProvider()
@@ -138,7 +153,7 @@ class HttpTest extends TestCase
      */
     public function testPathIsInvalid($path)
     {
-        $this->expectException(UriException::class);
+        self::expectException(UriException::class);
         Http::createFromString('')->withPath($path);
     }
 
@@ -155,11 +170,10 @@ class HttpTest extends TestCase
      * @covers ::assertValidState
      * @dataProvider invalidURI
      *
-     * @param mixed $uri
      */
     public function testCreateFromInvalidUrlKO($uri)
     {
-        $this->expectException(UriException::class);
+        self::expectException(UriException::class);
         Http::createFromString($uri);
     }
 
@@ -185,7 +199,7 @@ class HttpTest extends TestCase
      */
     public function testCreateFromServer($expected, $input)
     {
-        $this->assertSame($expected, (string) Http::createFromServer($input));
+        self::assertSame($expected, (string) Http::createFromServer($input));
     }
 
     public function validServerArray()
@@ -338,7 +352,7 @@ class HttpTest extends TestCase
      */
     public function testFailCreateFromServerWithoutHost()
     {
-        $this->expectException(UriException::class);
+        self::expectException(UriException::class);
         Http::createFromServer([
             'PHP_SELF' => '',
             'REQUEST_URI' => '',
@@ -352,7 +366,7 @@ class HttpTest extends TestCase
      */
     public function testModificationFailedWithEmptyAuthority()
     {
-        $this->expectException(UriException::class);
+        self::expectException(UriException::class);
         Http::createFromString('http://example.com/path')
             ->withScheme('')
             ->withHost('')

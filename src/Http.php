@@ -1,22 +1,37 @@
 <?php
+
 /**
- * League.Uri (http://uri.thephpleague.com)
+ * League.Uri (http://uri.thephpleague.com).
  *
  * @package    League\Uri
  * @subpackage League\Uri\Schemes
  * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
- * @license    https://github.com/thephpleague/uri-components/blob/master/LICENSE (MIT License)
- * @version    1.2.0
- * @link       https://github.com/thephpleague/uri-components
+ * @license    https://github.com/thephpleague/uri-schemes/blob/master/LICENSE (MIT License)
+ * @version    1.2.1
+ * @link       https://github.com/thephpleague/uri-schemes
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
 declare(strict_types=1);
 
 namespace League\Uri;
 
 use Psr\Http\Message\UriInterface as Psr7UriInterface;
+
+use const FILTER_FLAG_IPV4;
+use const FILTER_NULL_ON_FAILURE;
+use const FILTER_VALIDATE_BOOLEAN;
+use const FILTER_VALIDATE_IP;
+use function base64_decode;
+use function explode;
+use function filter_var;
+use function preg_match;
+use function rawurlencode;
+use function strpos;
+use function strtolower;
+use function substr;
 
 /**
  * Immutable Value object representing a HTTP(s) Uri.
@@ -48,8 +63,6 @@ class Http extends AbstractUri implements Psr7UriInterface
      * </ul>
      *
      * @see https://tools.ietf.org/html/rfc6455#section-3
-     *
-     * @return bool
      */
     protected function isValidUri(): bool
     {
@@ -75,7 +88,7 @@ class Http extends AbstractUri implements Psr7UriInterface
     }
 
     /**
-     * Create a new instance from the environment
+     * Create a new instance from the environment.
      *
      * @param array $server the server and execution environment information array typically ($_SERVER)
      *
@@ -91,11 +104,9 @@ class Http extends AbstractUri implements Psr7UriInterface
     }
 
     /**
-     * Returns the environment scheme
+     * Returns the environment scheme.
      *
      * @param array $server the environment server typically $_SERVER
-     *
-     * @return string
      */
     protected static function fetchScheme(array $server): string
     {
@@ -106,11 +117,9 @@ class Http extends AbstractUri implements Psr7UriInterface
     }
 
     /**
-     * Returns the environment user info
+     * Returns the environment user info.
      *
      * @param array $server the environment server typically $_SERVER
-     *
-     * @return array
      */
     protected static function fetchUserInfo(array $server): array
     {
@@ -133,13 +142,11 @@ class Http extends AbstractUri implements Psr7UriInterface
     }
 
     /**
-     * Returns the environment host
+     * Returns the environment host.
      *
      * @param array $server the environment server typically $_SERVER
      *
      * @throws UriException If the host can not be detected
-     *
-     * @return array
      */
     protected static function fetchHostname(array $server): array
     {
@@ -169,11 +176,9 @@ class Http extends AbstractUri implements Psr7UriInterface
     }
 
     /**
-     * Returns the environment path
+     * Returns the environment path.
      *
      * @param array $server the environment server typically $_SERVER
-     *
-     * @return array
      */
     protected static function fetchRequestUri(array $server): array
     {

@@ -1,26 +1,47 @@
 <?php
+
 /**
- * League.Uri (http://uri.thephpleague.com)
+ * League.Uri (http://uri.thephpleague.com).
  *
  * @package    League\Uri
  * @subpackage League\Uri\Schemes
  * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
- * @license    https://github.com/thephpleague/uri-components/blob/master/LICENSE (MIT License)
- * @version    1.2.0
- * @link       https://github.com/thephpleague/uri-components
+ * @license    https://github.com/thephpleague/uri-schemes/blob/master/LICENSE (MIT License)
+ * @version    1.2.1
+ * @link       https://github.com/thephpleague/uri-schemes
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
 declare(strict_types=1);
 
 namespace League\Uri;
 
 use BadMethodCallException;
 use League\Uri\Interfaces\Uri as DeprecatedLeagueUriInterface;
+use const FILTER_FLAG_IPV6;
+use const FILTER_VALIDATE_IP;
+use function array_keys;
+use function defined;
+use function explode;
+use function filter_var;
+use function function_exists;
+use function idn_to_ascii;
+use function implode;
+use function in_array;
+use function inet_pton;
+use function preg_match;
+use function preg_replace_callback;
+use function rawurldecode;
+use function rawurlencode;
+use function sprintf;
+use function strpos;
+use function strtolower;
+use function substr;
 
 /**
- * common URI Object properties and methods
+ * common URI Object properties and methods.
  *
  * @package    League\Uri
  * @subpackage League\Uri\Schemes
@@ -41,7 +62,7 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
     const INVALID_CHARS = "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F\x7F";
 
     /**
-     * RFC3986 Sub delimiter characters regular expression pattern
+     * RFC3986 Sub delimiter characters regular expression pattern.
      *
      * @see http://tools.ietf.org/html/rfc3986#section-2.2
      *
@@ -50,7 +71,7 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
     const REGEXP_CHARS_SUBDELIM = "\!\$&'\(\)\*\+,;\=%";
 
     /**
-     * RFC3986 unreserved characters regular expression pattern
+     * RFC3986 unreserved characters regular expression pattern.
      *
      * @see http://tools.ietf.org/html/rfc3986#section-2.3
      *
@@ -59,85 +80,87 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
     const REGEXP_CHARS_UNRESERVED = 'A-Za-z0-9_\-\.~';
 
     /**
-     * URI scheme component
+     * URI scheme component.
      *
      * @var string|null
      */
     protected $scheme;
 
     /**
-     * URI user info part
+     * URI user info part.
      *
      * @var string|null
      */
     protected $user_info;
 
     /**
-     * URI host component
+     * URI host component.
      *
      * @var string|null
      */
     protected $host;
 
     /**
-     * URI port component
+     * URI port component.
      *
      * @var int|null
      */
     protected $port;
 
     /**
-     * URI authority string representation
+     * URI authority string representation.
      *
      * @var string|null
      */
     protected $authority;
 
     /**
-     * URI path component
+     * URI path component.
      *
      * @var string
      */
     protected $path = '';
 
     /**
-     * URI query component
+     * URI query component.
      *
      * @var string|null
      */
     protected $query;
 
     /**
-     * URI fragment component
+     * URI fragment component.
      *
      * @var string|null
      */
     protected $fragment;
 
     /**
-     * URI string representation
+     * URI string representation.
      *
      * @var string|null
      */
     protected $uri;
 
     /**
-     * Supported schemes and corresponding default port
+     * Supported schemes and corresponding default port.
      *
      * @var array
      */
     protected static $supported_schemes;
 
     /**
-     * Static method called by PHP's var export
-     *
-     * @param array $components
+     * Static method called by PHP's var export.
      *
      * @return static
      */
     public static function __set_state(array $components): self
     {
-        list($components['user'], $components['pass']) = explode(':', $components['user_info'], 2) + [1 => null];
+        $components['user'] = null;
+        $components['pass'] = null;
+        if (null !== $components['user_info']) {
+            list($components['user'], $components['pass']) = explode(':', $components['user_info'], 2) + [1 => null];
+        }
 
         return new static(
             $components['scheme'],
@@ -152,9 +175,7 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
     }
 
     /**
-     * Create a new instance from a string
-     *
-     * @param string $uri
+     * Create a new instance from a string.
      *
      * @return static
      */
@@ -175,7 +196,7 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
     }
 
     /**
-     * Create a new instance from a hash of parse_url parts
+     * Create a new instance from a hash of parse_url parts.
      *
      * @param array $components a hash representation of the URI similar
      *                          to PHP parse_url function result
@@ -202,16 +223,15 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
     }
 
     /**
-     * Create a new instance
+     * Create a new instance.
      *
-     * @param string|null $scheme   scheme component
-     * @param string|null $user     user component
-     * @param string|null $pass     pass component
-     * @param string|null $host     host component
-     * @param int|null    $port     port component
-     * @param string      $path     path component
-     * @param string|null $query    query component
-     * @param string|null $fragment fragment component
+     * @param null|string $scheme
+     * @param null|string $user
+     * @param null|string $pass
+     * @param null|string $host
+     * @param null|int    $port
+     * @param null|string $query
+     * @param null|string $fragment
      */
     protected function __construct(
         string $scheme = null,
@@ -235,9 +255,9 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
     }
 
     /**
-     * Format the Scheme and Host component
+     * Format the Scheme and Host component.
      *
-     * @param string|null $scheme
+     * @param null|string $scheme
      *
      * @return string|null
      */
@@ -257,11 +277,10 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
     }
 
     /**
-     * Set the UserInfo component
+     * Set the UserInfo component.
      *
-     * @param string|null $user     the URI scheme component
-     * @param string|null $password the URI scheme component
-     *
+     * @param  null|string $user
+     * @param  null|string $password
      * @return string|null
      */
     protected static function formatUserInfo(string $user = null, string $password = null)
@@ -282,11 +301,7 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
     }
 
     /**
-     * Returns the RFC3986 encoded string matched
-     *
-     * @param array $matches
-     *
-     * @return string
+     * Returns the RFC3986 encoded string matched.
      */
     protected static function urlEncodeMatch(array $matches): string
     {
@@ -294,7 +309,7 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
     }
 
     /**
-     * Validate and Format the Host component
+     * Validate and Format the Host component.
      *
      * @param string|null $host
      *
@@ -318,11 +333,7 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
      *
      * The host is converted to its ascii representation if needed
      *
-     * @param string $host
-     *
      * @throws UriException if the submitted host is not a valid registered name
-     *
-     * @return string
      */
     private function formatRegisteredName(string $host): string
     {
@@ -362,18 +373,14 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
     }
 
     /**
-     * Retrieves and format IDNA conversion error message
+     * Retrieves and format IDNA conversion error message.
      *
      * @see http://icu-project.org/apiref/icu4j/com/ibm/icu/text/IDNA.Error.html
-     *
-     * @param int $error_byte
-     *
-     * @return string
      */
     private function getIdnaErrorMessage(int $error_byte): string
     {
         /**
-         * IDNA errors
+         * IDNA errors.
          */
         static $idn_errors = [
             IDNA_ERROR_EMPTY_LABEL => 'a non-final domain name label (or the whole domain name) is empty',
@@ -402,13 +409,9 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
     }
 
     /**
-     * Validate and Format the IPv6/IPvfuture host
-     *
-     * @param string $host
+     * Validate and Format the IPv6/IPvfuture host.
      *
      * @throws UriException if the submitted host is not a valid IPv6
-     *
-     * @return string
      */
     private function formatIp(string $host): string
     {
@@ -454,7 +457,7 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
     }
 
     /**
-     * Format the Port component
+     * Format the Port component.
      *
      * @param int|null $port
      *
@@ -473,7 +476,7 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
     }
 
     /**
-     * Filter the Port component
+     * Filter the Port component.
      *
      * @param int|null $port
      *
@@ -495,7 +498,7 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
     }
 
     /**
-     * Generate the URI authority part
+     * Generate the URI authority part.
      *
      * @return string|null
      */
@@ -518,11 +521,7 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
     }
 
     /**
-     * Filter the Path component
-     *
-     * @param string $path
-     *
-     * @return string
+     * Filter the Path component.
      */
     protected function filterPath(string $path): string
     {
@@ -530,11 +529,7 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
     }
 
     /**
-     * Format the Path component
-     *
-     * @param string $path
-     *
-     * @return string
+     * Format the Path component.
      */
     protected function formatPath(string $path): string
     {
@@ -543,7 +538,7 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
     }
 
     /**
-     * Format the Query or the Fragment component
+     * Format the Query or the Fragment component.
      *
      * Returns a array containing:
      * <ul>
@@ -567,7 +562,7 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
     }
 
     /**
-     * assert the URI internal state is valid
+     * assert the URI internal state is valid.
      *
      * @see https://tools.ietf.org/html/rfc3986#section-3
      * @see https://tools.ietf.org/html/rfc3986#section-3.3
@@ -615,23 +610,17 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
      *
      * The URI object validity depends on the scheme. This method
      * MUST be implemented on every URI object
-     *
-     * @return bool
      */
     abstract protected function isValidUri(): bool;
 
     /**
-     * Generate the URI string representation from its components
+     * Generate the URI string representation from its components.
      *
      * @see https://tools.ietf.org/html/rfc3986#section-5.3
-     *
-     * @param string|null $scheme
-     * @param string|null $authority
-     * @param string      $path
-     * @param string|null $query
-     * @param string|null $fragment
-     *
-     * @return string
+     * @param null|string $scheme
+     * @param null|string $authority
+     * @param null|string $query
+     * @param null|string $fragment
      */
     protected function getUriString(
         string $scheme = null,
@@ -674,10 +663,8 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
      * - If a fragment is present, it MUST be prefixed by "#".
      *
      * @see http://tools.ietf.org/html/rfc3986#section-4.1
-     *
-     * @return string
      */
-    public function __toString(): string
+    public function __toString()
     {
         $this->uri = $this->uri ?? $this->getUriString(
             $this->scheme,
@@ -702,8 +689,6 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
      * added.
      *
      * @see https://tools.ietf.org/html/rfc3986#section-3.1
-     *
-     * @return string The URI scheme.
      */
     public function getScheme(): string
     {
@@ -726,8 +711,6 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
      * scheme, it SHOULD NOT be included.
      *
      * @see https://tools.ietf.org/html/rfc3986#section-3.2
-     *
-     * @return string
      */
     public function getAuthority(): string
     {
@@ -752,8 +735,6 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
      *
      * The trailing "@" character is not part of the user information and MUST
      * NOT be added.
-     *
-     * @return string
      */
     public function getUserInfo(): string
     {
@@ -769,8 +750,6 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
      * Section 3.2.2.
      *
      * @see http://tools.ietf.org/html/rfc3986#section-3.2.2
-     *
-     * @return string
      */
     public function getHost(): string
     {
@@ -820,8 +799,6 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
      *
      * @see https://tools.ietf.org/html/rfc3986#section-2
      * @see https://tools.ietf.org/html/rfc3986#section-3.3
-     *
-     * @return string
      */
     public function getPath(): string
     {
@@ -846,8 +823,6 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
      *
      * @see https://tools.ietf.org/html/rfc3986#section-2
      * @see https://tools.ietf.org/html/rfc3986#section-3.4
-     *
-     * @return string
      */
     public function getQuery(): string
     {
@@ -868,8 +843,6 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
      *
      * @see https://tools.ietf.org/html/rfc3986#section-2
      * @see https://tools.ietf.org/html/rfc3986#section-3.5
-     *
-     * @return string
      */
     public function getFragment(): string
     {
@@ -914,11 +887,8 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
     /**
      * Filter a string.
      *
-     * @param string $str the value to evaluate as a string
      *
      * @throws UriException if the submitted data can not be converted to string
-     *
-     * @return string
      */
     protected static function filterString(string $str): string
     {
@@ -940,8 +910,8 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
      * user; an empty string for the user is equivalent to removing user
      * information.
      *
-     * @param string      $user     The user name to use for authority.
-     * @param null|string $password The password associated with $user.
+     * @param string      $user
+     * @param null|string $password
      *
      * @throws UriException for transformations that would result in
      *                      a state that cannot be represented as a
@@ -975,7 +945,7 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
      *
      * An empty host value is equivalent to removing the host.
      *
-     * @param string $host The hostname to use with the new instance.
+     * @param string $host
      *
      * @throws UriException for transformations that would result in
      *                      a state that cannot be represented as a
@@ -1054,7 +1024,7 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
      * Users can provide both encoded and decoded path characters.
      * Implementations ensure the correct encoding as outlined in getPath().
      *
-     * @param string $path The path to use with the new instance.
+     * @param string $path
      *
      * @throws UriException for transformations that would result in
      *                      a state that cannot be represented as a
@@ -1086,7 +1056,7 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
      *
      * An empty query string value is equivalent to removing the query string.
      *
-     * @param string $query The query string to use with the new instance.
+     * @param string $query
      *
      * @throws UriException for transformations that would result in
      *                      a state that cannot be represented as a
@@ -1122,7 +1092,7 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
      *
      * An empty fragment value is equivalent to removing the fragment.
      *
-     * @param string $fragment The fragment to use with the new instance.
+     * @param string $fragment
      *
      * @throws UriException for transformations that would result in
      *                      a state that cannot be represented as a

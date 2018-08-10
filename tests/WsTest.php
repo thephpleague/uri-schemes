@@ -1,5 +1,19 @@
 <?php
 
+/**
+ * League.Uri (http://uri.thephpleague.com).
+ *
+ * @package    League\Uri
+ * @subpackage League\Uri\Schemes
+ * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
+ * @license    https://github.com/thephpleague/uri-schemes/blob/master/LICENSE (MIT License)
+ * @version    1.2.1
+ * @link       https://github.com/thephpleague/uri-schemes
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace LeagueTest\Uri;
 
 use League\Uri\UriException;
@@ -21,7 +35,7 @@ class WsTest extends TestCase
      */
     public function testCreateFromString($input, $expected)
     {
-        $this->assertSame($expected, (string) Ws::createFromString($input));
+        self::assertSame($expected, (string) Ws::createFromString($input));
     }
 
     /**
@@ -30,7 +44,7 @@ class WsTest extends TestCase
      */
     public function testModificationFailedWithUnsupportedPort()
     {
-        $this->expectException(UriException::class);
+        self::expectException(UriException::class);
         Ws::createFromString('wss://example.com/path')->withPort(12365894);
     }
 
@@ -71,7 +85,7 @@ class WsTest extends TestCase
      */
     public function testConstructorThrowInvalidArgumentException($uri)
     {
-        $this->expectException(UriException::class);
+        self::expectException(UriException::class);
         Ws::createFromString($uri);
     }
 
@@ -90,7 +104,7 @@ class WsTest extends TestCase
      */
     public function testModificationFailedWithEmptyAuthority()
     {
-        $this->expectException(UriException::class);
+        self::expectException(UriException::class);
         Ws::createFromString('wss://example.com/path')
             ->withScheme('')
             ->withHost('')
@@ -105,7 +119,7 @@ class WsTest extends TestCase
      */
     public function testPort($uri, $port)
     {
-        $this->assertSame($port, Ws::createFromString($uri)->getPort());
+        self::assertSame($port, Ws::createFromString($uri)->getPort());
     }
 
     public function portProvider()
