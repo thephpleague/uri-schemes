@@ -1,7 +1,7 @@
 <?php
 
 /**
- * League.Uri (http://uri.thephpleague.com)
+ * League.Uri (http://uri.thephpleague.com).
  *
  * @package    League\Uri
  * @subpackage League\Uri\Schemes
@@ -25,6 +25,7 @@ use League\Uri\Relativizer;
 use League\Uri\Resolver;
 use League\Uri\UriInterface;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\UriInterface as Psr7UriInterface;
 use TypeError;
 
 /**
@@ -40,10 +41,6 @@ class FunctionsTest extends TestCase
      * @covers \League\Uri\Relativizer
      *
      * @dataProvider relativizeProvider
-     *
-     * @param string $uri
-     * @param string $resolved
-     * @param string $expected
      */
     public function testRelativize(string $uri, string $resolved, string $expected): void
     {
@@ -130,11 +127,6 @@ class FunctionsTest extends TestCase
      * @covers \League\Uri\Factory
      *
      * @dataProvider relativizeAndResolveProvider
-     *
-     * @param string $baseUri
-     * @param string $uri
-     * @param string $expectedRelativize
-     * @param string $expectedResolved
      */
     public function testRelativizeAndResolve(
         string $baseUri,
@@ -172,9 +164,9 @@ class FunctionsTest extends TestCase
      *
      * @covers \League\Uri\Info
      *
-     * @param mixed  $uri
-     * @param mixed  $base_uri
-     * @param bool[] $infos
+     * @param Psr7UriInterface|UriInterface      $uri
+     * @param null|Psr7UriInterface|UriInterface $base_uri
+     * @param bool[]                             $infos
      */
     public function testStat($uri, $base_uri, array $infos): void
     {
@@ -251,9 +243,10 @@ class FunctionsTest extends TestCase
     /**
      * @dataProvider failedUriProvider
      *
+     * @param null|mixed $uri
+     * @param null|mixed $base_uri
+     *
      * @covers \League\Uri\Info
-     * @param mixed $uri
-     * @param mixed $base_uri
      */
     public function testStatThrowsInvalidArgumentException($uri, $base_uri): void
     {
@@ -279,8 +272,6 @@ class FunctionsTest extends TestCase
      * @dataProvider functionProvider
      *
      * @covers \League\Uri\Info
-     *
-     * @param string $function
      */
     public function testIsFunctionsThrowsTypeError(string $function): void
     {
@@ -303,9 +294,8 @@ class FunctionsTest extends TestCase
      *
      * @dataProvider sameValueAsProvider
      *
-     * @param UriInterface $uri1
-     * @param UriInterface $uri2
-     * @param bool         $expected
+     * @param Psr7UriInterface|UriInterface $uri1
+     * @param Psr7UriInterface|UriInterface $uri2
      */
     public function testSameValueAs($uri1, $uri2, bool $expected): void
     {

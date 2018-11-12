@@ -1,7 +1,7 @@
 <?php
 
 /**
- * League.Uri (http://uri.thephpleague.com)
+ * League.Uri (http://uri.thephpleague.com).
  *
  * @package    League\Uri
  * @subpackage League\Uri\Schemes
@@ -43,12 +43,10 @@ class DataTest extends TestCase
      * @covers ::isValidUri
      * @covers ::formatPath
      * @covers ::assertValidPath
-     * @dataProvider validUrlProvider
      *
-     * @param string $uri
-     * @param string $path
+     * @dataProvider validUrlProvider
      */
-    public function testCreateFromString($uri, $path): void
+    public function testCreateFromString(string $uri, string $path): void
     {
         self::assertSame($path, Data::createFromString($uri)->getPath());
     }
@@ -82,10 +80,10 @@ class DataTest extends TestCase
     /**
      * @covers ::assertValidPath
      * @covers ::isValidUri
+     *
      * @dataProvider invalidUrlProvider
-     * @param string $uri
      */
-    public function testCreateFromStringFailed($uri): void
+    public function testCreateFromStringFailed(string $uri): void
     {
         self::expectException(InvalidUri::class);
         Data::createFromString($uri);
@@ -103,10 +101,10 @@ class DataTest extends TestCase
     /**
      * @covers ::assertValidPath
      * @covers ::isValidUri
+     *
      * @dataProvider invalidComponentProvider
-     * @param string $uri
      */
-    public function testCreateFromStringFailedWithWrongComponent($uri): void
+    public function testCreateFromStringFailedWithWrongComponent(string $uri): void
     {
         self::expectException(MalformedUri::class);
         Data::createFromString($uri);
@@ -124,7 +122,9 @@ class DataTest extends TestCase
 
     /**
      * @covers ::createFromPath
+     *
      * @dataProvider invalidDataPath
+     *
      * @param string $path
      */
     public function testCreateFromPathFailed($path): void
@@ -183,12 +183,10 @@ class DataTest extends TestCase
 
     /**
      * @covers ::createFromPath
-     * @dataProvider validFilePath
      *
-     * @param string $path
-     * @param string $expected
+     * @dataProvider validFilePath
      */
-    public function testCreateFromPath($path, $expected): void
+    public function testCreateFromPath(string $path, string $expected): void
     {
         $uri = Data::createFromPath(__DIR__.'/data/'.$path);
         self::assertContains($expected, $uri->getPath());

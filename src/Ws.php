@@ -1,7 +1,7 @@
 <?php
 
 /**
- * League.Uri (http://uri.thephpleague.com)
+ * League.Uri (http://uri.thephpleague.com).
  *
  * @package    League\Uri
  * @subpackage League\Uri\Schemes
@@ -40,8 +40,6 @@ final class Ws extends Uri
      * </ul>
      *
      * @see https://tools.ietf.org/html/rfc6455#section-3
-     *
-     * @return bool
      */
     protected function isValidUri(): bool
     {

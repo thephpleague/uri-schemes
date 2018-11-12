@@ -1,7 +1,7 @@
 <?php
 
 /**
- * League.Uri (http://uri.thephpleague.com)
+ * League.Uri (http://uri.thephpleague.com).
  *
  * @package    League\Uri
  * @subpackage League\Uri\Schemes
@@ -75,7 +75,7 @@ final class Resolver
     /**
      * Filter the URI object.
      *
-     * @param mixed $uri
+     * @param null|mixed $uri
      *
      * @throws TypeError if the URI object does not implements the supported interfaces.
      */
@@ -88,12 +88,6 @@ final class Resolver
 
     /**
      * Remove dot segments from the URI path.
-     *
-     * @internal used internally to create an URI object
-     *
-     * @param string $path
-     *
-     * @return string
      */
     private static function removeDotSegments(string $path): string
     {
@@ -119,11 +113,6 @@ final class Resolver
 
     /**
      * Remove dot segments.
-     *
-     * @param array  $carry
-     * @param string $segment
-     *
-     * @return array
      */
     private static function reducer(array $carry, string $segment): array
     {
@@ -142,8 +131,6 @@ final class Resolver
 
     /**
      * Resolve an URI path and query component.
-     *
-     * @internal used internally to create an URI object
      *
      * @param Psr7UriInterface|UriInterface $uri
      * @param Psr7UriInterface|UriInterface $base_uri

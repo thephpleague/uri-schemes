@@ -1,7 +1,7 @@
 <?php
 
 /**
- * League.Uri (http://uri.thephpleague.com)
+ * League.Uri (http://uri.thephpleague.com).
  *
  * @package    League\Uri
  * @subpackage League\Uri\Schemes
@@ -29,12 +29,10 @@ class WsTest extends TestCase
 {
     /**
      * @covers ::isValidUri
-     * @dataProvider validUrlProvider
      *
-     * @param string $expected
-     * @param string $input
+     * @dataProvider validUrlProvider
      */
-    public function testCreateFromString($input, $expected): void
+    public function testCreateFromString(string $input, string $expected): void
     {
         self::assertSame($expected, (string) Ws::createFromString($input));
     }
@@ -82,9 +80,8 @@ class WsTest extends TestCase
     /**
      * @covers ::isValidUri
      * @dataProvider invalidUrlProvider
-     * @param string $uri
      */
-    public function testConstructorThrowInvalidArgumentException($uri): void
+    public function testConstructorThrowInvalidArgumentException(string $uri): void
     {
         self::expectException(InvalidUri::class);
         Ws::createFromString($uri);
@@ -114,9 +111,7 @@ class WsTest extends TestCase
 
     /**
      * @dataProvider portProvider
-     *
-     * @param string   $uri
-     * @param int|null $port
+     * @param ?int $port
      */
     public function testPort(string $uri, ?int $port): void
     {

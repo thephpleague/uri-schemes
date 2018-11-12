@@ -1,7 +1,7 @@
 <?php
 
 /**
- * League.Uri (http://uri.thephpleague.com)
+ * League.Uri (http://uri.thephpleague.com).
  *
  * @package    League\Uri
  * @subpackage League\Uri\Schemes
@@ -38,12 +38,10 @@ class FileTest extends TestCase
      * @covers ::isValidUri
      * @covers ::formatHost
      * @covers ::formatPath
-     * @dataProvider validUrlProvider
      *
-     * @param string $uri
-     * @param string $expected
+     * @dataProvider validUrlProvider
      */
-    public function testCreateFromString($uri, $expected): void
+    public function testCreateFromString(string $uri, string $expected): void
     {
         self::assertSame($expected, (string) File::createFromString($uri));
     }
@@ -96,11 +94,10 @@ class FileTest extends TestCase
 
     /**
      * @covers ::isValidUri
-     * @dataProvider invalidUrlProvider
      *
-     * @param string $uri
+     * @dataProvider invalidUrlProvider
      */
-    public function testConstructorThrowsException($uri): void
+    public function testConstructorThrowsException(string $uri): void
     {
         self::expectException(InvalidUri::class);
         File::createFromString($uri);
@@ -120,12 +117,10 @@ class FileTest extends TestCase
 
     /**
      * @covers ::createFromUnixPath
-     * @dataProvider unixpathProvider
      *
-     * @param string $uri
-     * @param string $expected
+     * @dataProvider unixpathProvider
      */
-    public function testCreateFromUnixPath($uri, $expected): void
+    public function testCreateFromUnixPath(string $uri, string $expected): void
     {
         self::assertSame($expected, (string) File::createFromUnixPath($uri));
     }
@@ -158,12 +153,10 @@ class FileTest extends TestCase
 
     /**
      * @covers ::createFromWindowsPath
-     * @dataProvider windowLocalPathProvider
      *
-     * @param string $uri
-     * @param string $expected
+     * @dataProvider windowLocalPathProvider
      */
-    public function testCreateFromWindowsLocalPath($uri, $expected): void
+    public function testCreateFromWindowsLocalPath(string $uri, string $expected): void
     {
         self::assertSame($expected, (string) File::createFromWindowsPath($uri));
     }

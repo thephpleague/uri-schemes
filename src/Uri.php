@@ -1,7 +1,7 @@
 <?php
 
 /**
- * League.Uri (http://uri.thephpleague.com)
+ * League.Uri (http://uri.thephpleague.com).
  *
  * @package    League\Uri
  * @subpackage League\Uri\Schemes
@@ -27,103 +27,101 @@ use TypeError;
 class Uri implements UriInterface, JsonSerializable
 {
     /**
-     * @internal RFC3986 Sub delimiter characters regular expression pattern
+     * RFC3986 Sub delimiter characters regular expression pattern.
      *
      * @see http://tools.ietf.org/html/rfc3986#section-2.2
      *
      * @var string
      */
-    const REGEXP_CHARS_SUBDELIM = "\!\$&'\(\)\*\+,;\=%";
+    protected const REGEXP_CHARS_SUBDELIM = "\!\$&'\(\)\*\+,;\=%";
 
     /**
-     * @internal RFC3986 unreserved characters regular expression pattern
+     * RFC3986 unreserved characters regular expression pattern.
      *
      * @see http://tools.ietf.org/html/rfc3986#section-2.3
      *
      * @var string
      */
-    const REGEXP_CHARS_UNRESERVED = 'A-Za-z0-9_\-\.~';
+    protected const REGEXP_CHARS_UNRESERVED = 'A-Za-z0-9_\-\.~';
 
     /**
-     * URI scheme component
+     * URI scheme component.
      *
      * @var string|null
      */
     protected $scheme;
 
     /**
-     * URI user info part
+     * URI user info part.
      *
      * @var string|null
      */
     protected $user_info;
 
     /**
-     * URI host component
+     * URI host component.
      *
      * @var string|null
      */
     protected $host;
 
     /**
-     * URI port component
+     * URI port component.
      *
      * @var int|null
      */
     protected $port;
 
     /**
-     * URI authority string representation
+     * URI authority string representation.
      *
      * @var string|null
      */
     protected $authority;
 
     /**
-     * URI path component
+     * URI path component.
      *
      * @var string
      */
     protected $path = '';
 
     /**
-     * URI query component
+     * URI query component.
      *
      * @var string|null
      */
     protected $query;
 
     /**
-     * URI fragment component
+     * URI fragment component.
      *
      * @var string|null
      */
     protected $fragment;
 
     /**
-     * URI string representation
+     * URI string representation.
      *
      * @var string|null
      */
     protected $uri;
 
     /**
-     * Supported schemes and corresponding default port
+     * Supported schemes and corresponding default port.
      *
      * @var array
      */
     protected static $supported_schemes = [];
 
     /**
-     * Static method called by PHP's var export
-     *
-     * @param array $components
+     * Static method called by PHP's var export.
      *
      * @return static
      */
     public static function __set_state(array $components)
     {
-        list($components['user'], $components['pass']) = explode(':', $components['user_info'], 2) + [1 => null];
+        [$components['user'], $components['pass']] = explode(':', $components['user_info'], 2) + [1 => null];
 
         return new static(
             $components['scheme'],
@@ -138,9 +136,9 @@ class Uri implements UriInterface, JsonSerializable
     }
 
     /**
-     * Create a new instance from a string
+     * Create a new instance from a string.
      *
-     * @param mixed $uri
+     * @param string|mixed $uri
      *
      * @return static
      */
@@ -161,7 +159,7 @@ class Uri implements UriInterface, JsonSerializable
     }
 
     /**
-     * Create a new instance from a hash of parse_url parts
+     * Create a new instance from a hash of parse_url parts.
      *
      * @param array $components a hash representation of the URI similar
      *                          to PHP parse_url function result
@@ -188,7 +186,7 @@ class Uri implements UriInterface, JsonSerializable
     }
 
     /**
-     * Create a new instance
+     * Create a new instance.
      *
      * @param string|null $scheme   scheme component
      * @param string|null $user     user component
@@ -221,15 +219,12 @@ class Uri implements UriInterface, JsonSerializable
     }
 
     /**
-     * Format the Scheme and Host component
+     * Format the Scheme and Host component.
      *
-     * @param string|null $scheme
-     *
+     * @param  ?string      $scheme
      * @throws MalformedUri if the scheme is invalid
-     *
-     * @return string|null
      */
-    protected function formatScheme(string $scheme = null)
+    protected function formatScheme(?string $scheme = null): ?string
     {
         if ('' === $scheme || null === $scheme) {
             return $scheme;
@@ -245,14 +240,13 @@ class Uri implements UriInterface, JsonSerializable
     }
 
     /**
-     * Set the UserInfo component
+     * Set the UserInfo component.
      *
      * @param string|null $user     the URI scheme component
      * @param string|null $password the URI scheme component
      *
-     * @return string|null
      */
-    protected function formatUserInfo(string $user = null, string $password = null)
+    protected function formatUserInfo(string $user = null, string $password = null): ?string
     {
         if (null === $user) {
             return $user;
@@ -270,11 +264,7 @@ class Uri implements UriInterface, JsonSerializable
     }
 
     /**
-     * Returns the RFC3986 encoded string matched
-     *
-     * @param array $matches
-     *
-     * @return string
+     * Returns the RFC3986 encoded string matched.
      */
     private static function urlEncodeMatch(array $matches): string
     {
@@ -282,13 +272,10 @@ class Uri implements UriInterface, JsonSerializable
     }
 
     /**
-     * Validate and Format the Host component
+     * Validate and Format the Host component.
      *
-     * @param string|null $host
-     *
-     * @return string|null
      */
-    protected function formatHost(string $host = null)
+    protected function formatHost(string $host = null): ?string
     {
         if (null === $host || '' === $host) {
             return $host;
@@ -306,11 +293,7 @@ class Uri implements UriInterface, JsonSerializable
      *
      * The host is converted to its ascii representation if needed
      *
-     * @param string $host
-     *
      * @throws MalformedUri if the submitted host is not a valid registered name
-     *
-     * @return string
      */
     private function formatRegisteredName(string $host): string
     {
@@ -349,18 +332,14 @@ class Uri implements UriInterface, JsonSerializable
     }
 
     /**
-     * Retrieves and format IDNA conversion error message
+     * Retrieves and format IDNA conversion error message.
      *
      * @see http://icu-project.org/apiref/icu4j/com/ibm/icu/text/IDNA.Error.html
-     *
-     * @param int $error_byte
-     *
-     * @return string
      */
     private function getIDNAErrors(int $error_byte): string
     {
         /**
-         * IDNA errors
+         * IDNA errors.
          */
         static $idn_errors = [
             IDNA_ERROR_EMPTY_LABEL => 'a non-final domain name label (or the whole domain name) is empty',
@@ -389,13 +368,9 @@ class Uri implements UriInterface, JsonSerializable
     }
 
     /**
-     * Validate and Format the IPv6/IPvfuture host
-     *
-     * @param string $host
+     * Validate and Format the IPv6/IPvfuture host.
      *
      * @throws MalformedUri if the submitted host is not a valid IP host
-     *
-     * @return string
      */
     private function formatIp(string $host): string
     {
@@ -442,13 +417,11 @@ class Uri implements UriInterface, JsonSerializable
     }
 
     /**
-     * Format the Port component
+     * Format the Port component.
      *
-     * @param mixed $port
-     *
-     * @return int|null
+     * @param null|mixed $port
      */
-    protected function formatPort($port = null)
+    protected function formatPort($port = null): ?int
     {
         if (null === $port || '' === $port) {
             return null;
@@ -472,11 +445,10 @@ class Uri implements UriInterface, JsonSerializable
     }
 
     /**
-     * Generate the URI authority part
+     * Generate the URI authority part.
      *
-     * @return string|null
      */
-    protected function setAuthority()
+    protected function setAuthority(): ?string
     {
         $authority = null;
         if (null !== $this->user_info) {
@@ -495,11 +467,7 @@ class Uri implements UriInterface, JsonSerializable
     }
 
     /**
-     * Format the Path component
-     *
-     * @param string $path
-     *
-     * @return string
+     * Format the Path component.
      */
     protected function formatPath(string $path): string
     {
@@ -509,7 +477,7 @@ class Uri implements UriInterface, JsonSerializable
     }
 
     /**
-     * Format the Query or the Fragment component
+     * Format the Query or the Fragment component.
      *
      * Returns a array containing:
      * <ul>
@@ -518,11 +486,8 @@ class Uri implements UriInterface, JsonSerializable
      * when building the URI string representation</li>
      * </ul>
      *
-     * @param string|null $component
-     *
-     * @return string|null
      */
-    protected function formatQueryAndFragment(string $component = null)
+    protected function formatQueryAndFragment(string $component = null): ?string
     {
         if (null === $component || '' === $component) {
             return $component;
@@ -533,7 +498,7 @@ class Uri implements UriInterface, JsonSerializable
     }
 
     /**
-     * assert the URI internal state is valid
+     * assert the URI internal state is valid.
      *
      * @see https://tools.ietf.org/html/rfc3986#section-3
      * @see https://tools.ietf.org/html/rfc3986#section-3.3
@@ -583,8 +548,6 @@ class Uri implements UriInterface, JsonSerializable
      *
      * The URI object validity depends on the scheme. This method
      * MUST be implemented on every URI object
-     *
-     * @return bool
      */
     protected function isValidUri(): bool
     {
@@ -592,17 +555,9 @@ class Uri implements UriInterface, JsonSerializable
     }
 
     /**
-     * Generate the URI string representation from its components
+     * Generate the URI string representation from its components.
      *
      * @see https://tools.ietf.org/html/rfc3986#section-5.3
-     *
-     * @param string|null $scheme
-     * @param string|null $authority
-     * @param string      $path
-     * @param string|null $query
-     * @param string|null $fragment
-     *
-     * @return string
      */
     protected function getUriString(
         string $scheme = null,
@@ -764,7 +719,6 @@ class Uri implements UriInterface, JsonSerializable
      *
      * @throws MalformedUri if the submitted data can not be converted to string
      *
-     * @return string
      */
     private function filterString($str): string
     {

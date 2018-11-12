@@ -1,7 +1,7 @@
 <?php
 
 /**
- * League.Uri (http://uri.thephpleague.com)
+ * League.Uri (http://uri.thephpleague.com).
  *
  * @package    League\Uri
  * @subpackage League\Uri\Schemes
@@ -32,10 +32,8 @@ class FactoryTest extends TestCase
      * @dataProvider invalidMapperData
      *
      * @covers \League\Uri\Factory
-     *
-     * @param mixed $data
      */
-    public function testFactoryThrowExceptionOnConstruction($data): void
+    public function testFactoryThrowExceptionOnConstruction(iterable $data): void
     {
         self::expectException(InvalidUri::class);
         new Factory($data);
@@ -85,11 +83,8 @@ class FactoryTest extends TestCase
      * @dataProvider uriProvider
      *
      * @covers \League\Uri\Factory
-     *
-     * @param string $expected
-     * @param string $uri
      */
-    public function testCreate($expected, $uri): void
+    public function testCreate(string $expected, string $uri): void
     {
         self::assertInstanceOf($expected, (new Factory())->create($uri));
     }
@@ -122,12 +117,9 @@ class FactoryTest extends TestCase
      * @covers \League\Uri\Factory
      * @covers \League\Uri\Resolver
      *
-     * @param string $expected_class
-     * @param string $expected_uri
-     * @param string $uri
-     * @param mixed  $base_uri
+     * @param string|mixed $base_uri
      */
-    public function testCreateWithBaseUri($expected_class, $expected_uri, $uri, $base_uri): void
+    public function testCreateWithBaseUri(string $expected_class, string $expected_uri, string $uri, $base_uri): void
     {
         $obj = (new Factory())->create($uri, $base_uri);
         self::assertInstanceOf($expected_class, $obj);
@@ -218,10 +210,6 @@ class FactoryTest extends TestCase
      * @covers \League\Uri\Factory
      *
      * @dataProvider resolveProvider
-     *
-     * @param string $base_uri
-     * @param string $uri
-     * @param string $expected
      */
     public function testCreateResolve(string $base_uri, string $uri, string $expected): void
     {

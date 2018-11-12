@@ -1,7 +1,7 @@
 <?php
 
 /**
- * League.Uri (http://uri.thephpleague.com)
+ * League.Uri (http://uri.thephpleague.com).
  *
  * @package    League\Uri
  * @subpackage League\Uri\Schemes
@@ -32,7 +32,7 @@ final class Relativizer
     }
 
     /**
-     * Relativize an URI according to a base URI
+     * Relativize an URI according to a base URI.
      *
      * This method MUST retain the state of the submitted URI instance, and return
      * an URI instance of the same type that contains the applied modifications.
@@ -73,7 +73,7 @@ final class Relativizer
     /**
      * Filter the URI object.
      *
-     * @param mixed $uri
+     * @param null|mixed $uri
      *
      * @throws TypeError if the URI object does not implements the supported interfaces.
      *
@@ -93,8 +93,6 @@ final class Relativizer
      *
      * @param Psr7UriInterface|UriInterface $uri
      * @param Psr7UriInterface|UriInterface $base_uri
-     *
-     * @return bool
      */
     private static function isRelativizable($uri, $base_uri): bool
     {
@@ -106,11 +104,6 @@ final class Relativizer
 
     /**
      * Relative the URI for a authority-less target URI.
-     *
-     * @param string $path
-     * @param string $basepath
-     *
-     * @return string
      */
     private static function relativizePath(string $path, string $basepath): string
     {
@@ -134,10 +127,6 @@ final class Relativizer
 
     /**
      * returns the path segments.
-     *
-     * @param string $path
-     *
-     * @return array
      */
     private static function getSegments(string $path): array
     {
@@ -150,11 +139,6 @@ final class Relativizer
 
     /**
      * Formatting the path to keep a valid URI.
-     *
-     * @param string $path
-     * @param string $basepath
-     *
-     * @return string
      */
     private static function formatPath(string $path, string $basepath): string
     {
@@ -176,10 +160,6 @@ final class Relativizer
 
     /**
      * Formatting the path to keep a resolvable URI.
-     *
-     * @param string $path
-     *
-     * @return string
      */
     private static function formatPathWithEmptyBaseQuery(string $path): string
     {

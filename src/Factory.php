@@ -1,7 +1,7 @@
 <?php
 
 /**
- * League.Uri (http://uri.thephpleague.com)
+ * League.Uri (http://uri.thephpleague.com).
  *
  * @package    League\Uri
  * @subpackage League\Uri\Schemes
@@ -32,7 +32,7 @@ final class Factory
     const REGEXP_SCHEME = '/^[a-z][a-z\+\.\-]*$/';
 
     /**
-     * Supported schemes
+     * Supported schemes.
      *
      * @var string[]
      */
@@ -47,7 +47,7 @@ final class Factory
     ];
 
     /**
-     * supported URI interfaces
+     * supported URI interfaces.
      *
      * @var array
      */
@@ -57,7 +57,7 @@ final class Factory
     ];
 
     /**
-     * new instance
+     * new instance.
      *
      * @param iterable $map An override map of URI classes indexed by their supported schemes.
      */
@@ -69,10 +69,7 @@ final class Factory
     }
 
     /**
-     * Add a new classname for a given scheme URI
-     *
-     * @param string $scheme    valid URI scheme
-     * @param string $className classname which implements Psr7UriInterface or UriInterface
+     * Add a new classname for a given scheme URI.
      *
      * @throws MalformedUri if the scheme is invalid
      * @throws InvalidUri   if the class does not implements a supported interface
@@ -100,11 +97,10 @@ final class Factory
      * <li>a string
      * </ul>
      *
-     * @param mixed $uri
-     * @param mixed $base_uri
+     * @param null|mixed $uri
+     * @param null|mixed $base_uri
      *
-     * @throws MalformedUri if there's no base URI and the submitted URI is not absolute
-     *
+     * @throws MalformedUri                  if there's no base URI and the submitted URI is not absolute
      * @return Psr7UriInterface|UriInterface
      */
     public function create($uri, $base_uri = null)

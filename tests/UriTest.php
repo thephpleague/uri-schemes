@@ -1,7 +1,7 @@
 <?php
 
 /**
- * League.Uri (http://uri.thephpleague.com)
+ * League.Uri (http://uri.thephpleague.com).
  *
  * @package    League\Uri
  * @subpackage League\Uri\Schemes
@@ -281,9 +281,8 @@ class UriTest extends TestCase
     /**
      * @covers ::assertValidState
      * @dataProvider missingAuthorityProvider
-     * @param mixed $path
      */
-    public function testModificationFailedWithMissingAuthority($path): void
+    public function testModificationFailedWithMissingAuthority(string $path): void
     {
         self::expectException(InvalidUri::class);
         Uri::createFromString('http://example.com/path')
@@ -490,11 +489,9 @@ class UriTest extends TestCase
 
     /**
      * @dataProvider userInfoProvider
-     * @param mixed $user
-     * @param mixed $credential
-     * @param mixed $expected
+     * @param ?string $credential
      */
-    public function testWithUserInfoEncodesUsernameAndPassword($user, $credential, $expected): void
+    public function testWithUserInfoEncodesUsernameAndPassword(string $user, ?string $credential, string $expected): void
     {
         $uri = Uri::createFromString('https://user:pass@local.example.com:3001/foo?bar=baz#quz');
         $new = $uri->withUserInfo($user, $credential);

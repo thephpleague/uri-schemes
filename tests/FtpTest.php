@@ -1,7 +1,7 @@
 <?php
 
 /**
- * League.Uri (http://uri.thephpleague.com)
+ * League.Uri (http://uri.thephpleague.com).
  *
  * @package    League\Uri
  * @subpackage League\Uri\Schemes
@@ -29,11 +29,8 @@ class FtpTest extends TestCase
     /**
      * @covers ::isValidUri
      * @dataProvider validUrlProvider
-     *
-     * @param string $uri
-     * @param string $expected
      */
-    public function testCreateFromString($uri, $expected): void
+    public function testCreateFromString(string $uri, string $expected): void
     {
         self::assertSame($expected, (string) Ftp::createFromString($uri));
     }
@@ -70,11 +67,10 @@ class FtpTest extends TestCase
 
     /**
      * @covers ::isValidUri
-     * @dataProvider invalidUrlProvider
      *
-     * @param string $uri
+     * @dataProvider invalidUrlProvider
      */
-    public function testConstructorThrowInvalidArgumentException($uri): void
+    public function testConstructorThrowInvalidArgumentException(string $uri): void
     {
         self::expectException(InvalidUri::class);
         Ftp::createFromString($uri);
@@ -104,11 +100,9 @@ class FtpTest extends TestCase
 
     /**
      * @dataProvider portProvider
-     *
-     * @param string   $uri
-     * @param int|null $port
+     * @param ?int $port
      */
-    public function testPort($uri, $port): void
+    public function testPort(string $uri, ?int $port): void
     {
         self::assertSame($port, Ftp::createFromString($uri)->getPort());
     }

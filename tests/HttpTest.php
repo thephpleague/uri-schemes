@@ -1,7 +1,7 @@
 <?php
 
 /**
- * League.Uri (http://uri.thephpleague.com)
+ * League.Uri (http://uri.thephpleague.com).
  *
  * @package    League\Uri
  * @subpackage League\Uri\Schemes
@@ -62,12 +62,10 @@ class HttpTest extends TestCase
     /**
      * @covers ::isValidUri
      * @covers ::formatPort
-     * @dataProvider validUrlProvider
      *
-     * @param string $expected
-     * @param string $uri
+     * @dataProvider validUrlProvider
      */
-    public function testCreateFromString($expected, $uri): void
+    public function testCreateFromString(string $expected, string $uri): void
     {
         self::assertSame($expected, (string) Http::createFromString($uri));
     }
@@ -100,11 +98,10 @@ class HttpTest extends TestCase
 
     /**
      * @covers ::isValidUri
-     * @dataProvider invalidUrlProvider
      *
-     * @param string $uri
+     * @dataProvider invalidUrlProvider
      */
-    public function testIsValid($uri): void
+    public function testIsValid(string $uri): void
     {
         self::expectException(InvalidUri::class);
         Http::createFromString($uri);
@@ -125,12 +122,11 @@ class HttpTest extends TestCase
 
     /**
      * @dataProvider portProvider
-     * @covers ::formatPort
      *
-     * @param string   $uri
-     * @param int|null $port
+     * @covers ::formatPort
+     * @param ?int $port
      */
-    public function testPort($uri, $port): void
+    public function testPort(string $uri, ?int $port): void
     {
         self::assertSame($port, Http::createFromString($uri)->getPort());
     }
@@ -147,11 +143,10 @@ class HttpTest extends TestCase
 
     /**
      * @covers ::isValidUri
-     * @dataProvider invalidPathProvider
      *
-     * @param string $path
+     * @dataProvider invalidPathProvider
      */
-    public function testPathIsInvalid($path): void
+    public function testPathIsInvalid(string $path): void
     {
         self::expectException(InvalidUri::class);
         Http::createFromString('')->withPath($path);
@@ -168,11 +163,10 @@ class HttpTest extends TestCase
 
     /**
      * @covers ::assertValidState
-     * @dataProvider invalidURI
      *
-     * @param mixed $uri
+     * @dataProvider invalidURI
      */
-    public function testCreateFromInvalidUrlKO($uri): void
+    public function testCreateFromInvalidUrlKO(string $uri): void
     {
         self::expectException(InvalidUri::class);
         Http::createFromString($uri);
@@ -193,12 +187,10 @@ class HttpTest extends TestCase
      * @covers ::fetchHostname
      * @covers ::fetchRequestUri
      * @covers ::formatPort
-     * @dataProvider validServerArray
      *
-     * @param string $expected
-     * @param array  $input
+     * @dataProvider validServerArray
      */
-    public function testCreateFromServer($expected, $input): void
+    public function testCreateFromServer(string $expected, array $input): void
     {
         self::assertSame($expected, (string) Http::createFromServer($input));
     }
@@ -362,7 +354,6 @@ class HttpTest extends TestCase
         ]);
     }
 
-
     /**
      * @covers ::fetchUserInfo
      */
@@ -378,7 +369,6 @@ class HttpTest extends TestCase
             'HTTP_AUTHORIZATION' => 'basic foo:bar',
         ]);
     }
-
 
     /**
      * @covers ::isValidUri

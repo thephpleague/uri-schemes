@@ -1,7 +1,7 @@
 <?php
 
 /**
- * League.Uri (http://uri.thephpleague.com)
+ * League.Uri (http://uri.thephpleague.com).
  *
  * @package    League\Uri
  * @subpackage League\Uri\Schemes
@@ -42,8 +42,6 @@ final class File extends Uri
      * </ul>
      *
      * @see https://tools.ietf.org/html/rfc2397#section-3
-     *
-     * @return bool
      */
     protected function isValidUri(): bool
     {
@@ -56,7 +54,7 @@ final class File extends Uri
     }
 
     /**
-     * Format the Host component
+     * Format the Host component.
      *
      * @see https://tools.ietf.org/html/rfc1738#section-3.10
      *
@@ -64,11 +62,9 @@ final class File extends Uri
      *  string; this is interpreted as `the machine from which the URL is
      *  being interpreted'.
      *
-     * @param string|null $host
-     *
-     * @return string|null
+     * @param ?string $host
      */
-    protected function formatHost(string $host = null)
+    protected function formatHost(?string $host = null): ?string
     {
         if ('' === $host) {
             $host = 'localhost';
@@ -77,7 +73,9 @@ final class File extends Uri
         return parent::formatHost($host);
     }
 
-
+    /**
+     * {@inheritdoc}
+     */
     protected function formatPath(string $path): string
     {
         $path = parent::formatPath($path);
@@ -93,28 +91,24 @@ final class File extends Uri
     }
 
     /**
-     * Create a new instance from a Unix path string
+     * Create a new instance from a Unix path string.
      *
-     * @param string $uri
-     *
-     * @return static
+     * @return self
      */
     public static function createFromUnixPath(string $uri = '')
     {
         $uri = implode('/', array_map('rawurlencode', explode('/', $uri)));
         if ('/' === ($uri[0] ?? '')) {
-            return new static('file', null, null, 'localhost', null, $uri);
+            return new self('file', null, null, 'localhost', null, $uri);
         }
 
-        return new static(null, null, null, null, null, $uri);
+        return new self(null, null, null, null, null, $uri);
     }
 
     /**
-     * Create a new instance from a local Windows path string
+     * Create a new instance from a local Windows path string.
      *
-     * @param string $uri
-     *
-     * @return static
+     * @return self
      */
     public static function createFromWindowsPath(string $uri = '')
     {
@@ -129,15 +123,15 @@ final class File extends Uri
 
         //Local Windows absolute path
         if ('' !== $root) {
-            return new static('file', null, null, 'localhost', null, '/'.$root.$uri);
+            return new self('file', null, null, 'localhost', null, '/'.$root.$uri);
         }
 
         //UNC Windows Path
         if ('//' === substr($uri, 0, 2)) {
             $parts = explode('/', substr($uri, 2), 2) + [1 => null];
-            return new static('file', null, null, $parts[0], null, '/'.$parts[1]);
+            return new self('file', null, null, $parts[0], null, '/'.$parts[1]);
         }
 
-        return new static(null, null, null, null, null, $uri);
+        return new self(null, null, null, null, null, $uri);
     }
 }

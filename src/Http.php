@@ -1,7 +1,7 @@
 <?php
 
 /**
- * League.Uri (http://uri.thephpleague.com)
+ * League.Uri (http://uri.thephpleague.com).
  *
  * @package    League\Uri
  * @subpackage League\Uri\Schemes
@@ -43,8 +43,6 @@ final class Http extends Uri implements UriInterface
      * </ul>
      *
      * @see https://tools.ietf.org/html/rfc6455#section-3
-     *
-     * @return bool
      */
     protected function isValidUri(): bool
     {
@@ -55,27 +53,19 @@ final class Http extends Uri implements UriInterface
     }
 
     /**
-     * Create a new instance from the environment
-     *
-     * @param array $server the server and execution environment information array typically ($_SERVER)
-     *
-     * @return self
+     * Create a new instance from the environment.
      */
-    public static function createFromServer(array $server)
+    public static function createFromServer(array $server): self
     {
-        list($user, $pass) = self::fetchUserInfo($server);
-        list($host, $port) = self::fetchHostname($server);
-        list($path, $query) = self::fetchRequestUri($server);
+        [$user, $pass] = self::fetchUserInfo($server);
+        [$host, $port] = self::fetchHostname($server);
+        [$path, $query] = self::fetchRequestUri($server);
 
-        return new static(self::fetchScheme($server), $user, $pass, $host, $port, $path, $query);
+        return new self(self::fetchScheme($server), $user, $pass, $host, $port, $path, $query);
     }
 
     /**
-     * Returns the environment scheme
-     *
-     * @param array $server the environment server typically $_SERVER
-     *
-     * @return string
+     * Returns the environment scheme.
      */
     private static function fetchScheme(array $server): string
     {
@@ -86,11 +76,7 @@ final class Http extends Uri implements UriInterface
     }
 
     /**
-     * Returns the environment user info
-     *
-     * @param array $server the environment server typically $_SERVER
-     *
-     * @return array
+     * Returns the environment user info.
      */
     private static function fetchUserInfo(array $server): array
     {
@@ -117,13 +103,9 @@ final class Http extends Uri implements UriInterface
     }
 
     /**
-     * Returns the environment host
-     *
-     * @param array $server the environment server typically $_SERVER
+     * Returns the environment host.
      *
      * @throws InvalidUri If the host can not be detected
-     *
-     * @return array
      */
     private static function fetchHostname(array $server): array
     {
@@ -153,11 +135,7 @@ final class Http extends Uri implements UriInterface
     }
 
     /**
-     * Returns the environment path
-     *
-     * @param array $server the environment server typically $_SERVER
-     *
-     * @return array
+     * Returns the environment path.
      */
     private static function fetchRequestUri(array $server): array
     {
@@ -167,7 +145,7 @@ final class Http extends Uri implements UriInterface
         }
 
         if (isset($server['REQUEST_URI'])) {
-            list($path, ) = explode('?', $server['REQUEST_URI'], 2);
+            [$path, ] = explode('?', $server['REQUEST_URI'], 2);
             $query = ('' !== $server['QUERY_STRING']) ? $server['QUERY_STRING'] : null;
 
             return [$path, $query];

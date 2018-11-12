@@ -1,7 +1,7 @@
 <?php
 
 /**
- * League.Uri (http://uri.thephpleague.com)
+ * League.Uri (http://uri.thephpleague.com).
  *
  * @package    League\Uri
  * @subpackage League\Uri\Schemes
@@ -30,10 +30,10 @@ final class Info
      *     - League\Uri\UriInterface
      *     - Psr\Http\Message\UriInterface
      *
+     * @param null|mixed $uri
      *
+     * @throws TypeError if the URI object does not implements the supported interfaces.
      *
-     * @param  mixed                         $uri
-     * @throws TypeError                     if the URI object does not implements the supported interfaces.
      * @return Psr7UriInterface|UriInterface
      */
     private static function filterUri($uri)
@@ -92,8 +92,6 @@ final class Info
      * Tell whether the URI represents an absolute URI.
      *
      * @param Psr7UriInterface|UriInterface $uri
-     *
-     * @return bool
      */
     public static function isAbsolute($uri): bool
     {
@@ -104,8 +102,6 @@ final class Info
      * Tell whether the URI represents a network path.
      *
      * @param Psr7UriInterface|UriInterface $uri
-     *
-     * @return bool
      */
     public static function isNetworkPath($uri): bool
     {
@@ -118,8 +114,6 @@ final class Info
      * Tell whether the URI represents an absolute path.
      *
      * @param Psr7UriInterface|UriInterface $uri
-     *
-     * @return bool
      */
     public static function isAbsolutePath($uri): bool
     {
@@ -132,8 +126,6 @@ final class Info
      * Tell whether the URI represents a relative path.
      *
      * @param Psr7UriInterface|UriInterface $uri
-     *
-     * @return bool
      */
     public static function isRelativePath($uri): bool
     {
@@ -147,8 +139,6 @@ final class Info
      *
      * @param Psr7UriInterface|UriInterface $uri
      * @param Psr7UriInterface|UriInterface $base_uri
-     *
-     * @return bool
      */
     public static function isSameDocument($uri, $base_uri): bool
     {

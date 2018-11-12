@@ -1,7 +1,7 @@
 <?php
 
 /**
- * League.Uri (http://uri.thephpleague.com)
+ * League.Uri (http://uri.thephpleague.com).
  *
  * @package    League\Uri
  * @subpackage League\Uri\Schemes
@@ -32,7 +32,7 @@ final class Data extends Uri
     ];
 
     /**
-     * Create a new instance from a file path
+     * Create a new instance from a file path.
      *
      * @param string $path the file path
      *
@@ -68,8 +68,6 @@ final class Data extends Uri
      * </ul>
      *
      * @see https://tools.ietf.org/html/rfc2397#section-3
-     *
-     * @return bool
      */
     protected function isValidUri(): bool
     {
@@ -80,15 +78,11 @@ final class Data extends Uri
     }
 
     /**
-     * Filter the Path component
-     *
-     * @param string $path
+     * Filter the Path component.
      *
      * @see https://tools.ietf.org/html/rfc2397
      *
      * @throws InvalidUri If the path is not compliant with RFC2397
-     *
-     * @return string
      */
     protected function formatPath(string $path): string
     {
@@ -119,11 +113,7 @@ final class Data extends Uri
     }
 
     /**
-     * Assert the path is a compliant with RFC2397
-     *
-     * @param string $mimetype   the path mediatype mimetype
-     * @param string $parameters the path mediatype parameters
-     * @param string $data       the path data
+     * Assert the path is a compliant with RFC2397.
      *
      * @see https://tools.ietf.org/html/rfc2397
      *
@@ -156,11 +146,7 @@ final class Data extends Uri
     }
 
     /**
-     * Validate mediatype parameter
-     *
-     * @param string $parameter a mediatype parameter
-     *
-     * @return bool
+     * Validate mediatype parameter.
      */
     private function validateParameter(string $parameter): bool
     {
