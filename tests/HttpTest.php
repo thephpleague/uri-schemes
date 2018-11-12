@@ -32,30 +32,30 @@ class HttpTest extends TestCase
      */
     private $uri;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->uri = Http::createFromString(
             'http://login:pass@secure.example.com:443/test/query.php?kingkong=toto#doc3'
         );
     }
 
-    protected function tearDown()
+    protected function tearDown(): void
     {
         unset($this->uri);
     }
 
-    public function testDefaultConstructor()
+    public function testDefaultConstructor(): void
     {
-        $this->assertSame('', (string) Http::createFromString());
+        self::assertSame('', (string) Http::createFromString());
     }
 
     /**
      * @covers ::withPort
      * @covers ::formatPort
      */
-    public function testModificationFailedWithUnsupportedPort()
+    public function testModificationFailedWithUnsupportedPort(): void
     {
-        $this->expectException(MalformedUri::class);
+        self::expectException(MalformedUri::class);
         Http::createFromString('http://example.com/path')->withPort(12365894);
     }
 
@@ -67,12 +67,12 @@ class HttpTest extends TestCase
      * @param string $expected
      * @param string $uri
      */
-    public function testCreateFromString($expected, $uri)
+    public function testCreateFromString($expected, $uri): void
     {
-        $this->assertSame($expected, (string) Http::createFromString($uri));
+        self::assertSame($expected, (string) Http::createFromString($uri));
     }
 
-    public function validUrlProvider()
+    public function validUrlProvider(): array
     {
         return [
             'with default port' => [
@@ -104,13 +104,13 @@ class HttpTest extends TestCase
      *
      * @param string $uri
      */
-    public function testIsValid($uri)
+    public function testIsValid($uri): void
     {
-        $this->expectException(InvalidUri::class);
+        self::expectException(InvalidUri::class);
         Http::createFromString($uri);
     }
 
-    public function invalidUrlProvider()
+    public function invalidUrlProvider(): array
     {
         return [
             ['wss://example.com'],
@@ -130,12 +130,12 @@ class HttpTest extends TestCase
      * @param string   $uri
      * @param int|null $port
      */
-    public function testPort($uri, $port)
+    public function testPort($uri, $port): void
     {
-        $this->assertSame($port, Http::createFromString($uri)->getPort());
+        self::assertSame($port, Http::createFromString($uri)->getPort());
     }
 
-    public function portProvider()
+    public function portProvider(): array
     {
         return [
             ['http://www.example.com:443/', 443],
@@ -151,13 +151,13 @@ class HttpTest extends TestCase
      *
      * @param string $path
      */
-    public function testPathIsInvalid($path)
+    public function testPathIsInvalid($path): void
     {
-        $this->expectException(InvalidUri::class);
+        self::expectException(InvalidUri::class);
         Http::createFromString('')->withPath($path);
     }
 
-    public function invalidPathProvider()
+    public function invalidPathProvider(): array
     {
         return [
             ['data:go'],
@@ -172,13 +172,13 @@ class HttpTest extends TestCase
      *
      * @param mixed $uri
      */
-    public function testCreateFromInvalidUrlKO($uri)
+    public function testCreateFromInvalidUrlKO($uri): void
     {
-        $this->expectException(InvalidUri::class);
+        self::expectException(InvalidUri::class);
         Http::createFromString($uri);
     }
 
-    public function invalidURI()
+    public function invalidURI(): array
     {
         return [
             ['http://user@:80'],
@@ -198,12 +198,12 @@ class HttpTest extends TestCase
      * @param string $expected
      * @param array  $input
      */
-    public function testCreateFromServer($expected, $input)
+    public function testCreateFromServer($expected, $input): void
     {
-        $this->assertSame($expected, (string) Http::createFromServer($input));
+        self::assertSame($expected, (string) Http::createFromServer($input));
     }
 
-    public function validServerArray()
+    public function validServerArray(): array
     {
         return [
             'with host' => [
@@ -351,9 +351,9 @@ class HttpTest extends TestCase
     /**
      * @covers ::fetchHostname
      */
-    public function testFailCreateFromServerWithoutHost()
+    public function testFailCreateFromServerWithoutHost(): void
     {
-        $this->expectException(InvalidUri::class);
+        self::expectException(InvalidUri::class);
         Http::createFromServer([
             'PHP_SELF' => '',
             'REQUEST_URI' => '',
@@ -362,12 +362,30 @@ class HttpTest extends TestCase
         ]);
     }
 
+
+    /**
+     * @covers ::fetchUserInfo
+     */
+    public function testFailCreateFromServerWithoutInvalidUserInfo(): void
+    {
+        self::expectException(InvalidUri::class);
+        Http::createFromServer([
+            'PHP_SELF' => '/toto',
+            'SERVER_ADDR' => '127.0.0.1',
+            'HTTPS' => 'on',
+            'SERVER_PORT' => 23,
+            'QUERY_STRING' => 'foo=bar',
+            'HTTP_AUTHORIZATION' => 'basic foo:bar',
+        ]);
+    }
+
+
     /**
      * @covers ::isValidUri
      */
-    public function testModificationFailedWithEmptyAuthority()
+    public function testModificationFailedWithEmptyAuthority(): void
     {
-        $this->expectException(InvalidUri::class);
+        self::expectException(InvalidUri::class);
         Http::createFromString('http://example.com/path')
             ->withScheme('')
             ->withHost('')

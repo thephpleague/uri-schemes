@@ -21,7 +21,7 @@ namespace League\Uri;
 final class Ftp extends Uri
 {
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     protected static $supported_schemes = [
         'ftp' => 21,

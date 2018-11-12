@@ -14,18 +14,14 @@
  * file that was distributed with this source code.
  */
 
-namespace LeagueTest\Uri\Resolution;
+namespace LeagueTest\Uri;
 
-use InvalidArgumentException;
 use League\Uri\Exception\InvalidUri;
+use League\Uri\Factory;
 use League\Uri\Ftp;
 use League\Uri\Http;
-use League\Uri\Resolution\Factory;
 use League\Uri\Uri;
 use PHPUnit\Framework\TestCase;
-use TypeError;
-use function League\Uri\create;
-use function League\Uri\resolve;
 
 /**
  * @group factory
@@ -33,28 +29,19 @@ use function League\Uri\resolve;
 class FactoryTest extends TestCase
 {
     /**
-     * @covers \League\Uri\Resolution\Factory
-     */
-    public function testFactoryThrowTypeErrorOnConstruction()
-    {
-        $this->expectException(TypeError::class);
-        new Factory(date_create());
-    }
-
-    /**
      * @dataProvider invalidMapperData
      *
-     * @covers \League\Uri\Resolution\Factory
+     * @covers \League\Uri\Factory
      *
      * @param mixed $data
      */
-    public function testFactoryThrowExceptionOnConstruction($data)
+    public function testFactoryThrowExceptionOnConstruction($data): void
     {
-        $this->expectException(InvalidUri::class);
+        self::expectException(InvalidUri::class);
         new Factory($data);
     }
 
-    public function invalidMapperData()
+    public function invalidMapperData(): array
     {
         return [
             'invalid scheme' => [
@@ -70,47 +57,44 @@ class FactoryTest extends TestCase
         ];
     }
 
-    public function testFactoryAddMapper()
+    public function testFactoryAddMapper(): void
     {
         $factory = new Factory(['http' => Uri::class]);
-        $this->assertInstanceOf(Uri::class, $factory->create('http://example.com'));
+        self::assertInstanceOf(Uri::class, $factory->create('http://example.com'));
     }
 
     /**
-     * @covers \League\Uri\create
-     * @covers \League\Uri\Resolution\Factory
+     * @covers \League\Uri\Factory
      */
-    public function testCreateThrowExceptionWithBaseUriNotAbsolute()
+    public function testCreateThrowExceptionWithBaseUriNotAbsolute(): void
     {
-        $this->expectException(InvalidUri::class);
-        create('/path/to/you', Http::createFromString('//example.com'));
+        self::expectException(InvalidUri::class);
+        (new Factory())->create('/path/to/you', Http::createFromString('//example.com'));
     }
 
     /**
-     * @covers \League\Uri\create
-     * @covers \League\Uri\Resolution\Factory
+     * @covers \League\Uri\Factory
      */
-    public function testCreateThrowExceptionWithUriNotAbsolute()
+    public function testCreateThrowExceptionWithUriNotAbsolute(): void
     {
-        $this->expectException(InvalidUri::class);
-        create('/path/to/you');
+        self::expectException(InvalidUri::class);
+        (new Factory())->create('/path/to/you');
     }
 
     /**
      * @dataProvider uriProvider
      *
-     * @covers \League\Uri\create
-     * @covers \League\Uri\Resolution\Factory
+     * @covers \League\Uri\Factory
      *
      * @param string $expected
      * @param string $uri
      */
-    public function testCreate($expected, $uri)
+    public function testCreate($expected, $uri): void
     {
-        $this->assertInstanceOf($expected, create($uri));
+        self::assertInstanceOf($expected, (new Factory())->create($uri));
     }
 
-    public function uriProvider()
+    public function uriProvider(): array
     {
         return [
             'http' => [
@@ -135,23 +119,22 @@ class FactoryTest extends TestCase
     /**
      * @dataProvider uriBaseUriProvider
      *
-     * @covers \League\Uri\create
-     * @covers \League\Uri\Resolution\Factory
-     * @covers \League\Uri\Resolution\Resolver
+     * @covers \League\Uri\Factory
+     * @covers \League\Uri\Resolver
      *
      * @param string $expected_class
      * @param string $expected_uri
      * @param string $uri
      * @param mixed  $base_uri
      */
-    public function testCreateWithBaseUri($expected_class, $expected_uri, $uri, $base_uri)
+    public function testCreateWithBaseUri($expected_class, $expected_uri, $uri, $base_uri): void
     {
-        $obj = create($uri, $base_uri);
-        $this->assertInstanceOf($expected_class, $obj);
-        $this->assertSame($expected_uri, (string) $obj);
+        $obj = (new Factory())->create($uri, $base_uri);
+        self::assertInstanceOf($expected_class, $obj);
+        self::assertSame($expected_uri, (string) $obj);
     }
 
-    public function uriBaseUriProvider()
+    public function uriBaseUriProvider(): array
     {
         $base_uri = 'https://example.com/index.php';
 
@@ -232,8 +215,7 @@ class FactoryTest extends TestCase
     }
 
     /**
-     * @covers \League\Uri\create
-     * @covers \League\Uri\Resolution\Factory
+     * @covers \League\Uri\Factory
      *
      * @dataProvider resolveProvider
      *
@@ -241,12 +223,12 @@ class FactoryTest extends TestCase
      * @param string $uri
      * @param string $expected
      */
-    public function testCreateResolve(string $base_uri, string $uri, string $expected)
+    public function testCreateResolve(string $base_uri, string $uri, string $expected): void
     {
-        $this->assertSame($expected, (string) create($uri, $base_uri));
+        self::assertSame($expected, (string) (new Factory())->create($uri, $base_uri));
     }
 
-    public function resolveProvider()
+    public function resolveProvider(): array
     {
         $base_uri = 'http://a/b/c/d;p?q';
 
@@ -293,32 +275,11 @@ class FactoryTest extends TestCase
         ];
     }
 
-    /**
-     * @covers \League\Uri\resolve
-     */
-    public function testResolveLetThrowResolvedInvalidUri()
+    public function testCreateAlwaysResolveUri(): void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $http = Http::createFromString('http://example.com/path/to/file');
-        $ftp = Ftp::createFromString('ftp//a/b/c/d;p');
-        resolve($ftp, $http);
-    }
-
-    /**
-     * @covers \League\Uri\resolve
-     * @covers \League\Uri\Resolution\Resolver::filterUri
-     */
-    public function testResolveThrowExceptionOnConstructor()
-    {
-        $this->expectException(TypeError::class);
-        resolve('ftp//a/b/c/d;p', 'toto');
-    }
-
-    public function testCreateAlwaysResolveUri()
-    {
-        $this->assertSame(
-            (string) create('../cats', 'http://www.example.com/dogs'),
-            (string) create('http://www.example.com/dogs/../cats')
+        self::assertSame(
+            (string) (new Factory())->create('../cats', 'http://www.example.com/dogs'),
+            (string) (new Factory())->create('http://www.example.com/dogs/../cats')
         );
     }
 }

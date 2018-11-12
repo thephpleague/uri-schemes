@@ -21,6 +21,7 @@ namespace League\Uri;
 use JsonSerializable;
 use League\Uri\Exception\InvalidUri;
 use League\Uri\Exception\MalformedUri;
+use League\Uri\Parser\RFC3986;
 use TypeError;
 
 class Uri implements UriInterface, JsonSerializable
@@ -145,7 +146,7 @@ class Uri implements UriInterface, JsonSerializable
      */
     public static function createFromString($uri = '')
     {
-        $components = parse($uri);
+        $components = RFC3986::parse($uri);
 
         return new static(
             $components['scheme'],
@@ -236,7 +237,7 @@ class Uri implements UriInterface, JsonSerializable
 
         $formatted_scheme = strtolower($scheme);
         static $pattern = '/^[a-z][a-z\+\.\-]*$/';
-        if (preg_match($pattern, $formatted_scheme)) {
+        if (1 === preg_match($pattern, $formatted_scheme)) {
             return $formatted_scheme;
         }
 
@@ -320,12 +321,12 @@ class Uri implements UriInterface, JsonSerializable
             (?<sub_delims>[!$&\'()*+,;=])|
             (?<encoded>%[A-F0-9]{2})
         )+$/x';
-        if (preg_match($reg_name, $formatted_host)) {
+        if (1 === preg_match($reg_name, $formatted_host)) {
             return $formatted_host;
         }
 
         static $gen_delims = '/[:\/?#\[\]@ ]/'; // Also includes space.
-        if (preg_match($gen_delims, $formatted_host)) {
+        if (1 === preg_match($gen_delims, $formatted_host)) {
             throw new MalformedUri(sprintf('The host `%s` is invalid : a registered name can not contain URI delimiters or spaces', $host));
         }
 
@@ -340,7 +341,7 @@ class Uri implements UriInterface, JsonSerializable
         // @codeCoverageIgnoreEnd
 
         $formatted_host = idn_to_ascii($formatted_host, 0, INTL_IDNA_VARIANT_UTS46, $arr);
-        if (!$arr['errors']) {
+        if (0 === $arr['errors'] && false !== $formatted_host) {
             return $formatted_host;
         }
 
@@ -379,12 +380,12 @@ class Uri implements UriInterface, JsonSerializable
 
         $res = [];
         foreach ($idn_errors as $error => $reason) {
-            if ($error_byte & $error) {
+            if (1 === ($error_byte & $error)) {
                 $res[] = $reason;
             }
         }
 
-        return empty($res) ? 'Unknown IDNA conversion error.' : implode(', ', $res).'.';
+        return [] === $res ? 'Unknown IDNA conversion error.' : implode(', ', $res).'.';
     }
 
     /**
@@ -399,7 +400,7 @@ class Uri implements UriInterface, JsonSerializable
     private function formatIp(string $host): string
     {
         $ip = substr($host, 1, -1);
-        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+        if (false !== filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
             return $host;
         }
 
@@ -410,21 +411,22 @@ class Uri implements UriInterface, JsonSerializable
                 (?<sub_delims>[!$&\'()*+,;=:])  # also include the : character
             )+
         $/ix';
-        if (preg_match($ip_future, $ip, $matches) && !in_array($matches['version'], ['4', '6'], true)) {
+        if (1 === preg_match($ip_future, $ip, $matches) && !in_array($matches['version'], ['4', '6'], true)) {
             return $host;
         }
 
-        if (false === ($pos = strpos($ip, '%'))) {
+        $pos = strpos($ip, '%');
+        if (false === $pos) {
             throw new MalformedUri(sprintf('The host `%s` is invalid : the IP host is malformed', $host));
         }
 
         static $gen_delims = '/[:\/?#\[\]@ ]/'; // Also includes space.
-        if (preg_match($gen_delims, rawurldecode(substr($ip, $pos)))) {
+        if (1 === preg_match($gen_delims, rawurldecode(substr($ip, $pos)))) {
             throw new MalformedUri(sprintf('The host `%s` is invalid : the IP host is malformed', $host));
         }
 
         $ip = substr($ip, 0, $pos);
-        if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+        if (false === filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
             throw new MalformedUri(sprintf('The host `%s` is invalid : the IP host is malformed', $host));
         }
 
@@ -452,7 +454,7 @@ class Uri implements UriInterface, JsonSerializable
             return null;
         }
 
-        if (!is_int($port) && !(is_string($port) && preg_match('/^\d*$/', $port))) {
+        if (!is_int($port) && !(is_string($port) && 1 === preg_match('/^\d*$/', $port))) {
             throw new MalformedUri(sprintf('The port `%s` is invalid', $port));
         }
 
@@ -502,7 +504,8 @@ class Uri implements UriInterface, JsonSerializable
     protected function formatPath(string $path): string
     {
         static $pattern = '/(?:[^'.self::REGEXP_CHARS_UNRESERVED.self::REGEXP_CHARS_SUBDELIM.'%:@\/}{]++\|%(?![A-Fa-f0-9]{2}))/';
-        return preg_replace_callback($pattern, [Uri::class, 'urlEncodeMatch'], $path);
+
+        return (string) preg_replace_callback($pattern, [Uri::class, 'urlEncodeMatch'], $path);
     }
 
     /**
@@ -538,7 +541,7 @@ class Uri implements UriInterface, JsonSerializable
      * @throws MalformedUri if the URI is in an invalid state according to RFC3986
      * @throws MalformedUri if the URI is in an invalid state according to scheme specific rules
      */
-    protected function assertValidState()
+    protected function assertValidState(): void
     {
         $this->uri = null;
 
@@ -555,9 +558,10 @@ class Uri implements UriInterface, JsonSerializable
             ));
         }
 
+        $pos = strpos($this->path, ':');
         if (null === $this->authority
             && null === $this->scheme
-            && false !== ($pos = strpos($this->path, ':'))
+            && false !== $pos
             && false === strpos(substr($this->path, 0, $pos), '/')
         ) {
             throw new MalformedUri(
@@ -645,7 +649,7 @@ class Uri implements UriInterface, JsonSerializable
     /**
      * {@inheritdoc}
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): string
     {
         return $this->__toString();
     }
@@ -653,7 +657,7 @@ class Uri implements UriInterface, JsonSerializable
     /**
      * {@inheritdoc}
      */
-    public function __debugInfo()
+    public function __debugInfo(): array
     {
         return [
             'scheme' => $this->scheme,
@@ -770,7 +774,7 @@ class Uri implements UriInterface, JsonSerializable
 
         $str = (string) $str;
         static $pattern = '/[\x00-\x1f\x7f]/';
-        if (!preg_match($pattern, $str)) {
+        if (1 !== preg_match($pattern, $str)) {
             return $str;
         }
 

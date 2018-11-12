@@ -21,7 +21,7 @@ namespace League\Uri;
 final class File extends Uri
 {
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     protected static $supported_schemes = [
         'file' => null,
@@ -87,7 +87,7 @@ final class File extends Uri
 
         static $pattern = ',^(?<delim>/)?(?<root>[a-zA-Z][:|\|])(?<rest>.*)?,';
 
-        return preg_replace_callback($pattern, function (array $matches): string {
+        return (string) preg_replace_callback($pattern, function (array $matches): string {
             return $matches['delim'].str_replace('|', ':', $matches['root']).$matches['rest'];
         }, $path);
     }
@@ -120,7 +120,7 @@ final class File extends Uri
     {
         $root = '';
         static $pattern = ',^(?<root>[a-zA-Z][:|\|]),';
-        if (preg_match($pattern, $uri, $matches)) {
+        if (1 === preg_match($pattern, $uri, $matches)) {
             $root = substr($matches['root'], 0, -1).':';
             $uri = substr($uri, strlen($root));
         }

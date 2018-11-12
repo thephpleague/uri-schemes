@@ -14,21 +14,18 @@
  * file that was distributed with this source code.
  */
 
-namespace LeagueTest\Uri\Resolution;
+namespace LeagueTest\Uri;
 
+use InvalidArgumentException;
 use League\Uri;
 use League\Uri\Ftp;
 use League\Uri\Http;
+use League\Uri\Info;
+use League\Uri\Relativizer;
+use League\Uri\Resolver;
 use League\Uri\UriInterface;
 use PHPUnit\Framework\TestCase;
 use TypeError;
-use function League\Uri\is_absolute;
-use function League\Uri\is_absolute_path;
-use function League\Uri\is_network_path;
-use function League\Uri\is_relative_path;
-use function League\Uri\is_same_document;
-use function League\Uri\normalize;
-use function League\Uri\relativize;
 
 /**
  * @group uri
@@ -40,8 +37,7 @@ class FunctionsTest extends TestCase
     const BASE_URI = 'http://a/b/c/d;p?q';
 
     /**
-     * @covers \League\Uri\relativize
-     * @covers \League\Uri\Resolution\Relativizer
+     * @covers \League\Uri\Relativizer
      *
      * @dataProvider relativizeProvider
      *
@@ -49,14 +45,14 @@ class FunctionsTest extends TestCase
      * @param string $resolved
      * @param string $expected
      */
-    public function testRelativize(string $uri, string $resolved, string $expected)
+    public function testRelativize(string $uri, string $resolved, string $expected): void
     {
-        $uri      = Http::createFromString($uri);
+        $uri   = Http::createFromString($uri);
         $resolved = Http::createFromString($resolved);
-        $this->assertSame($expected, (string) relativize($resolved, $uri));
+        self::assertSame($expected, (string) Relativizer::relativize($resolved, $uri));
     }
 
-    public function relativizeProvider()
+    public function relativizeProvider(): array
     {
         return [
             'different scheme'        => [self::BASE_URI,       'https://a/b/c/d;p?q',   'https://a/b/c/d;p?q'],
@@ -100,20 +96,38 @@ class FunctionsTest extends TestCase
     }
 
     /**
-     * @covers \League\Uri\relativize
-     * @covers \League\Uri\Resolution\Relativizer
+     * @covers \League\Uri\Resolver
      */
-    public function testRelativizerThrowExceptionOnConstructor()
+    public function testResolveLetThrowResolvedInvalidUri(): void
     {
-        $this->expectException(TypeError::class);
-        relativize('ftp//a/b/c/d;p', 'toto');
+        self::expectException(InvalidArgumentException::class);
+        $http = Http::createFromString('http://example.com/path/to/file');
+        $ftp = Ftp::createFromString('ftp//a/b/c/d;p');
+        Resolver::resolve($ftp, $http);
     }
 
     /**
-     * @covers \League\Uri\relativize
-     * @covers \League\Uri\Resolution\Relativizer
-     * @covers \League\Uri\resolve
-     * @covers \League\Uri\Resolution\Factory
+     * @covers \League\Uri\Resolver
+     */
+    public function testResolveThrowExceptionOnConstructor(): void
+    {
+        self::expectException(TypeError::class);
+        Resolver::resolve('ftp//a/b/c/d;p', 'toto');
+    }
+
+    /**
+     * @covers \League\Uri\Relativizer
+     */
+    public function testRelativizerThrowExceptionOnConstructor(): void
+    {
+        self::expectException(TypeError::class);
+        Relativizer::relativize('ftp//a/b/c/d;p', 'toto');
+    }
+
+    /**
+     * @covers \League\Uri\Relativizer
+     * @covers \League\Uri\Resolver
+     * @covers \League\Uri\Factory
      *
      * @dataProvider relativizeAndResolveProvider
      *
@@ -127,15 +141,15 @@ class FunctionsTest extends TestCase
         string $uri,
         string $expectedRelativize,
         string $expectedResolved
-    ) {
+    ): void {
         $baseUri = Http::createFromString($baseUri);
         $uri = Http::createFromString($uri);
 
-        $relativeUri = relativize($uri, $baseUri);
-        $this->assertSame($expectedRelativize, (string) $relativeUri);
+        $relativeUri = Relativizer::relativize($uri, $baseUri);
+        self::assertSame($expectedRelativize, (string) $relativeUri);
     }
 
-    public function relativizeAndResolveProvider()
+    public function relativizeAndResolveProvider(): array
     {
         return [
             'empty path'            => [self::BASE_URI, 'http://a/', '../../',   'http://a/'],
@@ -156,28 +170,24 @@ class FunctionsTest extends TestCase
     /**
      * @dataProvider uriProvider
      *
-     * @covers \League\Uri\is_absolute
-     * @covers \League\Uri\is_absolute_path
-     * @covers \League\Uri\is_network_path
-     * @covers \League\Uri\is_relative_path
-     * @covers \League\Uri\is_same_document
-     * @covers \League\Uri\normalize
+     * @covers \League\Uri\Info
+     *
      * @param mixed  $uri
      * @param mixed  $base_uri
      * @param bool[] $infos
      */
-    public function testStat($uri, $base_uri, array $infos)
+    public function testStat($uri, $base_uri, array $infos): void
     {
         if (null !== $base_uri) {
-            $this->assertSame($infos['same_document'], is_same_document($uri, $base_uri));
+            self::assertSame($infos['same_document'], Info::isSameDocument($uri, $base_uri));
         }
-        $this->assertSame($infos['relative_path'], is_relative_path($uri));
-        $this->assertSame($infos['absolute_path'], is_absolute_path($uri));
-        $this->assertSame($infos['absolute_uri'], is_absolute($uri));
-        $this->assertSame($infos['network_path'], is_network_path($uri));
+        self::assertSame($infos['relative_path'], Info::isRelativePath($uri));
+        self::assertSame($infos['absolute_path'], Info::isAbsolutePath($uri));
+        self::assertSame($infos['absolute_uri'], Info::isAbsolute($uri));
+        self::assertSame($infos['network_path'], Info::isNetworkPath($uri));
     }
 
-    public function uriProvider()
+    public function uriProvider(): array
     {
         return [
             'absolute uri' => [
@@ -241,18 +251,17 @@ class FunctionsTest extends TestCase
     /**
      * @dataProvider failedUriProvider
      *
-     * @covers \League\Uri\is_same_document
-     * @covers \League\Uri\normalize
+     * @covers \League\Uri\Info
      * @param mixed $uri
      * @param mixed $base_uri
      */
-    public function testStatThrowsInvalidArgumentException($uri, $base_uri)
+    public function testStatThrowsInvalidArgumentException($uri, $base_uri): void
     {
-        $this->expectException(TypeError::class);
-        is_same_document($uri, $base_uri);
+        self::expectException(TypeError::class);
+        Info::isSameDocument($uri, $base_uri);
     }
 
-    public function failedUriProvider()
+    public function failedUriProvider(): array
     {
         return [
             'invalid uri' => [
@@ -269,32 +278,28 @@ class FunctionsTest extends TestCase
     /**
      * @dataProvider functionProvider
      *
-     * @covers \League\Uri\is_absolute
-     * @covers \League\Uri\is_absolute_path
-     * @covers \League\Uri\is_network_path
-     * @covers \League\Uri\is_relative_path
-     * @covers \League\Uri\normalize
+     * @covers \League\Uri\Info
      *
      * @param string $function
      */
-    public function testIsFunctionsThrowsTypeError(string $function)
+    public function testIsFunctionsThrowsTypeError(string $function): void
     {
-        $this->expectException(TypeError::class);
-        ($function)('http://example.com');
+        self::expectException(TypeError::class);
+        Info::$function('http://example.com');
     }
 
-    public function functionProvider()
+    public function functionProvider(): array
     {
         return [
-            ['\League\Uri\is_absolute'],
-            ['\League\Uri\is_network_path'],
-            ['\League\Uri\is_absolute_path'],
-            ['\League\Uri\is_relative_path'],
+            ['isAbsolute'],
+            ['isNetworkPath'],
+            ['isAbsolutePath'],
+            ['isRelativePath'],
         ];
     }
 
     /**
-     * @covers \League\Uri\normalize
+     * @covers \League\Uri\Info
      *
      * @dataProvider sameValueAsProvider
      *
@@ -302,12 +307,12 @@ class FunctionsTest extends TestCase
      * @param UriInterface $uri2
      * @param bool         $expected
      */
-    public function testSameValueAs($uri1, $uri2, bool $expected)
+    public function testSameValueAs($uri1, $uri2, bool $expected): void
     {
-        $this->assertSame($expected, (string) normalize($uri1) == (string) normalize($uri2));
+        self::assertSame($expected, Info::isSameDocument($uri1, $uri2));
     }
 
-    public function sameValueAsProvider()
+    public function sameValueAsProvider(): array
     {
         return [
             '2 disctincts URIs' => [
@@ -356,17 +361,5 @@ class FunctionsTest extends TestCase
                 true,
             ],
         ];
-    }
-
-    /**
-     * @covers \League\Uri\normalize
-     */
-    public function testNormalizeDoesNotAlterPathEncoding()
-    {
-        $rawUrl = 'HtTp://vonNN.com/ipsam-nulla-adipisci-laboriosam-dignissimos-accusamus-eum-voluptatem';
-        $this->assertSame(
-            'http://vonnn.com/ipsam-nulla-adipisci-laboriosam-dignissimos-accusamus-eum-voluptatem',
-            (string) normalize(Http::createFromString($rawUrl))
-        );
     }
 }

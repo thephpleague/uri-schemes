@@ -21,7 +21,7 @@ namespace League\Uri;
 final class Ws extends Uri
 {
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     protected static $supported_schemes = [
         'ws' => 80,

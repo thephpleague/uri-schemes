@@ -34,22 +34,22 @@ class WsTest extends TestCase
      * @param string $expected
      * @param string $input
      */
-    public function testCreateFromString($input, $expected)
+    public function testCreateFromString($input, $expected): void
     {
-        $this->assertSame($expected, (string) Ws::createFromString($input));
+        self::assertSame($expected, (string) Ws::createFromString($input));
     }
 
     /**
      * @covers ::withPort
      * @covers ::formatPort
      */
-    public function testModificationFailedWithUnsupportedPort()
+    public function testModificationFailedWithUnsupportedPort(): void
     {
-        $this->expectException(MalformedUri::class);
+        self::expectException(MalformedUri::class);
         Ws::createFromString('wss://example.com/path')->withPort(12365894);
     }
 
-    public function validUrlProvider()
+    public function validUrlProvider(): array
     {
         return [
             'with default port' => [
@@ -84,13 +84,13 @@ class WsTest extends TestCase
      * @dataProvider invalidUrlProvider
      * @param string $uri
      */
-    public function testConstructorThrowInvalidArgumentException($uri)
+    public function testConstructorThrowInvalidArgumentException($uri): void
     {
-        $this->expectException(InvalidUri::class);
+        self::expectException(InvalidUri::class);
         Ws::createFromString($uri);
     }
 
-    public function invalidUrlProvider()
+    public function invalidUrlProvider(): array
     {
         return [
             ['http://example.com'],
@@ -103,9 +103,9 @@ class WsTest extends TestCase
     /**
      * @covers ::isValidUri
      */
-    public function testModificationFailedWithEmptyAuthority()
+    public function testModificationFailedWithEmptyAuthority(): void
     {
-        $this->expectException(InvalidUri::class);
+        self::expectException(InvalidUri::class);
         Ws::createFromString('wss://example.com/path')
             ->withScheme('')
             ->withHost('')
@@ -118,12 +118,12 @@ class WsTest extends TestCase
      * @param string   $uri
      * @param int|null $port
      */
-    public function testPort($uri, $port)
+    public function testPort(string $uri, ?int $port): void
     {
-        $this->assertSame($port, Ws::createFromString($uri)->getPort());
+        self::assertSame($port, Ws::createFromString($uri)->getPort());
     }
 
-    public function portProvider()
+    public function portProvider(): array
     {
         return [
             ['ws://www.example.com:443/', 443],

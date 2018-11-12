@@ -33,12 +33,12 @@ class FtpTest extends TestCase
      * @param string $uri
      * @param string $expected
      */
-    public function testCreateFromString($uri, $expected)
+    public function testCreateFromString($uri, $expected): void
     {
-        $this->assertSame($expected, (string) Ftp::createFromString($uri));
+        self::assertSame($expected, (string) Ftp::createFromString($uri));
     }
 
-    public function validUrlProvider()
+    public function validUrlProvider(): array
     {
         return [
             'with default port' => [
@@ -74,13 +74,13 @@ class FtpTest extends TestCase
      *
      * @param string $uri
      */
-    public function testConstructorThrowInvalidArgumentException($uri)
+    public function testConstructorThrowInvalidArgumentException($uri): void
     {
-        $this->expectException(InvalidUri::class);
+        self::expectException(InvalidUri::class);
         Ftp::createFromString($uri);
     }
 
-    public function invalidUrlProvider()
+    public function invalidUrlProvider(): array
     {
         return [
             ['http://example.com'],
@@ -93,9 +93,9 @@ class FtpTest extends TestCase
     /**
      * @covers ::isValidUri
      */
-    public function testModificationFailedWithEmptyAuthority()
+    public function testModificationFailedWithEmptyAuthority(): void
     {
-        $this->expectException(InvalidUri::class);
+        self::expectException(InvalidUri::class);
         Ftp::createFromString('ftp://example.com/path')
             ->withScheme('')
             ->withHost('')
@@ -108,12 +108,12 @@ class FtpTest extends TestCase
      * @param string   $uri
      * @param int|null $port
      */
-    public function testPort($uri, $port)
+    public function testPort($uri, $port): void
     {
-        $this->assertSame($port, Ftp::createFromString($uri)->getPort());
+        self::assertSame($port, Ftp::createFromString($uri)->getPort());
     }
 
-    public function portProvider()
+    public function portProvider(): array
     {
         return [
             ['ftp://www.example.com:443/', 443],

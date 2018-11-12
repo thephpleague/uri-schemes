@@ -31,9 +31,9 @@ class DataTest extends TestCase
      * @covers ::isValidUri
      * @covers ::formatPath
      */
-    public function testDefaultConstructor()
+    public function testDefaultConstructor(): void
     {
-        $this->assertSame(
+        self::assertSame(
             'data:text/plain;charset=us-ascii,',
             (string) Data::createFromString('data:')
         );
@@ -48,12 +48,12 @@ class DataTest extends TestCase
      * @param string $uri
      * @param string $path
      */
-    public function testCreateFromString($uri, $path)
+    public function testCreateFromString($uri, $path): void
     {
-        $this->assertSame($path, Data::createFromString($uri)->getPath());
+        self::assertSame($path, Data::createFromString($uri)->getPath());
     }
 
-    public function validUrlProvider()
+    public function validUrlProvider(): array
     {
         return [
             'simple string' => [
@@ -85,13 +85,13 @@ class DataTest extends TestCase
      * @dataProvider invalidUrlProvider
      * @param string $uri
      */
-    public function testCreateFromStringFailed($uri)
+    public function testCreateFromStringFailed($uri): void
     {
-        $this->expectException(InvalidUri::class);
+        self::expectException(InvalidUri::class);
         Data::createFromString($uri);
     }
 
-    public function invalidUrlProvider()
+    public function invalidUrlProvider(): array
     {
         return [
             'invalid format' => ['foo:bar'],
@@ -106,13 +106,13 @@ class DataTest extends TestCase
      * @dataProvider invalidComponentProvider
      * @param string $uri
      */
-    public function testCreateFromStringFailedWithWrongComponent($uri)
+    public function testCreateFromStringFailedWithWrongComponent($uri): void
     {
-        $this->expectException(MalformedUri::class);
+        self::expectException(MalformedUri::class);
         Data::createFromString($uri);
     }
 
-    public function invalidComponentProvider()
+    public function invalidComponentProvider(): array
     {
         return [
             'invalid data' => ['data:image/png;base64,zzz28'],
@@ -127,13 +127,13 @@ class DataTest extends TestCase
      * @dataProvider invalidDataPath
      * @param string $path
      */
-    public function testCreateFromPathFailed($path)
+    public function testCreateFromPathFailed($path): void
     {
-        $this->expectException(InvalidUri::class);
+        self::expectException(InvalidUri::class);
         Data::createFromPath($path);
     }
 
-    public function invalidDataPath()
+    public function invalidDataPath(): array
     {
         return [
             'invalid format' => ['/usr/bin/yeah'],
@@ -144,9 +144,9 @@ class DataTest extends TestCase
      * @covers ::assertValidPath
      * @covers ::formatPath
      */
-    public function testCreateFromComponentsFailedWithInvalidArgumentException()
+    public function testCreateFromComponentsFailedWithInvalidArgumentException(): void
     {
-        $this->expectException(InvalidUri::class);
+        self::expectException(InvalidUri::class);
         Data::createFromString('data:image/png;base64,°28');
     }
 
@@ -155,18 +155,18 @@ class DataTest extends TestCase
      * @covers ::validateParameter
      * @covers ::formatPath
      */
-    public function testCreateFromComponentsFailedInvalidMediatype()
+    public function testCreateFromComponentsFailedInvalidMediatype(): void
     {
-        $this->expectException(MalformedUri::class);
+        self::expectException(MalformedUri::class);
         Data::createFromString('data:image/png;base64=toto;base64,dsqdfqfd');
     }
 
     /**
      * @covers ::isValidUri
      */
-    public function testCreateFromComponentsFailedWithException()
+    public function testCreateFromComponentsFailedWithException(): void
     {
-        $this->expectException(InvalidUri::class);
+        self::expectException(InvalidUri::class);
         Data::createFromString('data:text/plain;charset=us-ascii,Bonjour%20le%20monde%21#fragment');
     }
 
@@ -174,11 +174,11 @@ class DataTest extends TestCase
      * @covers ::assertValidPath
      * @covers ::formatPath
      */
-    public function testWithPath()
+    public function testWithPath(): void
     {
         $path = 'text/plain;charset=us-ascii,Bonjour%20le%20monde%21';
         $uri = Data::createFromString('data:'.$path);
-        $this->assertSame($uri, $uri->withPath($path));
+        self::assertSame($uri, $uri->withPath($path));
     }
 
     /**
@@ -188,13 +188,13 @@ class DataTest extends TestCase
      * @param string $path
      * @param string $expected
      */
-    public function testCreateFromPath($path, $expected)
+    public function testCreateFromPath($path, $expected): void
     {
         $uri = Data::createFromPath(__DIR__.'/data/'.$path);
-        $this->assertContains($expected, $uri->getPath());
+        self::assertContains($expected, $uri->getPath());
     }
 
-    public function validFilePath()
+    public function validFilePath(): array
     {
         return [
             'text file' => ['hello-world.txt', 'text/plain'],
@@ -205,9 +205,9 @@ class DataTest extends TestCase
     /**
      * @covers ::isValidUri
      */
-    public function testInvalidUri()
+    public function testInvalidUri(): void
     {
-        $this->expectException(InvalidUri::class);
+        self::expectException(InvalidUri::class);
         Data::createFromString('http:text/plain;charset=us-ascii,Bonjour%20le%20monde%21');
     }
 }

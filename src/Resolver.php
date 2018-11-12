@@ -16,9 +16,8 @@
 
 declare(strict_types=1);
 
-namespace League\Uri\Resolution;
+namespace League\Uri;
 
-use League\Uri\UriInterface;
 use Psr\Http\Message\UriInterface as Psr7UriInterface;
 use TypeError;
 
@@ -60,15 +59,15 @@ final class Resolver
                 ->withPath(self::removeDotSegments($uri->getPath()));
         }
 
-        list($base_uri_user, $base_uri_pass) = explode(':', $base_uri->getUserInfo(), 2) + [1 => null];
-        list($uri_path, $uri_query) = self::resolvePathAndQuery($uri, $base_uri);
+        [$user, $pass] = explode(':', $base_uri->getUserInfo(), 2) + [1 => null];
+        [$uri_path, $uri_query] = self::resolvePathAndQuery($uri, $base_uri);
 
         return $uri
             ->withPath(self::removeDotSegments($uri_path))
             ->withQuery($uri_query)
             ->withHost($base_uri->getHost())
             ->withPort($base_uri->getPort())
-            ->withUserInfo($base_uri_user, $base_uri_pass)
+            ->withUserInfo((string) $user, $pass)
             ->withScheme($base_uri->getScheme())
         ;
     }
@@ -80,7 +79,7 @@ final class Resolver
      *
      * @throws TypeError if the URI object does not implements the supported interfaces.
      */
-    private static function filterUri($uri)
+    private static function filterUri($uri): void
     {
         if (!$uri instanceof Psr7UriInterface && !$uri instanceof UriInterface) {
             throw new TypeError(sprintf('The uri must be a valid URI object received `%s`', gettype($uri)));
@@ -184,7 +183,7 @@ final class Resolver
         if ('' !== $base_path) {
             $segments = explode('/', $base_path);
             array_pop($segments);
-            if (!empty($segments)) {
+            if ([] !== $segments) {
                 $target_path = implode('/', $segments).'/'.$target_path;
             }
         }

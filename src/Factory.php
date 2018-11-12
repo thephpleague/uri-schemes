@@ -16,23 +16,13 @@
 
 declare(strict_types=1);
 
-namespace League\Uri\Resolution;
+namespace League\Uri;
 
-use League\Uri\Data;
 use League\Uri\Exception\InvalidUri;
 use League\Uri\Exception\MalformedUri;
-use League\Uri\File;
-use League\Uri\Ftp;
-use League\Uri\Http;
-use League\Uri\Uri;
-use League\Uri\UriInterface;
-use League\Uri\Ws;
+use League\Uri\Parser\RFC3986;
 use Psr\Http\Message\UriInterface as Psr7UriInterface;
 use ReflectionClass;
-use Traversable;
-use TypeError;
-use function League\Uri\parse;
-use function League\Uri\resolve;
 
 final class Factory
 {
@@ -69,14 +59,10 @@ final class Factory
     /**
      * new instance
      *
-     * @param array|Traversable $map An override map of URI classes indexed by their supported schemes.
+     * @param iterable $map An override map of URI classes indexed by their supported schemes.
      */
-    public function __construct($map = [])
+    public function __construct(iterable $map = [])
     {
-        if (!is_array($map) && !$map instanceof Traversable) {
-            throw new TypeError(sprintf('The map must be an iterable structure, `%s` given', gettype($map)));
-        }
-
         foreach ($map as $scheme => $className) {
             $this->addMap(strtolower($scheme), $className);
         }
@@ -91,13 +77,13 @@ final class Factory
      * @throws MalformedUri if the scheme is invalid
      * @throws InvalidUri   if the class does not implements a supported interface
      */
-    private function addMap(string $scheme, string $className)
+    private function addMap(string $scheme, string $className): void
     {
-        if (!preg_match(self::REGEXP_SCHEME, $scheme)) {
+        if (1 !== preg_match(self::REGEXP_SCHEME, $scheme)) {
             throw new MalformedUri(sprintf('The scheme `%s` is invalid', $scheme));
         }
 
-        if (empty(array_intersect((new ReflectionClass($className))->getInterfaceNames(), self::$uri_interfaces))) {
+        if ([] === array_intersect((new ReflectionClass($className))->getInterfaceNames(), self::$uri_interfaces)) {
             throw new InvalidUri(sprintf('The class `%s` does not implement a supported class', $className));
         }
 
@@ -128,9 +114,8 @@ final class Factory
         }
 
         if (!$uri instanceof UriInterface && !$uri instanceof Psr7UriInterface) {
-            $components = parse($uri);
-            $uri = (new ReflectionClass($this->getClassName($components['scheme'], $base_uri)))
-                ->newInstanceWithoutConstructor()
+            $components = RFC3986::parse($uri);
+            $uri = $this->getUriObject($components['scheme'], $base_uri)
                 ->withHost($components['host'] ?? '')
                 ->withPort($components['port'])
                 ->withUserInfo($components['user'] ?? '', $components['pass'])
@@ -142,18 +127,18 @@ final class Factory
         }
 
         if (null !== $base_uri) {
-            return resolve($uri, $base_uri);
+            return Resolver::resolve($uri, $base_uri);
         }
 
         if ('' === $uri->getScheme()) {
-            throw new MalformedUri(sprintf('the URI `%s` must be absolute', $uri));
+            throw new MalformedUri(sprintf('the URI `%s` must be absolute', (string) $uri));
         }
 
         if ('' === $uri->getAuthority()) {
             return $uri;
         }
 
-        return resolve($uri, $uri->withFragment('')->withQuery('')->withPath(''));
+        return Resolver::resolve($uri, $uri->withFragment('')->withQuery('')->withPath(''));
     }
 
     /**
@@ -162,15 +147,16 @@ final class Factory
      * @param string|null $scheme   URI scheme component
      * @param mixed       $base_uri base URI object
      *
-     * @return string
+     * @return Psr7UriInterface|UriInterface
      */
-    private function getClassName(string $scheme = null, $base_uri): string
+    private function getUriObject(string $scheme = null, $base_uri)
     {
         $scheme = strtolower($scheme ?? '');
+        $className = $this->map[$scheme] ?? Uri::class;
         if (null !== $base_uri && in_array($scheme, [$base_uri->getScheme(), ''], true)) {
-            return get_class($base_uri);
+            $className = $base_uri;
         }
 
-        return $this->map[$scheme] ?? Uri::class;
+        return (new ReflectionClass($className))->newInstanceWithoutConstructor();
     }
 }

@@ -18,17 +18,44 @@ declare(strict_types=1);
 
 namespace League\Uri;
 
+use finfo;
 use League\Uri\Exception\InvalidUri;
 use League\Uri\Exception\MalformedUri;
 
 final class Data extends Uri
 {
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     protected static $supported_schemes = [
         'data' => null,
     ];
+
+    /**
+     * Create a new instance from a file path
+     *
+     * @param string $path the file path
+     *
+     * @return self
+     */
+    public static function createFromPath(string $path)
+    {
+        $raw = @file_get_contents($path);
+        if (false === $raw) {
+            throw new InvalidUri(sprintf('The file `%s` does not exist or is not readable', $path));
+        }
+
+        $mimetype = str_replace(' ', '', (new finfo(FILEINFO_MIME))->file($path));
+
+        return new self(
+            'data',
+            null,
+            null,
+            null,
+            null,
+            $mimetype.';base64,'.base64_encode($raw)
+        );
+    }
 
     /**
      * Tell whether the Data URI is in valid state.
@@ -69,13 +96,13 @@ final class Data extends Uri
             return 'text/plain;charset=us-ascii,';
         }
 
-        if (!mb_detect_encoding($path, 'US-ASCII', true) || false === strpos($path, ',')) {
+        if (false === mb_detect_encoding($path, 'US-ASCII', true) || false === strpos($path, ',')) {
             throw new MalformedUri(sprintf('The path `%s` is invalid according to RFC2937', $path));
         }
 
         $parts = explode(',', $path, 2) + [1 => null];
-        $mediatype = explode(';', $parts[0], 2) + [1 => null];
-        $data = $parts[1];
+        $mediatype = explode(';', (string) $parts[0], 2) + [1 => null];
+        $data = (string) $parts[1];
         $mimetype = $mediatype[0];
         if (null === $mimetype || '' === $mimetype) {
             $mimetype = 'text/plain';
@@ -100,22 +127,21 @@ final class Data extends Uri
      *
      * @see https://tools.ietf.org/html/rfc2397
      *
-     * @throws InvalidUriComponent If the mediatype or the data are not compliant
-     *                             with the RFC2397
+     * @throws MalformedUri If the mediatype or the data are not compliant with the RFC2397
      */
-    private function assertValidPath(string $mimetype, string $parameters, string $data)
+    private function assertValidPath(string $mimetype, string $parameters, string $data): void
     {
-        if (!preg_match(',^\w+/[-.\w]+(?:\+[-.\w]+)?$,', $mimetype)) {
+        if (1 !== preg_match(',^\w+/[-.\w]+(?:\+[-.\w]+)?$,', $mimetype)) {
             throw new MalformedUri(sprintf('The path mimetype `%s` is invalid', $mimetype));
         }
 
-        $is_binary = preg_match(',(;|^)base64$,', $parameters, $matches);
+        $is_binary = 1 === preg_match(',(;|^)base64$,', $parameters, $matches);
         if ($is_binary) {
             $parameters = substr($parameters, 0, - strlen($matches[0]));
         }
 
         $res = array_filter(array_filter(explode(';', $parameters), [$this, 'validateParameter']));
-        if (!empty($res)) {
+        if ([] !== $res) {
             throw new MalformedUri(sprintf('The path paremeters `%s` is invalid', $parameters));
         }
 
@@ -141,30 +167,5 @@ final class Data extends Uri
         $properties = explode('=', $parameter);
 
         return 2 != count($properties) || strtolower($properties[0]) === 'base64';
-    }
-
-    /**
-     * Create a new instance from a file path
-     *
-     * @param string $path the file path
-     *
-     * @return self
-     */
-    public static function createFromPath(string $path)
-    {
-        if (!file_exists($path) || !is_readable($path)) {
-            throw new InvalidUri(sprintf('The file `%s` does not exist or is not readable', $path));
-        }
-
-        $mimetype = str_replace(' ', '', (new \finfo(FILEINFO_MIME))->file($path));
-
-        return new static(
-            'data',
-            null,
-            null,
-            null,
-            null,
-            $mimetype.';base64,'.base64_encode(file_get_contents($path))
-        );
     }
 }

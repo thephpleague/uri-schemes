@@ -29,9 +29,9 @@ class FileTest extends TestCase
     /**
      * @covers ::formatHost
      */
-    public function testDefaultConstructor()
+    public function testDefaultConstructor(): void
     {
-        $this->assertSame('', (string) File::createFromString());
+        self::assertSame('', (string) File::createFromString());
     }
 
     /**
@@ -43,12 +43,12 @@ class FileTest extends TestCase
      * @param string $uri
      * @param string $expected
      */
-    public function testCreateFromString($uri, $expected)
+    public function testCreateFromString($uri, $expected): void
     {
-        $this->assertSame($expected, (string) File::createFromString($uri));
+        self::assertSame($expected, (string) File::createFromString($uri));
     }
 
-    public function validUrlProvider()
+    public function validUrlProvider(): array
     {
         return [
             'relative path' => [
@@ -100,13 +100,13 @@ class FileTest extends TestCase
      *
      * @param string $uri
      */
-    public function testConstructorThrowsException($uri)
+    public function testConstructorThrowsException($uri): void
     {
-        $this->expectException(InvalidUri::class);
+        self::expectException(InvalidUri::class);
         File::createFromString($uri);
     }
 
-    public function invalidUrlProvider()
+    public function invalidUrlProvider(): array
     {
         return [
             'no authority 1' => ['file:example.com'],
@@ -125,12 +125,12 @@ class FileTest extends TestCase
      * @param string $uri
      * @param string $expected
      */
-    public function testCreateFromUnixPath($uri, $expected)
+    public function testCreateFromUnixPath($uri, $expected): void
     {
-        $this->assertSame($expected, (string) File::createFromUnixPath($uri));
+        self::assertSame($expected, (string) File::createFromUnixPath($uri));
     }
 
-    public function unixpathProvider()
+    public function unixpathProvider(): array
     {
         return [
             'relative path' => [
@@ -163,12 +163,12 @@ class FileTest extends TestCase
      * @param string $uri
      * @param string $expected
      */
-    public function testCreateFromWindowsLocalPath($uri, $expected)
+    public function testCreateFromWindowsLocalPath($uri, $expected): void
     {
-        $this->assertSame($expected, (string) File::createFromWindowsPath($uri));
+        self::assertSame($expected, (string) File::createFromWindowsPath($uri));
     }
 
-    public function windowLocalPathProvider()
+    public function windowLocalPathProvider(): array
     {
         return [
             'relative path' => [

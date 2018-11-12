@@ -24,7 +24,7 @@ use Psr\Http\Message\UriInterface;
 final class Http extends Uri implements UriInterface
 {
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     protected static $supported_schemes = [
         'http' => 80,
@@ -98,7 +98,11 @@ final class Http extends Uri implements UriInterface
         $user = $server['PHP_AUTH_USER'];
         $pass = $server['PHP_AUTH_PW'];
         if (0 === strpos(strtolower($server['HTTP_AUTHORIZATION']), 'basic')) {
-            list($user, $pass) = explode(':', base64_decode(substr($server['HTTP_AUTHORIZATION'], 6)), 2) + [1 => null];
+            $userinfo = base64_decode(substr($server['HTTP_AUTHORIZATION'], 6), true);
+            if (false === $userinfo) {
+                throw new InvalidUri('The user info could not be detected');
+            }
+            [$user, $pass] = explode(':', $userinfo, 2) + [1 => null];
         }
 
         if (null !== $user) {
@@ -141,7 +145,7 @@ final class Http extends Uri implements UriInterface
             throw new InvalidUri('The host could not be detected');
         }
 
-        if (!filter_var($server['SERVER_ADDR'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+        if (false === filter_var($server['SERVER_ADDR'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
             $server['SERVER_ADDR'] = '['.$server['SERVER_ADDR'].']';
         }
 

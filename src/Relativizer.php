@@ -16,13 +16,10 @@
 
 declare(strict_types=1);
 
-namespace League\Uri\Resolution;
+namespace League\Uri;
 
-use League\Uri\Uri;
-use League\Uri\UriInterface;
 use Psr\Http\Message\UriInterface as Psr7UriInterface;
 use TypeError;
-use function League\Uri\is_relative_path;
 
 final class Relativizer
 {
@@ -103,7 +100,7 @@ final class Relativizer
     {
         return $base_uri->getScheme() === $uri->getScheme()
             && $base_uri->getAuthority() === $uri->getAuthority()
-            && !is_relative_path($uri)
+            && !Info::isRelativePath($uri)
         ;
     }
 
