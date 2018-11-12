@@ -29,45 +29,12 @@ use PHPUnit\Framework\TestCase;
 class FactoryTest extends TestCase
 {
     /**
-     * @dataProvider invalidMapperData
-     *
-     * @covers \League\Uri\Factory
-     */
-    public function testFactoryThrowExceptionOnConstruction(iterable $data): void
-    {
-        self::expectException(InvalidUri::class);
-        new Factory($data);
-    }
-
-    public function invalidMapperData(): array
-    {
-        return [
-            'invalid scheme' => [
-                'data' => [
-                    'tété' => Http::class,
-                ],
-            ],
-            'invalid class' => [
-                'data' => [
-                    'telnet' => InvalidUri::class,
-                ],
-            ],
-        ];
-    }
-
-    public function testFactoryAddMapper(): void
-    {
-        $factory = new Factory(['http' => Uri::class]);
-        self::assertInstanceOf(Uri::class, $factory->create('http://example.com'));
-    }
-
-    /**
      * @covers \League\Uri\Factory
      */
     public function testCreateThrowExceptionWithBaseUriNotAbsolute(): void
     {
         self::expectException(InvalidUri::class);
-        (new Factory())->create('/path/to/you', Http::createFromString('//example.com'));
+        Factory::create('/path/to/you', Http::createFromString('//example.com'));
     }
 
     /**
@@ -76,7 +43,7 @@ class FactoryTest extends TestCase
     public function testCreateThrowExceptionWithUriNotAbsolute(): void
     {
         self::expectException(InvalidUri::class);
-        (new Factory())->create('/path/to/you');
+        Factory::create('/path/to/you');
     }
 
     /**
@@ -86,22 +53,22 @@ class FactoryTest extends TestCase
      */
     public function testCreate(string $expected, string $uri): void
     {
-        self::assertInstanceOf($expected, (new Factory())->create($uri));
+        self::assertInstanceOf($expected, Factory::create($uri));
     }
 
     public function uriProvider(): array
     {
         return [
             'http' => [
-                'expected' => Http::class,
+                'expected' => Uri::class,
                 'uri' => 'http://www.example.com',
             ],
             'https' => [
-                'expected' => Http::class,
+                'expected' => Uri::class,
                 'uri' => 'https://www.example.com',
             ],
             'ftp' => [
-                'expected' => Ftp::class,
+                'expected' => Uri::class,
                 'uri' => 'ftp://www.example.com',
             ],
             'generic' => [
@@ -121,7 +88,7 @@ class FactoryTest extends TestCase
      */
     public function testCreateWithBaseUri(string $expected_class, string $expected_uri, string $uri, $base_uri): void
     {
-        $obj = (new Factory())->create($uri, $base_uri);
+        $obj = Factory::create($uri, $base_uri);
         self::assertInstanceOf($expected_class, $obj);
         self::assertSame($expected_uri, (string) $obj);
     }
@@ -192,13 +159,13 @@ class FactoryTest extends TestCase
                 'base_uri' => Http::createFromString('http://a/b/c/d;p?q'),
             ],
             'uri with a base URI as string' => [
-                'expected_class' => Http::class,
+                'expected_class' => Uri::class,
                 'expected_uri' => 'https://example.com/path/to/file',
                 'uri' => 'https://example.com/path/to/file',
                 'base_uri' => 'ftp://example.com/index.php',
             ],
             'uri with a base URI as league URI' => [
-                'expected_class' => Http::class,
+                'expected_class' => Uri::class,
                 'expected_uri' => 'https://example.com/path/to/file',
                 'uri' => 'https://example.com/path/to/file',
                 'base_uri' => Ftp::createFromString('ftp://example.com/index.php'),
@@ -213,7 +180,7 @@ class FactoryTest extends TestCase
      */
     public function testCreateResolve(string $base_uri, string $uri, string $expected): void
     {
-        self::assertSame($expected, (string) (new Factory())->create($uri, $base_uri));
+        self::assertSame($expected, (string) Factory::create($uri, $base_uri));
     }
 
     public function resolveProvider(): array
@@ -266,8 +233,8 @@ class FactoryTest extends TestCase
     public function testCreateAlwaysResolveUri(): void
     {
         self::assertSame(
-            (string) (new Factory())->create('../cats', 'http://www.example.com/dogs'),
-            (string) (new Factory())->create('http://www.example.com/dogs/../cats')
+            (string) Factory::create('../cats', 'http://www.example.com/dogs'),
+            (string) Factory::create('http://www.example.com/dogs/../cats')
         );
     }
 }

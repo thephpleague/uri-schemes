@@ -126,7 +126,7 @@ final class Info
     {
         $uri = self::filterUri($uri);
 
-        return '' === $uri->getScheme().$uri->getAuthority() && '/' === $uri->getPath()[0];
+        return '' === $uri->getScheme().$uri->getAuthority() && '/' === ($uri->getPath()[0] ?? '');
     }
 
     /**
@@ -138,7 +138,7 @@ final class Info
     {
         $uri = self::filterUri($uri);
 
-        return '' === $uri->getScheme().$uri->getAuthority()  && '/' !== $uri->getPath()[0];
+        return '' === $uri->getScheme().$uri->getAuthority()  && '/' !== ($uri->getPath()[0] ?? '');
     }
 
     /**
