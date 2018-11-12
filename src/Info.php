@@ -24,6 +24,13 @@ use TypeError;
 final class Info
 {
     /**
+     * @codeCoverageIgnore
+     */
+    private function __construct()
+    {
+    }
+
+    /**
      * Filter the URI object.
      *
      * To be valid an URI MUST implement at least one of the following interface:
@@ -119,7 +126,7 @@ final class Info
     {
         $uri = self::filterUri($uri);
 
-        return '' === $uri->getScheme().$uri->getAuthority() && '/' === substr($uri->getPath(), 0, 1);
+        return '' === $uri->getScheme().$uri->getAuthority() && '/' === $uri->getPath()[0];
     }
 
     /**
@@ -131,7 +138,7 @@ final class Info
     {
         $uri = self::filterUri($uri);
 
-        return '' === $uri->getScheme().$uri->getAuthority()  && '/' !== substr($uri->getPath(), 0, 1);
+        return '' === $uri->getScheme().$uri->getAuthority()  && '/' !== $uri->getPath()[0];
     }
 
     /**
