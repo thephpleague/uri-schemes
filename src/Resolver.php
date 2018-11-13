@@ -20,6 +20,14 @@ namespace League\Uri;
 
 use Psr\Http\Message\UriInterface as Psr7UriInterface;
 use TypeError;
+use function array_pop;
+use function array_reduce;
+use function end;
+use function explode;
+use function gettype;
+use function implode;
+use function sprintf;
+use function strpos;
 
 final class Resolver
 {

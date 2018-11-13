@@ -20,10 +20,20 @@ namespace League\Uri;
 
 use Psr\Http\Message\UriInterface as Psr7UriInterface;
 use TypeError;
+use function array_pop;
+use function count;
+use function end;
+use function explode;
+use function gettype;
+use function implode;
+use function in_array;
+use function sprintf;
+use function str_repeat;
+use function strpos;
+use function substr;
 
 final class Relativizer
 {
-
     /**
      * @codeCoverageIgnore
      */

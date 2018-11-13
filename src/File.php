@@ -18,6 +18,15 @@ declare(strict_types=1);
 
 namespace League\Uri;
 
+use function array_map;
+use function explode;
+use function implode;
+use function in_array;
+use function preg_replace_callback;
+use function str_replace;
+use function strlen;
+use function substr;
+
 final class File extends Uri
 {
     /**

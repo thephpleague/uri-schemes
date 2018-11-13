@@ -20,6 +20,11 @@ namespace League\Uri;
 
 use Psr\Http\Message\UriInterface as Psr7UriInterface;
 use TypeError;
+use function explode;
+use function implode;
+use function preg_replace_callback;
+use function rawurldecode;
+use function sprintf;
 
 final class Info
 {

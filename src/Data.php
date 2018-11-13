@@ -21,6 +21,20 @@ namespace League\Uri;
 use finfo;
 use League\Uri\Exception\InvalidUri;
 use League\Uri\Exception\MalformedUri;
+use function array_filter;
+use function base64_decode;
+use function base64_encode;
+use function count;
+use function explode;
+use function file_get_contents;
+use function mb_detect_encoding;
+use function preg_match;
+use function sprintf;
+use function str_replace;
+use function strlen;
+use function strpos;
+use function substr;
+use const FILEINFO_MIME;
 
 final class Data extends Uri
 {
@@ -34,18 +48,24 @@ final class Data extends Uri
     /**
      * Create a new instance from a file path.
      *
-     * @param string $path the file path
+     * @param resource|null $context
      *
-     * @return self
+     * @throws InvalidUri If the file does not exist or is not readable
+     * @throws InvalidUri If the file mimetype can not be detected
      */
-    public static function createFromPath(string $path)
+    public static function createFromPath(string $path, $context = null): self
     {
-        $raw = @file_get_contents($path);
+        $file_args = [$path, false];
+        $mime_args = [$path, FILEINFO_MIME];
+        if (null !== $context) {
+            $file_args[] = $context;
+            $mime_args[] = $context;
+        }
+
+        $raw = @file_get_contents(...$file_args);
         if (false === $raw) {
             throw new InvalidUri(sprintf('The file `%s` does not exist or is not readable', $path));
         }
-
-        $mimetype = str_replace(' ', '', (new finfo(FILEINFO_MIME))->file($path));
 
         return new self(
             'data',
@@ -53,7 +73,7 @@ final class Data extends Uri
             null,
             null,
             null,
-            $mimetype.';base64,'.base64_encode($raw)
+            str_replace(' ', '', (new finfo(FILEINFO_MIME))->file(...$mime_args)).';base64,'.base64_encode($raw)
         );
     }
 

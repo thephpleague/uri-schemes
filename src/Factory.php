@@ -22,14 +22,11 @@ use League\Uri\Exception\MalformedUri;
 use League\Uri\Parser\RFC3986;
 use Psr\Http\Message\UriInterface as Psr7UriInterface;
 use ReflectionClass;
+use function sprintf;
+use function strtolower;
 
 final class Factory
 {
-    /**
-     * @internal
-     */
-    private const REGEXP_SCHEME = '/^[a-z][a-z\+\.\-]*$/';
-
     /**
      * @codeCoverageIgnore
      */
@@ -97,12 +94,12 @@ final class Factory
      */
     private static function getUriObject(string $scheme = null, $base_uri)
     {
-        if (null !== $scheme) {
-            $scheme = strtolower($scheme);
+        if ($base_uri instanceof Psr7UriInterface && null === $scheme) {
+            return Http::createFromString('');
         }
 
-        if ($base_uri instanceof Psr7UriInterface && in_array($scheme, ['http', 'https', null], true)) {
-            return (new ReflectionClass($base_uri))->newInstanceWithoutConstructor();
+        if (null !== $scheme) {
+            $scheme = strtolower($scheme);
         }
 
         static $map = [

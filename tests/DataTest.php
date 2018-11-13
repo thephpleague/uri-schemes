@@ -188,7 +188,14 @@ class DataTest extends TestCase
      */
     public function testCreateFromPath(string $path, string $expected): void
     {
-        $uri = Data::createFromPath(__DIR__.'/data/'.$path);
+        $context = stream_context_create([
+            'http'=> [
+                'method' => 'GET',
+                'header' => "Accept-language: en\r\nCookie: foo=bar\r\n",
+            ],
+        ]);
+
+        $uri = Data::createFromPath(__DIR__.'/data/'.$path, $context);
         self::assertContains($expected, $uri->getPath());
     }
 
