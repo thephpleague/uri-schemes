@@ -22,34 +22,34 @@ use League\Uri\Ftp;
 use League\Uri\Http;
 use League\Uri\Uri;
 use PHPUnit\Framework\TestCase;
+use TypeError;
 
 /**
+ * @coversDefaultClass \League\Uri\Factory
  * @group factory
  */
 class FactoryTest extends TestCase
 {
-    /**
-     * @covers \League\Uri\Factory
-     */
     public function testCreateThrowExceptionWithBaseUriNotAbsolute(): void
     {
         self::expectException(InvalidUri::class);
         Factory::create('/path/to/you', Http::createFromString('//example.com'));
     }
 
-    /**
-     * @covers \League\Uri\Factory
-     */
     public function testCreateThrowExceptionWithUriNotAbsolute(): void
     {
         self::expectException(InvalidUri::class);
         Factory::create('/path/to/you');
     }
 
+    public function testCreateThrowExceptionWithUnsupportedType(): void
+    {
+        self::expectException(TypeError::class);
+        Factory::create(null);
+    }
+
     /**
      * @dataProvider uriProvider
-     *
-     * @covers \League\Uri\Factory
      */
     public function testCreate(string $expected, string $uri): void
     {
@@ -60,20 +60,24 @@ class FactoryTest extends TestCase
     {
         return [
             'http' => [
-                'expected' => Uri::class,
+                'expected' => Http::class,
                 'uri' => 'http://www.example.com',
             ],
             'https' => [
-                'expected' => Uri::class,
+                'expected' => Http::class,
                 'uri' => 'https://www.example.com',
             ],
             'ftp' => [
-                'expected' => Uri::class,
+                'expected' => Ftp::class,
                 'uri' => 'ftp://www.example.com',
             ],
             'generic' => [
                 'expected' => Uri::class,
                 'uri' => 'mailto:info@thephpleague.com',
+            ],
+            'multiline URI' => [
+                'expected' => Http::class,
+                'uri' => 'http  : // www '.PHP_EOL.'example.com',
             ],
         ];
     }
@@ -81,7 +85,6 @@ class FactoryTest extends TestCase
     /**
      * @dataProvider uriBaseUriProvider
      *
-     * @covers \League\Uri\Factory
      * @covers \League\Uri\Resolver
      *
      * @param string|mixed $base_uri
@@ -159,13 +162,13 @@ class FactoryTest extends TestCase
                 'base_uri' => Http::createFromString('http://a/b/c/d;p?q'),
             ],
             'uri with a base URI as string' => [
-                'expected_class' => Uri::class,
+                'expected_class' => Http::class,
                 'expected_uri' => 'https://example.com/path/to/file',
                 'uri' => 'https://example.com/path/to/file',
                 'base_uri' => 'ftp://example.com/index.php',
             ],
             'uri with a base URI as league URI' => [
-                'expected_class' => Uri::class,
+                'expected_class' => Http::class,
                 'expected_uri' => 'https://example.com/path/to/file',
                 'uri' => 'https://example.com/path/to/file',
                 'base_uri' => Ftp::createFromString('ftp://example.com/index.php'),
@@ -174,8 +177,6 @@ class FactoryTest extends TestCase
     }
 
     /**
-     * @covers \League\Uri\Factory
-     *
      * @dataProvider resolveProvider
      */
     public function testCreateResolve(string $base_uri, string $uri, string $expected): void

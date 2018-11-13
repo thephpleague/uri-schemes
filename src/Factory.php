@@ -22,6 +22,10 @@ use League\Uri\Exception\MalformedUri;
 use League\Uri\Parser\RFC3986;
 use Psr\Http\Message\UriInterface as Psr7UriInterface;
 use ReflectionClass;
+use TypeError;
+use function get_class;
+use function gettype;
+use function is_object;
 use function sprintf;
 use function strtolower;
 
@@ -47,7 +51,8 @@ final class Factory
      * @param null|mixed $uri
      * @param null|mixed $base_uri
      *
-     * @throws MalformedUri                  if there's no base URI and the submitted URI is not absolute
+     * @throws MalformedUri if there's no base URI and the submitted URI is not absolute
+     *
      * @return Psr7UriInterface|UriInterface
      */
     public static function create($uri, $base_uri = null)
@@ -57,7 +62,7 @@ final class Factory
         }
 
         if (!$uri instanceof UriInterface && !$uri instanceof Psr7UriInterface) {
-            $components = RFC3986::parse($uri);
+            $components = RFC3986::parse(self::filterUri($uri));
             $uri = self::getUriObject($components['scheme'], $base_uri)
                 ->withHost($components['host'] ?? '')
                 ->withPort($components['port'])
@@ -82,6 +87,25 @@ final class Factory
         }
 
         return Resolver::resolve($uri, $uri->withFragment('')->withQuery('')->withPath(''));
+    }
+
+    /**
+     * Filter Uri string.
+     *
+     * - Removes trailing and leading control characters or space
+     * - Removes trailing and leading control characters contains in the URI string
+     *
+     * @param null|mixed $uri
+     *
+     * @throws TypeError if the URI can not be converted to a string
+     */
+    private static function filterUri($uri): string
+    {
+        if (is_scalar($uri) || method_exists($uri, '__toString')) {
+            return (string) preg_replace('/[\x00-\x1f\x7f\s]/', '', (string) $uri);
+        }
+
+        throw new TypeError(sprintf('The uri must be a scalar or a stringable object `%s` given', is_object($uri) ? get_class($uri) : gettype($uri)));
     }
 
     /**
