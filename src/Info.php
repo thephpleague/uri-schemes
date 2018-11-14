@@ -80,7 +80,7 @@ final class Info
 
         static $pattern = ',%(2[D|E]|3[0-9]|4[1-9|A-F]|5[0-9|A|F]|6[1-9|A-F]|7[0-9|E]),i';
 
-        $replace = function (array $matches): string {
+        $replace = static function (array $matches): string {
             return rawurldecode($matches[0]);
         };
 

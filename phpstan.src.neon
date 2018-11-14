@@ -1,6 +1,6 @@
 includes:
-	- vendor/phpstan/phpstan-strict-rules/rules.neon
+    - vendor/phpstan/phpstan-phpunit/extension.neon
+    - vendor/phpstan/phpstan-phpunit/rules.neon
 parameters:
     ignoreErrors:
-        - '#Method League\\Uri\\Factory::getUriObject\(\) should return League\\Uri\\UriInterface\|Psr\\Http\\Message\\UriInterface but returns object\.#'
 

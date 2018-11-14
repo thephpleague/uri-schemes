@@ -94,9 +94,11 @@ final class File extends Uri
 
         static $pattern = ',^(?<delim>/)?(?<root>[a-zA-Z][:|\|])(?<rest>.*)?,';
 
-        return (string) preg_replace_callback($pattern, function (array $matches): string {
+        $replace = static function (array $matches): string {
             return $matches['delim'].str_replace('|', ':', $matches['root']).$matches['rest'];
-        }, $path);
+        };
+
+        return (string) preg_replace_callback($pattern, $replace, $path);
     }
 
     /**

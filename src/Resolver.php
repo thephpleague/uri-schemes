@@ -18,6 +18,7 @@ declare(strict_types=1);
 
 namespace League\Uri;
 
+use League\Uri\Exception\MalformedUri;
 use Psr\Http\Message\UriInterface as Psr7UriInterface;
 use TypeError;
 use function array_pop;
@@ -65,6 +66,10 @@ final class Resolver
             return $uri
                 ->withScheme($base_uri->getScheme())
                 ->withPath(self::removeDotSegments($uri->getPath()));
+        }
+
+        if ('' === $base_uri->getAuthority() || '' === $base_uri->getScheme()) {
+            throw new MalformedUri(sprintf('The base URI `%s` can not be use to resolve the URI `%s`', (string) $base_uri, (string) $uri));
         }
 
         [$user, $pass] = explode(':', $base_uri->getUserInfo(), 2) + [1 => null];

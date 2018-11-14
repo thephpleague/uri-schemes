@@ -17,12 +17,13 @@
 namespace LeagueTest\Uri;
 
 use InvalidArgumentException;
-use League\Uri;
+use League\Uri\Exception\MalformedUri;
 use League\Uri\Ftp;
 use League\Uri\Http;
 use League\Uri\Info;
 use League\Uri\Relativizer;
 use League\Uri\Resolver;
+use League\Uri\Uri;
 use League\Uri\UriInterface;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\UriInterface as Psr7UriInterface;
@@ -110,6 +111,18 @@ class FunctionsTest extends TestCase
     {
         self::expectException(TypeError::class);
         Resolver::resolve('ftp//a/b/c/d;p', 'toto');
+    }
+
+    /**
+     * @covers \League\Uri\Resolver
+     */
+    public function testResolveThrowsExceptionOnNonInvalidBaseUri(): void
+    {
+        self::expectException(MalformedUri::class);
+        Resolver::resolve(
+            Uri::createFromString('b@c.d?subject=baz'),
+            Uri::createFromString('mailto:f@a.b')
+        );
     }
 
     /**
@@ -202,17 +215,6 @@ class FunctionsTest extends TestCase
                     'absolute_path' => false,
                     'relative_path' => false,
                     'same_document' => true,
-                ],
-            ],
-            'path absolute uri' => [
-                'uri' => Http::createFromString('/p?q#f'),
-                'base_uri' => Http::createFromString('/p?a#f'),
-                'infos' => [
-                    'absolute_uri' => false,
-                    'network_path' => false,
-                    'absolute_path' => true,
-                    'relative_path' => false,
-                    'same_document' => false,
                 ],
             ],
             'path relative uri with non empty path' => [

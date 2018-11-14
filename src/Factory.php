@@ -21,7 +21,6 @@ namespace League\Uri;
 use League\Uri\Exception\MalformedUri;
 use League\Uri\Parser\RFC3986;
 use Psr\Http\Message\UriInterface as Psr7UriInterface;
-use ReflectionClass;
 use TypeError;
 use function get_class;
 use function gettype;
@@ -31,6 +30,23 @@ use function strtolower;
 
 final class Factory
 {
+    private const REGEXP_FORMAT_URI = [
+        '/[\r\t\n]/',
+        '/[\x00-\x1f\s]$/',
+        '/^[\x00-\x1f\s]/',
+    ];
+
+    private const SCHEME_TO_URI_LIST = [
+        'http' => Http::class,
+        'https' => Http::class,
+        'ftp' => Ftp::class,
+        'file' => File::class,
+        'data' => Data::class,
+        'ws' => Ws::class,
+        'wss' => Ws::class,
+        '' => Uri::class,
+    ];
+
     /**
      * @codeCoverageIgnore
      */
@@ -63,15 +79,7 @@ final class Factory
 
         if (!$uri instanceof UriInterface && !$uri instanceof Psr7UriInterface) {
             $components = RFC3986::parse(self::filterUri($uri));
-            $uri = self::getUriObject($components['scheme'], $base_uri)
-                ->withHost($components['host'] ?? '')
-                ->withPort($components['port'])
-                ->withUserInfo($components['user'] ?? '', $components['pass'])
-                ->withScheme($components['scheme'] ?? '')
-                ->withPath($components['path'] ?? '')
-                ->withQuery($components['query'] ?? '')
-                ->withFragment($components['fragment'] ?? '')
-            ;
+            $uri = self::getUriObject($components['scheme'], $base_uri)::createFromComponents($components);
         }
 
         if (null !== $base_uri) {
@@ -92,8 +100,10 @@ final class Factory
     /**
      * Filter Uri string.
      *
-     * - Removes trailing and leading control characters or space
-     * - Removes trailing and leading control characters contains in the URI string
+     * - Remove any leading and trailing C0 control or space from input.
+     * - Remove all ASCII tab or newline from input.
+     *
+     * @see https://url.spec.whatwg.org/#url-parsing
      *
      * @param null|mixed $uri
      *
@@ -102,7 +112,7 @@ final class Factory
     private static function filterUri($uri): string
     {
         if (is_scalar($uri) || method_exists($uri, '__toString')) {
-            return (string) preg_replace('/[\x00-\x1f\x7f\s]/', '', (string) $uri);
+            return (string) preg_replace(self::REGEXP_FORMAT_URI, '', (string) $uri);
         }
 
         throw new TypeError(sprintf('The uri must be a scalar or a stringable object `%s` given', is_object($uri) ? get_class($uri) : gettype($uri)));
@@ -111,31 +121,14 @@ final class Factory
     /**
      * Returns the className to use to instantiate the URI object.
      *
-     * @param string|null $scheme   URI scheme component
-     * @param mixed       $base_uri base URI object
-     *
-     * @return Psr7UriInterface|UriInterface
+     * @param ?string $scheme
      */
-    private static function getUriObject(string $scheme = null, $base_uri)
+    private static function getUriObject(?string $scheme, $base_uri): string
     {
         if ($base_uri instanceof Psr7UriInterface && null === $scheme) {
-            return Http::createFromString('');
+            $scheme = 'http';
         }
 
-        if (null !== $scheme) {
-            $scheme = strtolower($scheme);
-        }
-
-        static $map = [
-            'http' => Http::class,
-            'https' => Http::class,
-            'ftp' => Ftp::class,
-            'file' => File::class,
-            'data' => Data::class,
-            'ws' => Ws::class,
-            'wss' => Ws::class,
-        ];
-
-        return (new ReflectionClass($map[$scheme] ?? Uri::class))->newInstanceWithoutConstructor();
+        return self::SCHEME_TO_URI_LIST[strtolower($scheme ?? '')] ?? Uri::class;
     }
 }

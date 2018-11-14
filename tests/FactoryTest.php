@@ -77,7 +77,7 @@ class FactoryTest extends TestCase
             ],
             'multiline URI' => [
                 'expected' => Http::class,
-                'uri' => 'http  : // www '.PHP_EOL.'example.com',
+                'uri' => 'http://www'.PHP_EOL.'example.com ',
             ],
         ];
     }
@@ -227,7 +227,6 @@ class FactoryTest extends TestCase
             'dot segments presence 5' => [$base_uri, 'g..',           'http://a/b/c/g..'],
             'dot segments presence 6' => [$base_uri, '..g',           'http://a/b/c/..g'],
             'origin uri without path' => ['http://h:b@a', 'b/../y',   'http://h:b@a/y'],
-            'uri without auhtority'   => ['mailto:f@a.b', 'b@c.d?subject=baz', 'mailto:b@c.d?subject=baz'],
         ];
     }
 

@@ -569,11 +569,7 @@ class Uri implements UriInterface, JsonSerializable
         }
 
         if (!$this->isValidUri()) {
-            throw new MalformedUri(sprintf(
-                'The uri `%s` is invalid for the following scheme(s): `%s`',
-                $this->getUriString($this->scheme, $this->authority, $this->path, $this->query, $this->fragment),
-                implode(', ', array_keys(static::$supported_schemes))
-            ));
+            throw new MalformedUri(sprintf('The uri `%s` is invalid for the following scheme(s): `%s`', (string) $this, implode(', ', array_keys(static::$supported_schemes))));
         }
     }
 
