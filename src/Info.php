@@ -28,6 +28,8 @@ use function sprintf;
 
 final class Info
 {
+    private const REGEXP_ENCODED_CHARS = ',%(2[D|E]|3[0-9]|4[1-9|A-F]|5[0-9|A|F]|6[1-9|A-F]|7[0-9|E]),i';
+
     /**
      * @codeCoverageIgnore
      */
@@ -78,13 +80,11 @@ final class Info
         $pairs = explode('&', $query);
         sort($pairs, SORT_REGULAR);
 
-        static $pattern = ',%(2[D|E]|3[0-9]|4[1-9|A-F]|5[0-9|A|F]|6[1-9|A-F]|7[0-9|E]),i';
-
         $replace = static function (array $matches): string {
             return rawurldecode($matches[0]);
         };
 
-        $retval = preg_replace_callback($pattern, $replace, [$path, implode('&', $pairs), $fragment]);
+        $retval = preg_replace_callback(self::REGEXP_ENCODED_CHARS, $replace, [$path, implode('&', $pairs), $fragment]);
         if (null !== $retval) {
             [$path, $query, $fragment] = $retval + ['', '', ''];
         }

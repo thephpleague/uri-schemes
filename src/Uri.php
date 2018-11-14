@@ -78,6 +78,27 @@ class Uri implements UriInterface, JsonSerializable
      */
     protected const REGEXP_CHARS_UNRESERVED = 'A-Za-z0-9_\-\.~';
 
+
+    protected const REGEXP_SCHEME = '/^[a-z][a-z\+\.\-]*$/';
+
+    protected const REGEXP_HOST_REGNAME = '/^(
+        (?<unreserved>[a-z0-9_~\-\.])|
+        (?<sub_delims>[!$&\'()*+,;=])|
+        (?<encoded>%[A-F0-9]{2})
+    )+$/x';
+
+    protected const REGEXP_HOST_GEN_DELIMS = '/[:\/?#\[\]@ ]/'; // Also includes space.
+
+    protected const REGEXP_HOST_IPFUTURE = '/^
+        v(?<version>[A-F0-9])+\.
+        (?:
+            (?<unreserved>[a-z0-9_~\-\.])|
+            (?<sub_delims>[!$&\'()*+,;=:])  # also include the : character
+        )+
+    $/ix';
+
+    protected const HOST_ADDRESS_BLOCK = "\xfe\x80";
+
     /**
      * URI scheme component.
      *
@@ -265,8 +286,7 @@ class Uri implements UriInterface, JsonSerializable
         }
 
         $formatted_scheme = strtolower($scheme);
-        static $pattern = '/^[a-z][a-z\+\.\-]*$/';
-        if (1 === preg_match($pattern, $formatted_scheme)) {
+        if (1 === preg_match(self::REGEXP_SCHEME, $formatted_scheme)) {
             return $formatted_scheme;
         }
 
@@ -332,18 +352,11 @@ class Uri implements UriInterface, JsonSerializable
     private function formatRegisteredName(string $host): string
     {
         $formatted_host = rawurldecode(strtolower($host));
-
-        static $reg_name = '/^(
-            (?<unreserved>[a-z0-9_~\-\.])|
-            (?<sub_delims>[!$&\'()*+,;=])|
-            (?<encoded>%[A-F0-9]{2})
-        )+$/x';
-        if (1 === preg_match($reg_name, $formatted_host)) {
+        if (1 === preg_match(self::REGEXP_HOST_REGNAME, $formatted_host)) {
             return $formatted_host;
         }
 
-        static $gen_delims = '/[:\/?#\[\]@ ]/'; // Also includes space.
-        if (1 === preg_match($gen_delims, $formatted_host)) {
+        if (1 === preg_match(self::REGEXP_HOST_GEN_DELIMS, $formatted_host)) {
             throw new MalformedUri(sprintf('The host `%s` is invalid : a registered name can not contain URI delimiters or spaces', $host));
         }
 
@@ -413,14 +426,8 @@ class Uri implements UriInterface, JsonSerializable
             return $host;
         }
 
-        static $ip_future = '/^
-            v(?<version>[A-F0-9])+\.
-            (?:
-                (?<unreserved>[a-z0-9_~\-\.])|
-                (?<sub_delims>[!$&\'()*+,;=:])  # also include the : character
-            )+
-        $/ix';
-        if (1 === preg_match($ip_future, $ip, $matches) && !in_array($matches['version'], ['4', '6'], true)) {
+
+        if (1 === preg_match(self::REGEXP_HOST_IPFUTURE, $ip, $matches) && !in_array($matches['version'], ['4', '6'], true)) {
             return $host;
         }
 
@@ -429,8 +436,7 @@ class Uri implements UriInterface, JsonSerializable
             throw new MalformedUri(sprintf('The host `%s` is invalid : the IP host is malformed', $host));
         }
 
-        static $gen_delims = '/[:\/?#\[\]@ ]/'; // Also includes space.
-        if (1 === preg_match($gen_delims, rawurldecode(substr($ip, $pos)))) {
+        if (1 === preg_match(self::REGEXP_HOST_GEN_DELIMS, rawurldecode(substr($ip, $pos)))) {
             throw new MalformedUri(sprintf('The host `%s` is invalid : the IP host is malformed', $host));
         }
 
@@ -441,9 +447,7 @@ class Uri implements UriInterface, JsonSerializable
 
         //Only the address block fe80::/10 can have a Zone ID attach to
         //let's detect the link local significant 10 bits
-        static $address_block = "\xfe\x80";
-
-        if (substr(inet_pton($ip) & $address_block, 0, 2) === $address_block) {
+        if (0 === strpos((string) inet_pton($ip), self::HOST_ADDRESS_BLOCK)) {
             return $host;
         }
 

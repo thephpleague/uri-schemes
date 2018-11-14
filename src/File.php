@@ -29,6 +29,10 @@ use function substr;
 
 final class File extends Uri
 {
+    private const REGEXP_PATH = ',^(?<delim>/)?(?<root>[a-zA-Z][:|\|])(?<rest>.*)?,';
+
+    private const REGEXP_WINDOW_PATH = ',^(?<root>[a-zA-Z][:|\|]),';
+
     /**
      * {@inheritdoc}
      */
@@ -92,13 +96,11 @@ final class File extends Uri
             return $path;
         }
 
-        static $pattern = ',^(?<delim>/)?(?<root>[a-zA-Z][:|\|])(?<rest>.*)?,';
-
         $replace = static function (array $matches): string {
             return $matches['delim'].str_replace('|', ':', $matches['root']).$matches['rest'];
         };
 
-        return (string) preg_replace_callback($pattern, $replace, $path);
+        return (string) preg_replace_callback(self::REGEXP_PATH, $replace, $path);
     }
 
     /**
@@ -124,8 +126,7 @@ final class File extends Uri
     public static function createFromWindowsPath(string $uri = '')
     {
         $root = '';
-        static $pattern = ',^(?<root>[a-zA-Z][:|\|]),';
-        if (1 === preg_match($pattern, $uri, $matches)) {
+        if (1 === preg_match(self::REGEXP_WINDOW_PATH, $uri, $matches)) {
             $root = substr($matches['root'], 0, -1).':';
             $uri = substr($uri, strlen($root));
         }

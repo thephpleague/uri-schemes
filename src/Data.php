@@ -38,6 +38,10 @@ use const FILEINFO_MIME;
 
 final class Data extends Uri
 {
+    private const REGEXP_MIMETYPE = ',^\w+/[-.\w]+(?:\+[-.\w]+)?$,';
+
+    private const REGEXP_BINARY = ',(;|^)base64$,';
+
     /**
      * {@inheritdoc}
      */
@@ -141,11 +145,11 @@ final class Data extends Uri
      */
     private function assertValidPath(string $mimetype, string $parameters, string $data): void
     {
-        if (1 !== preg_match(',^\w+/[-.\w]+(?:\+[-.\w]+)?$,', $mimetype)) {
+        if (1 !== preg_match(self::REGEXP_MIMETYPE, $mimetype)) {
             throw new MalformedUri(sprintf('The path mimetype `%s` is invalid', $mimetype));
         }
 
-        $is_binary = 1 === preg_match(',(;|^)base64$,', $parameters, $matches);
+        $is_binary = 1 === preg_match(self::REGEXP_BINARY, $parameters, $matches);
         if ($is_binary) {
             $parameters = substr($parameters, 0, - strlen($matches[0]));
         }
