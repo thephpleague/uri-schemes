@@ -17,7 +17,9 @@
 namespace LeagueTest\Uri;
 
 use League\Uri\Exception\InvalidUri;
+use League\Uri\Exception\MalformedUri;
 use League\Uri\Factory;
+use League\Uri\File;
 use League\Uri\Ftp;
 use League\Uri\Http;
 use League\Uri\Uri;
@@ -86,6 +88,9 @@ class FactoryTest extends TestCase
      * @dataProvider uriBaseUriProvider
      *
      * @covers \League\Uri\Resolver
+     * @covers ::create
+     * @covers ::preFormatting
+     * @covers ::postFormatting
      *
      * @param string|mixed $base_uri
      */
@@ -173,6 +178,90 @@ class FactoryTest extends TestCase
                 'uri' => 'https://example.com/path/to/file',
                 'base_uri' => Ftp::createFromString('ftp://example.com/index.php'),
             ],
+            'living standard #1' => [
+                'expected_class' => Http::class,
+                'expected_uri' => 'https://example.org',
+                'uri' => 'https:example.org ',
+                'base_uri' => null,
+            ],
+            'living standard #2' => [
+                'expected_class' => Http::class,
+                'expected_uri' => 'https://example.com///',
+                'uri' => 'https://////example.com///',
+                'base_uri' => null,
+            ],
+            'living standard #3' => [
+                'expected_class' => Http::class,
+                'expected_uri' => 'https://example.com/foo',
+                'uri' => 'https://example.com/././foo ',
+                'base_uri' => null,
+            ],
+            'living standard #4' => [
+                'expected_class' => Uri::class,
+                'expected_uri' => 'hello:world',
+                'uri' => 'hello:world',
+                'base_uri' => 'https://example.com/',
+            ],
+            'living standard #5' => [
+                'expected_class' => Http::class,
+                'expected_uri' => 'https://example.com/example.org',
+                'uri' => 'https:example.org',
+                'base_uri' => 'https://example.com/',
+            ],
+            'living standard #6' => [
+                'expected_class' => Http::class,
+                'expected_uri' => 'https://example.com/demo/',
+                'uri' => '\example\..\demo/.\\',
+                'base_uri' => 'https://example.com/',
+            ],
+            'living standard #7' => [
+                'expected_class' => Http::class,
+                'expected_uri' => 'https://example.com/example',
+                'uri' => 'example',
+                'base_uri' => 'https://example.com/demo',
+            ],
+            'living standard #8' => [
+                'expected_class' => File::class,
+                'expected_uri' => 'file://localhost/C:/demo',
+                'uri' => 'file:///C|/demo',
+                'base_uri' => null,
+            ],
+            'living standard #9' => [
+                'expected_class' => File::class,
+                'expected_uri' => 'file://localhost/C:/',
+                'uri' => '..',
+                'base_uri' => 'file:///C:/demo',
+            ],
+            'living standard #10' => [
+                'expected_class' => File::class,
+                'expected_uri' => 'file://localhost/',
+                'uri' => 'file://loc%61lhost/',
+                'base_uri' => null,
+            ],
+            'remove Gopher Port' => [
+                'expected_class' => Uri::class,
+                'expected_uri' => 'gopher://example.com/example',
+                'uri' => 'example',
+                'base_uri' => 'gopher://example.com:70/demo',
+            ],
+            'non special URI' => [
+                'expected_class' => Uri::class,
+                'expected_uri' => 'non-special://test:@test/x',
+                'uri' => 'non-special://test:@test/x',
+                'base_uri' => 'about:blank',
+            ],
+            'non valid path #1' => [
+                'expected_class' => Http::class,
+                'expected_uri' => 'http://example.org/foo/:23',
+                'uri' => ':23',
+                'base_uri' => 'http://example.org/foo/bar',
+            ],
+            'non valid path #2' => [
+                'expected_class' => Http::class,
+                'expected_uri' => 'http://example.org/foo/:@c:29',
+                'uri' => 'http::@c:29',
+                'base_uri' => 'http://example.org/foo/bar',
+            ],
         ];
     }
 
@@ -236,5 +325,11 @@ class FactoryTest extends TestCase
             (string) Factory::create('../cats', 'http://www.example.com/dogs'),
             (string) Factory::create('http://www.example.com/dogs/../cats')
         );
+    }
+
+    public function testCreateThrowsExceptionIftheBaseURLIsNotValid(): void
+    {
+        self::expectException(MalformedUri::class);
+        Factory::create('../cats', 'data:,');
     }
 }

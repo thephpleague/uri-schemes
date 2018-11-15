@@ -17,7 +17,6 @@
 namespace LeagueTest\Uri;
 
 use InvalidArgumentException;
-use League\Uri\Exception\MalformedUri;
 use League\Uri\Ftp;
 use League\Uri\Http;
 use League\Uri\Info;
@@ -111,18 +110,6 @@ class FunctionsTest extends TestCase
     {
         self::expectException(TypeError::class);
         Resolver::resolve('ftp//a/b/c/d;p', 'toto');
-    }
-
-    /**
-     * @covers \League\Uri\Resolver
-     */
-    public function testResolveThrowsExceptionOnNonInvalidBaseUri(): void
-    {
-        self::expectException(MalformedUri::class);
-        Resolver::resolve(
-            Uri::createFromString('b@c.d?subject=baz'),
-            Uri::createFromString('mailto:f@a.b')
-        );
     }
 
     /**

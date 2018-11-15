@@ -25,6 +25,8 @@ use TypeError;
 use function get_class;
 use function gettype;
 use function is_object;
+use function ltrim;
+use function preg_match;
 use function sprintf;
 use function strtolower;
 
@@ -46,6 +48,18 @@ final class Factory
         'wss' => Ws::class,
         '' => Uri::class,
     ];
+
+    private const SPECIAL_SCHEMES_LIST = [
+        'ftp' => 21,
+        'file' => null,
+        'gopher' => 70,
+        'http' => 80,
+        'https' => 443,
+        'ws' => 80,
+        'wss' => 443,
+    ];
+
+    private const REGEXP_WINDOW_PATH = ',^(?<driver>/[a-zA-Z]:/),';
 
     /**
      * @codeCoverageIgnore
@@ -79,11 +93,12 @@ final class Factory
 
         if (!$uri instanceof UriInterface && !$uri instanceof Psr7UriInterface) {
             $components = RFC3986::parse(self::filterUri($uri));
+            $components = self::preFormatting($components, $base_uri);
             $uri = self::getUriObject($components['scheme'], $base_uri)::createFromComponents($components);
         }
 
-        if (null !== $base_uri) {
-            return Resolver::resolve($uri, $base_uri);
+        if (null !== $base_uri && '' !== $base_uri->getAuthority() && '' !== $base_uri->getScheme()) {
+            return self::postFormatting(Resolver::resolve($uri, $base_uri), $base_uri);
         }
 
         if ('' === $uri->getScheme()) {
@@ -91,10 +106,87 @@ final class Factory
         }
 
         if ('' === $uri->getAuthority()) {
-            return $uri;
+            return self::postFormatting($uri, $uri);
         }
 
-        return Resolver::resolve($uri, $uri->withFragment('')->withQuery('')->withPath(''));
+        $base_uri = $uri->withFragment('')->withQuery('')->withPath('');
+
+        return self::postFormatting(Resolver::resolve($uri, $base_uri), $base_uri);
+    }
+
+    /**
+     * Remove the default Port for the Gopher scheme.
+     *
+     * @param Psr7UriInterface|UriInterface $uri
+     * @param Psr7UriInterface|UriInterface $originalUri
+     *
+     * @return Psr7UriInterface|UriInterface
+     */
+    private static function postFormatting($uri, $originalUri)
+    {
+        if ('gopher' === $uri->getScheme() && 70 === $uri->getPort()) {
+            return $uri->withPort(null);
+        }
+
+        if ('file' === $uri->getScheme()
+            && 1 === preg_match(self::REGEXP_WINDOW_PATH, $originalUri->getPath(), $matches)
+            && 0 === preg_match(self::REGEXP_WINDOW_PATH, $uri->getPath())
+        ) {
+            return $uri->withPath($matches['driver'].ltrim('/', $uri->getPath()));
+        }
+
+        return $uri;
+    }
+
+    /**
+     * Format returned components according to the living standard rules.
+     *
+     * @see https://url.spec.whatwg.org/#urls
+     */
+    private static function preFormatting(array $components, $base_uri): array
+    {
+        if (null !== $components['host']) {
+            $components['host'] = str_replace('\\', '/', $components['host']);
+        }
+
+        $components['path'] = str_replace('\\', '/', $components['path']);
+        if (null === $components['host'] && ':' === ($components['path'][0] ?? '')) {
+            $components['path'] = './'.$components['path'];
+        }
+
+        $scheme = strtolower($components['scheme'] ?? '');
+        if (!isset(self::SPECIAL_SCHEMES_LIST[$scheme])) {
+            if (null === $base_uri) {
+                return $components;
+            }
+
+            return $components;
+        }
+
+        if (in_array($components['host'], [null, ''], true) && '/' === ($components['path'][0] ?? '')) {
+            $path = ltrim($components['path'], '/');
+            [$host, $path] = explode('/', $path, 2) + [1 => ''];
+            $components['host'] = $host;
+            $components['path'] = '/'.$path;
+
+            return $components;
+        }
+
+        if (null === $components['host'] && '' !== $components['path']) {
+            if (null !== $base_uri) {
+                $components['scheme'] = null;
+
+                return $components;
+            }
+
+            [$host, $path] = explode('/', $components['path'], 2) + [1 => ''];
+            $components['host'] = $host;
+            $components['path'] = $path;
+
+            return $components;
+        }
+
+        return $components;
     }
 
     /**
@@ -125,8 +217,8 @@ final class Factory
      */
     private static function getUriObject(?string $scheme, $base_uri): string
     {
-        if ($base_uri instanceof Psr7UriInterface && null === $scheme) {
-            $scheme = 'http';
+        if (null !== $base_uri && null === $scheme) {
+            $scheme = $base_uri->getScheme();
         }
 
         return self::SCHEME_TO_URI_LIST[strtolower($scheme ?? '')] ?? Uri::class;
