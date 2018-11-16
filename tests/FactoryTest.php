@@ -89,8 +89,8 @@ class FactoryTest extends TestCase
      *
      * @covers \League\Uri\Resolver
      * @covers ::create
-     * @covers ::preFormatting
-     * @covers ::postFormatting
+     * @covers ::sanitizeComponents
+     * @covers ::formatUri
      *
      * @param string|mixed $base_uri
      */

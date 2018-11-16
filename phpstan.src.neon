@@ -3,4 +3,5 @@ includes:
     - vendor/phpstan/phpstan-phpunit/rules.neon
 parameters:
     ignoreErrors:
-
+        - '#Strict comparison using === between false and string will always evaluate to false\.#'
+    reportUnmatchedIgnoredErrors: false

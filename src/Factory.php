@@ -93,12 +93,13 @@ final class Factory
 
         if (!$uri instanceof UriInterface && !$uri instanceof Psr7UriInterface) {
             $components = RFC3986::parse(self::filterUri($uri));
-            $components = self::preFormatting($components, $base_uri);
-            $uri = self::getUriObject($components['scheme'], $base_uri)::createFromComponents($components);
+            $components = self::sanitizeComponents($components, $base_uri);
+            $className = self::getClassName($components['scheme'], $base_uri);
+            $uri = $className::createFromComponents($components);
         }
 
         if (null !== $base_uri && '' !== $base_uri->getAuthority() && '' !== $base_uri->getScheme()) {
-            return self::postFormatting(Resolver::resolve($uri, $base_uri), $base_uri);
+            return self::formatUri(Resolver::resolve($uri, $base_uri), $base_uri);
         }
 
         if ('' === $uri->getScheme()) {
@@ -106,12 +107,12 @@ final class Factory
         }
 
         if ('' === $uri->getAuthority()) {
-            return self::postFormatting($uri, $uri);
+            return self::formatUri($uri, $uri);
         }
 
         $base_uri = $uri->withFragment('')->withQuery('')->withPath('');
 
-        return self::postFormatting(Resolver::resolve($uri, $base_uri), $base_uri);
+        return self::formatUri(Resolver::resolve($uri, $base_uri), $base_uri);
     }
 
     /**
@@ -122,7 +123,7 @@ final class Factory
      *
      * @return Psr7UriInterface|UriInterface
      */
-    private static function postFormatting($uri, $originalUri)
+    private static function formatUri($uri, $originalUri)
     {
         if ('gopher' === $uri->getScheme() && 70 === $uri->getPort()) {
             return $uri->withPort(null);
@@ -143,13 +144,13 @@ final class Factory
      *
      * @see https://url.spec.whatwg.org/#urls
      */
-    private static function preFormatting(array $components, $base_uri): array
+    private static function sanitizeComponents(array $components, $base_uri): array
     {
         if (null !== $components['host']) {
             $components['host'] = str_replace('\\', '/', $components['host']);
         }
 
-        $components['path'] = str_replace('\\', '/', $components['path']);
+        $components['path'] = str_replace(['\\', ' '], ['/', '%20'], $components['path']);
         if (null === $components['host'] && ':' === ($components['path'][0] ?? '')) {
             $components['path'] = './'.$components['path'];
         }
@@ -215,7 +216,7 @@ final class Factory
      *
      * @param ?string $scheme
      */
-    private static function getUriObject(?string $scheme, $base_uri): string
+    private static function getClassName(?string $scheme, $base_uri): string
     {
         if (null !== $base_uri && null === $scheme) {
             $scheme = $base_uri->getScheme();

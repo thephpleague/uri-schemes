@@ -488,6 +488,25 @@ class UriTest extends TestCase
     }
 
     /**
+     * @covers ::formatRegisteredName
+     * @covers ::getIDNAErrors
+     */
+    public function testCreateFromComponentsThrowsException6(): void
+    {
+        self::expectException(MalformedUri::class);
+        Uri::createFromComponents(['host' => 'xn--3']);
+    }
+
+    /**
+     * @covers ::formatRegisteredName
+     */
+    public function testCreateFromComponentsWorksWithPunycode(): void
+    {
+        $uri = Uri::createFromComponents(['host' => 'xn--mgbh0fb.xn--kgbechtv']);
+        self::assertSame('xn--mgbh0fb.xn--kgbechtv', $uri->getHost());
+    }
+
+    /**
      * @covers ::formatPath
      */
     public function testReservedCharsInPathUnencoded(): void

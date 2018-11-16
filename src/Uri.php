@@ -23,6 +23,7 @@ use League\Uri\Exception\InvalidUri;
 use League\Uri\Exception\MalformedUri;
 use League\Uri\Parser\RFC3986;
 use TypeError;
+use UnexpectedValueException;
 use function defined;
 use function explode;
 use function function_exists;
@@ -355,8 +356,36 @@ class Uri implements UriInterface, JsonSerializable
      */
     private function formatRegisteredName(string $host): string
     {
+        // @codeCoverageIgnoreStart
+        // added because it is not possible in travis to disabled the ext/intl extension
+        // see travis issue https://github.com/travis-ci/travis-ci/issues/4701
+        static $idn_support = null;
+        $idn_support = $idn_support ?? function_exists('idn_to_ascii') && defined('INTL_IDNA_VARIANT_UTS46');
+        // @codeCoverageIgnoreEnd
+
         $formatted_host = rawurldecode(strtolower($host));
         if (1 === preg_match(self::REGEXP_HOST_REGNAME, $formatted_host)) {
+            if (false === strpos($formatted_host, 'xn--')) {
+                return $formatted_host;
+            }
+
+            // @codeCoverageIgnoreStart
+            if (!$idn_support) {
+                throw new InvalidUri(sprintf('the host `%s` could not be processed for IDN. Verify that ext/intl is installed for IDN support and that ICU is at least version 4.6.', $host));
+            }
+            // @codeCoverageIgnoreEnd
+
+            $unicode = idn_to_utf8($host, 0, INTL_IDNA_VARIANT_UTS46, $arr);
+            if (0 !== $arr['errors']) {
+                throw new MalformedUri(sprintf('The host `%s` is invalid : %s', $host, $this->getIDNAErrors($arr['errors'])));
+            }
+
+            // @codeCoverageIgnoreStart
+            if (false === $formatted_host) {
+                throw new UnexpectedValueException(sprintf('The Intl extension is misconfigured for %s, please correct this issue before proceeding.', PHP_OS));
+            }
+            // @codeCoverageIgnoreEnd
+
             return $formatted_host;
         }
 
@@ -365,21 +394,23 @@ class Uri implements UriInterface, JsonSerializable
         }
 
         // @codeCoverageIgnoreStart
-        // added because it is not possible in travis to disabled the ext/intl extension
-        // see travis issue https://github.com/travis-ci/travis-ci/issues/4701
-        static $idn_support = null;
-        $idn_support = $idn_support ?? function_exists('idn_to_ascii') && defined('INTL_IDNA_VARIANT_UTS46');
         if (!$idn_support) {
             throw new InvalidUri(sprintf('the host `%s` could not be processed for IDN. Verify that ext/intl is installed for IDN support and that ICU is at least version 4.6.', $host));
         }
         // @codeCoverageIgnoreEnd
 
         $formatted_host = idn_to_ascii($formatted_host, 0, INTL_IDNA_VARIANT_UTS46, $arr);
-        if (0 === $arr['errors'] && false !== $formatted_host) {
-            return $formatted_host;
+        if (0 !== $arr['errors']) {
+            throw new MalformedUri(sprintf('The host `%s` is invalid : %s', $host, $this->getIDNAErrors($arr['errors'])));
         }
 
-        throw new MalformedUri(sprintf('The host `%s` is invalid : %s', $host, $this->getIDNAErrors($arr['errors'])));
+        // @codeCoverageIgnoreStart
+        if (false === $formatted_host) {
+            throw new UnexpectedValueException(sprintf('The Intl extension is misconfigured for %s, please correct this issue before proceeding.', PHP_OS));
+        }
+        // @codeCoverageIgnoreEnd
+
+        return $formatted_host;
     }
 
     /**
