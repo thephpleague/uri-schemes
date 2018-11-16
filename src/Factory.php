@@ -116,81 +116,6 @@ final class Factory
     }
 
     /**
-     * Remove the default Port for the Gopher scheme.
-     *
-     * @param Psr7UriInterface|UriInterface $uri
-     * @param Psr7UriInterface|UriInterface $originalUri
-     *
-     * @return Psr7UriInterface|UriInterface
-     */
-    private static function formatUri($uri, $originalUri)
-    {
-        if ('gopher' === $uri->getScheme() && 70 === $uri->getPort()) {
-            return $uri->withPort(null);
-        }
-
-        if ('file' === $uri->getScheme()
-            && 1 === preg_match(self::REGEXP_WINDOW_PATH, $originalUri->getPath(), $matches)
-            && 0 === preg_match(self::REGEXP_WINDOW_PATH, $uri->getPath())
-        ) {
-            return $uri->withPath($matches['driver'].ltrim('/', $uri->getPath()));
-        }
-
-        return $uri;
-    }
-
-    /**
-     * Format returned components according to the living standard rules.
-     *
-     * @see https://url.spec.whatwg.org/#urls
-     */
-    private static function sanitizeComponents(array $components, $base_uri): array
-    {
-        if (null !== $components['host']) {
-            $components['host'] = str_replace('\\', '/', $components['host']);
-        }
-
-        $components['path'] = str_replace(['\\', ' '], ['/', '%20'], $components['path']);
-        if (null === $components['host'] && ':' === ($components['path'][0] ?? '')) {
-            $components['path'] = './'.$components['path'];
-        }
-
-        $scheme = strtolower($components['scheme'] ?? '');
-        if (!isset(self::SPECIAL_SCHEMES_LIST[$scheme])) {
-            if (null === $base_uri) {
-                return $components;
-            }
-
-            return $components;
-        }
-
-        if (in_array($components['host'], [null, ''], true) && '/' === ($components['path'][0] ?? '')) {
-            $path = ltrim($components['path'], '/');
-            [$host, $path] = explode('/', $path, 2) + [1 => ''];
-            $components['host'] = $host;
-            $components['path'] = '/'.$path;
-
-            return $components;
-        }
-
-        if (null === $components['host'] && '' !== $components['path']) {
-            if (null !== $base_uri) {
-                $components['scheme'] = null;
-
-                return $components;
-            }
-
-            [$host, $path] = explode('/', $components['path'], 2) + [1 => ''];
-            $components['host'] = $host;
-            $components['path'] = $path;
-
-            return $components;
-        }
-
-        return $components;
-    }
-
-    /**
      * Filter Uri string.
      *
      * - Remove any leading and trailing C0 control or space from input.
@@ -212,6 +137,64 @@ final class Factory
     }
 
     /**
+     * sanitized URI components according to the living standard rules.
+     *
+     * - converts '\' characters to '/' for path and host component
+     * - converts ' ' character to '%20' for path component
+     * - relativize invalid path component
+     *
+     * For special scheme URIs
+     *
+     * - generates host component on invalid path
+     * - removes excessive '/' in front of the path and format path
+     *
+     * @todo Improve Host formatting by supported exotic IPv4 representation.
+     *
+     * @see https://url.spec.whatwg.org/#urls
+     */
+    private static function sanitizeComponents(array $components, $base_uri): array
+    {
+        if (null !== $components['host']) {
+            $components['host'] = str_replace('\\', '/', $components['host']);
+        }
+
+        $components['path'] = str_replace(['\\', ' '], ['/', '%20'], $components['path']);
+        if (null === $components['host'] && ':' === ($components['path'][0] ?? '')) {
+            $components['path'] = './'.$components['path'];
+        }
+
+        $scheme = strtolower($components['scheme'] ?? '');
+        if (!isset(self::SPECIAL_SCHEMES_LIST[$scheme])) {
+            return $components;
+        }
+
+        if (in_array($components['host'], [null, ''], true) && '/' === ($components['path'][0] ?? '')) {
+            $path = ltrim($components['path'], '/');
+            [$host, $path] = explode('/', $path, 2) + [1 => ''];
+            $components['host'] = $host;
+            $components['path'] = '/'.$path;
+
+            return $components;
+        }
+
+        if (null !== $components['host'] || '' === $components['path']) {
+            return $components;
+        }
+
+        if (null !== $base_uri) {
+            $components['scheme'] = null;
+
+            return $components;
+        }
+
+        [$host, $path] = explode('/', $components['path'], 2) + [1 => ''];
+        $components['host'] = $host;
+        $components['path'] = $path;
+
+        return $components;
+    }
+
+    /**
      * Returns the className to use to instantiate the URI object.
      *
      * @param ?string $scheme
@@ -223,5 +206,32 @@ final class Factory
         }
 
         return self::SCHEME_TO_URI_LIST[strtolower($scheme ?? '')] ?? Uri::class;
+    }
+
+    /**
+     * Post formatting the generated URI according to its scheme.
+     *
+     * - Removes gopher standard port if present
+     * - Preserves window based path driver letter after resolving the path
+     *
+     * @param Psr7UriInterface|UriInterface $uri
+     * @param Psr7UriInterface|UriInterface $originalUri
+     *
+     * @return Psr7UriInterface|UriInterface
+     */
+    private static function formatUri($uri, $originalUri)
+    {
+        if ('gopher' === $uri->getScheme() && 70 === $uri->getPort()) {
+            return $uri->withPort(null);
+        }
+
+        if ('file' === $uri->getScheme()
+            && 1 === preg_match(self::REGEXP_WINDOW_PATH, $originalUri->getPath(), $matches)
+            && 0 === preg_match(self::REGEXP_WINDOW_PATH, $uri->getPath())
+        ) {
+            return $uri->withPath($matches['driver'].ltrim('/', $uri->getPath()));
+        }
+
+        return $uri;
     }
 }
