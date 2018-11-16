@@ -108,7 +108,7 @@ final class Relativizer
     {
         return $base_uri->getScheme() === $uri->getScheme()
             && $base_uri->getAuthority() === $uri->getAuthority()
-            && !Info::isRelativePath($uri)
+            && !UriInfo::isRelativePath($uri)
         ;
     }
 

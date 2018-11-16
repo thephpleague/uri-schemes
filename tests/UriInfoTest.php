@@ -18,8 +18,8 @@ namespace LeagueTest\Uri;
 
 use League\Uri\Ftp;
 use League\Uri\Http;
-use League\Uri\Info;
 use League\Uri\Uri;
+use League\Uri\UriInfo;
 use League\Uri\UriInterface;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\UriInterface as Psr7UriInterface;
@@ -29,9 +29,9 @@ use TypeError;
  * @group uri
  * @group modifier
  * @group uri-modifier
- * @coversDefaultClass League\Uri\Info
+ * @coversDefaultClass League\Uri\UriInfo
  */
-class InfoTest extends TestCase
+class UriInfoTest extends TestCase
 {
     /**
      * @dataProvider uriProvider
@@ -43,12 +43,12 @@ class InfoTest extends TestCase
     public function testInfo($uri, $base_uri, array $infos): void
     {
         if (null !== $base_uri) {
-            self::assertSame($infos['same_document'], Info::isSameDocument($uri, $base_uri));
+            self::assertSame($infos['same_document'], UriInfo::isSameDocument($uri, $base_uri));
         }
-        self::assertSame($infos['relative_path'], Info::isRelativePath($uri));
-        self::assertSame($infos['absolute_path'], Info::isAbsolutePath($uri));
-        self::assertSame($infos['absolute_uri'], Info::isAbsolute($uri));
-        self::assertSame($infos['network_path'], Info::isNetworkPath($uri));
+        self::assertSame($infos['relative_path'], UriInfo::isRelativePath($uri));
+        self::assertSame($infos['absolute_path'], UriInfo::isAbsolutePath($uri));
+        self::assertSame($infos['absolute_uri'], UriInfo::isAbsolute($uri));
+        self::assertSame($infos['network_path'], UriInfo::isNetworkPath($uri));
     }
 
     public function uriProvider(): array
@@ -110,7 +110,7 @@ class InfoTest extends TestCase
     public function testStatThrowsInvalidArgumentException($uri, $base_uri): void
     {
         self::expectException(TypeError::class);
-        Info::isSameDocument($uri, $base_uri);
+        UriInfo::isSameDocument($uri, $base_uri);
     }
 
     public function failedUriProvider(): array
@@ -133,7 +133,7 @@ class InfoTest extends TestCase
     public function testIsFunctionsThrowsTypeError(string $function): void
     {
         self::expectException(TypeError::class);
-        Info::$function('http://example.com');
+        UriInfo::$function('http://example.com');
     }
 
     public function functionProvider(): array
@@ -154,7 +154,7 @@ class InfoTest extends TestCase
      */
     public function testSameValueAs($uri1, $uri2, bool $expected): void
     {
-        self::assertSame($expected, Info::isSameDocument($uri1, $uri2));
+        self::assertSame($expected, UriInfo::isSameDocument($uri1, $uri2));
     }
 
     public function sameValueAsProvider(): array
