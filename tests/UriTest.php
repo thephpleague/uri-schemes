@@ -20,6 +20,7 @@ use League\Uri\Exception\InvalidUri;
 use League\Uri\Exception\MalformedUri;
 use League\Uri\Http;
 use League\Uri\Uri;
+use League\Uri\UriInterface;
 use PHPUnit\Framework\TestCase;
 use TypeError;
 
@@ -323,13 +324,28 @@ class UriTest extends TestCase
     }
 
     /**
+     * @dataProvider setStateDataProvider
+     *
      * @covers ::__set_state
      */
-    public function testSetState(): void
+    public function testSetState(UriInterface $uri): void
     {
-        $uri = Uri::createFromString('https://a:b@c:442/d?q=r#f');
-        $generateUri = eval('return '.var_export($uri, true).';');
-        self::assertEquals($uri, $generateUri);
+        self::assertEquals($uri, eval('return '.var_export($uri, true).';'));
+    }
+
+    public function setStateDataProvider(): array
+    {
+        return [
+            'all components' => [Uri::createFromString('https://a:b@c:442/d?q=r#f')],
+            'without scheme' => [Uri::createFromString('//a:b@c:442/d?q=r#f')],
+            'without userinfo' => [Uri::createFromString('https://c:442/d?q=r#f')],
+            'without port' => [Uri::createFromString('https://a:b@c/d?q=r#f')],
+            'without path' => [Uri::createFromString('https://a:b@c:442?q=r#f')],
+            'without query' => [Uri::createFromString('https://a:b@c:442/d#f')],
+            'without fragment' => [Uri::createFromString('https://a:b@c:442/d?q=r')],
+            'without pass' => [Uri::createFromString('https://a@c:442/d?q=r#f')],
+            'without authority' => [Uri::createFromString('/d?q=r#f')],
+       ];
     }
 
     /**

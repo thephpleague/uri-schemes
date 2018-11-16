@@ -176,7 +176,11 @@ class Uri implements UriInterface, JsonSerializable
      */
     public static function __set_state(array $components)
     {
-        [$components['user'], $components['pass']] = explode(':', $components['user_info'], 2) + [1 => null];
+        $components['user'] = null;
+        $components['pass'] = null;
+        if (null !== $components['user_info']) {
+            [$components['user'], $components['pass']] = explode(':', $components['user_info'], 2) + [1 => null];
+        }
 
         return new static(
             $components['scheme'],
