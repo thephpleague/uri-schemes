@@ -10,7 +10,7 @@ We accept bug reports via issues created on [Github](https://github.com/thephple
 
 - **Always search the issue or pull request list first** - The odds are good that if you've found a problem, someone else has found it, too.
 
-- **Always try the [master branch](https://github.com/thephpleague/uri)** - to see if the reported bug has not already been fixed.
+- **Always try the [master branch](https://github.com/thephpleague/uri-schemes)** - to see if the reported bug has not already been fixed.
 
 ### When submitting your report
 
@@ -42,7 +42,7 @@ We accept contributions via Pull Requests on [Github](https://github.com/thephpl
 ## Running Tests
 
 ``` bash
-$ phpunit
+$ composer test
 ```
 
 

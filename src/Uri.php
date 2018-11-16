@@ -6,7 +6,7 @@
  * @package    League\Uri
  * @subpackage League\Uri\Schemes
  * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
- * @license    https://github.com/thephpleague/uri-components/blob/master/LICENSE (MIT License)
+ * @license    https://github.com/thephpleague/uri-schemes/blob/master/LICENSE (MIT License)
  * @version    2.0.0
  * @link       https://github.com/thephpleague/uri-schemes
  *
@@ -381,7 +381,7 @@ class Uri implements UriInterface, JsonSerializable
             }
 
             // @codeCoverageIgnoreStart
-            if (false === $formatted_host) {
+            if (false === $unicode) {
                 throw new UnexpectedValueException(sprintf('The Intl extension is misconfigured for %s, please correct this issue before proceeding.', PHP_OS));
             }
             // @codeCoverageIgnoreEnd
