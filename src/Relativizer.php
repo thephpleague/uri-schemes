@@ -50,10 +50,10 @@ final class Relativizer
      * This method MUST be transparent when dealing with error and exceptions.
      * It MUST not alter of silence them apart from validating its own parameters.
      *
-     * @param Psr7UriInterface|UriInterface $uri
-     * @param Psr7UriInterface|UriInterface $base_uri
+     * @param Psr7UriInterface|Uri $uri
+     * @param Psr7UriInterface|Uri $base_uri
      *
-     * @return Psr7UriInterface|UriInterface
+     * @return Psr7UriInterface|Uri
      */
     public static function relativize($uri, $base_uri)
     {
@@ -63,14 +63,15 @@ final class Relativizer
             return $uri;
         }
 
-        $uri = $uri->withScheme('')->withPort(null)->withUserInfo('')->withHost('');
+        $null = $uri instanceof Psr7UriInterface ? '' : null;
+        $uri = $uri->withScheme($null)->withPort(null)->withUserInfo($null)->withHost($null);
         $target_path = $uri->getPath();
         if ($target_path !== $base_uri->getPath()) {
             return $uri->withPath(self::relativizePath($target_path, $base_uri->getPath()));
         }
 
         if ($uri->getQuery() === $base_uri->getQuery()) {
-            return $uri->withPath('')->withQuery('');
+            return $uri->withPath($null)->withQuery($null);
         }
 
         if ('' === $uri->getQuery()) {
@@ -87,11 +88,11 @@ final class Relativizer
      *
      * @throws TypeError if the URI object does not implements the supported interfaces.
      *
-     * @return Psr7UriInterface|UriInterface
+     * @return Psr7UriInterface|Uri
      */
     private static function filterUri($uri)
     {
-        if (!$uri instanceof Psr7UriInterface && !$uri instanceof UriInterface) {
+        if (!$uri instanceof Psr7UriInterface && !$uri instanceof Uri) {
             throw new TypeError(sprintf('The uri must be a valid URI object received `%s`', gettype($uri)));
         }
 
@@ -101,8 +102,8 @@ final class Relativizer
     /**
      * Tell whether the submitted URI object can be relativize.
      *
-     * @param Psr7UriInterface|UriInterface $uri
-     * @param Psr7UriInterface|UriInterface $base_uri
+     * @param Psr7UriInterface|Uri $uri
+     * @param Psr7UriInterface|Uri $base_uri
      */
     private static function isRelativizable($uri, $base_uri): bool
     {

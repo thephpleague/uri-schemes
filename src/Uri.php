@@ -18,30 +18,40 @@ declare(strict_types=1);
 
 namespace League\Uri;
 
+use finfo;
 use JsonSerializable;
 use League\Uri\Exception\InvalidUri;
 use League\Uri\Exception\MalformedUri;
 use League\Uri\Parser\RFC3986;
 use TypeError;
 use UnexpectedValueException;
+use function array_filter;
+use function array_map;
+use function base64_decode;
+use function base64_encode;
+use function count;
 use function defined;
 use function explode;
+use function file_get_contents;
 use function function_exists;
 use function idn_to_ascii;
 use function implode;
 use function in_array;
 use function inet_pton;
 use function is_scalar;
+use function mb_detect_encoding;
 use function method_exists;
 use function preg_match;
 use function preg_replace;
 use function preg_replace_callback;
-use function rawurldecode;
 use function rawurlencode;
 use function sprintf;
+use function str_replace;
+use function strlen;
 use function strpos;
 use function strtolower;
 use function substr;
+use const FILEINFO_MIME;
 use const FILTER_FLAG_IPV6;
 use const FILTER_VALIDATE_IP;
 use const IDNA_ERROR_BIDI;
@@ -59,7 +69,7 @@ use const IDNA_ERROR_PUNYCODE;
 use const IDNA_ERROR_TRAILING_HYPHEN;
 use const INTL_IDNA_VARIANT_UTS46;
 
-class Uri implements UriInterface, JsonSerializable
+final class Uri implements JsonSerializable
 {
     /**
      * RFC3986 Sub delimiter characters regular expression pattern.
@@ -68,7 +78,7 @@ class Uri implements UriInterface, JsonSerializable
      *
      * @var string
      */
-    protected const REGEXP_CHARS_SUBDELIM = "\!\$&'\(\)\*\+,;\=%";
+    private const REGEXP_CHARS_SUBDELIM = "\!\$&'\(\)\*\+,;\=%";
 
     /**
      * RFC3986 unreserved characters regular expression pattern.
@@ -77,20 +87,20 @@ class Uri implements UriInterface, JsonSerializable
      *
      * @var string
      */
-    protected const REGEXP_CHARS_UNRESERVED = 'A-Za-z0-9_\-\.~';
+    private const REGEXP_CHARS_UNRESERVED = 'A-Za-z0-9_\-\.~';
 
 
-    protected const REGEXP_SCHEME = '/^[a-z][a-z\+\.\-]*$/';
+    private const REGEXP_SCHEME = '/^[a-z][a-z\+\.\-]*$/';
 
-    protected const REGEXP_HOST_REGNAME = '/^(
+    private const REGEXP_HOST_REGNAME = '/^(
         (?<unreserved>[a-z0-9_~\-\.])|
         (?<sub_delims>[!$&\'()*+,;=])|
         (?<encoded>%[A-F0-9]{2})
     )+$/x';
 
-    protected const REGEXP_HOST_GEN_DELIMS = '/[:\/?#\[\]@ ]/'; // Also includes space.
+    private const REGEXP_HOST_GEN_DELIMS = '/[:\/?#\[\]@ ]/'; // Also includes space.
 
-    protected const REGEXP_HOST_IPFUTURE = '/^
+    private const REGEXP_HOST_IPFUTURE = '/^
         v(?<version>[A-F0-9])+\.
         (?:
             (?<unreserved>[a-z0-9_~\-\.])|
@@ -98,77 +108,94 @@ class Uri implements UriInterface, JsonSerializable
         )+
     $/ix';
 
-    protected const HOST_ADDRESS_BLOCK = "\xfe\x80";
+    private const HOST_ADDRESS_BLOCK = "\xfe\x80";
+
+    private const REGEXP_FILE_PATH = ',^(?<delim>/)?(?<root>[a-zA-Z][:|\|])(?<rest>.*)?,';
+
+    private const REGEXP_WINDOW_PATH = ',^(?<root>[a-zA-Z][:|\|]),';
+
+    private const REGEXP_MIMETYPE = ',^\w+/[-.\w]+(?:\+[-.\w]+)?$,';
+
+    private const REGEXP_BINARY = ',(;|^)base64$,';
 
     /**
      * URI scheme component.
      *
      * @var string|null
      */
-    protected $scheme;
+    private $scheme;
 
     /**
      * URI user info part.
      *
      * @var string|null
      */
-    protected $user_info;
+    private $user_info;
 
     /**
      * URI host component.
      *
      * @var string|null
      */
-    protected $host;
+    private $host;
 
     /**
      * URI port component.
      *
      * @var int|null
      */
-    protected $port;
+    private $port;
 
     /**
      * URI authority string representation.
      *
      * @var string|null
      */
-    protected $authority;
+    private $authority;
 
     /**
      * URI path component.
      *
      * @var string
      */
-    protected $path = '';
+    private $path = '';
 
     /**
      * URI query component.
      *
      * @var string|null
      */
-    protected $query;
+    private $query;
 
     /**
      * URI fragment component.
      *
      * @var string|null
      */
-    protected $fragment;
+    private $fragment;
 
     /**
      * URI string representation.
      *
      * @var string|null
      */
-    protected $uri;
+    private $uri;
 
     /**
      * Supported schemes and corresponding default port.
      *
      * @var array
      */
-    protected static $supported_schemes = [];
+    private static $supported_schemes = [
+        'http' => 80,
+        'https' => 443,
+        'ws' => 80,
+        'wss' => 443,
+        'file' => null,
+        'ftp' => 21,
+        'data' => null,
+        'gopher' => 70,
+    ];
 
     /**
      * Static method called by PHP's var export.
@@ -183,7 +210,7 @@ class Uri implements UriInterface, JsonSerializable
             [$components['user'], $components['pass']] = explode(':', $components['user_info'], 2) + [1 => null];
         }
 
-        return new static(
+        return new self(
             $components['scheme'],
             $components['user'],
             $components['pass'],
@@ -193,6 +220,184 @@ class Uri implements UriInterface, JsonSerializable
             $components['query'],
             $components['fragment']
         );
+    }
+
+    /**
+     * Create a new instance from the environment.
+     */
+    public static function createFromServer(array $server): self
+    {
+        [$user, $pass] = self::fetchUserInfo($server);
+        [$host, $port] = self::fetchHostname($server);
+        [$path, $query] = self::fetchRequestUri($server);
+
+        return new self(self::fetchScheme($server), $user, $pass, $host, $port, $path, $query);
+    }
+
+    /**
+     * Returns the environment scheme.
+     */
+    private static function fetchScheme(array $server): string
+    {
+        $server += ['HTTPS' => ''];
+        $res = filter_var($server['HTTPS'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+
+        return $res !== false ? 'https' : 'http';
+    }
+
+    /**
+     * Returns the environment user info.
+     */
+    private static function fetchUserInfo(array $server): array
+    {
+        $server += ['PHP_AUTH_USER' => null, 'PHP_AUTH_PW' => null, 'HTTP_AUTHORIZATION' => ''];
+        $user = $server['PHP_AUTH_USER'];
+        $pass = $server['PHP_AUTH_PW'];
+        if (0 === strpos(strtolower($server['HTTP_AUTHORIZATION']), 'basic')) {
+            $userinfo = base64_decode(substr($server['HTTP_AUTHORIZATION'], 6), true);
+            if (false === $userinfo) {
+                throw new InvalidUri('The user info could not be detected');
+            }
+            [$user, $pass] = explode(':', $userinfo, 2) + [1 => null];
+        }
+
+        if (null !== $user) {
+            $user = rawurlencode($user);
+        }
+
+        if (null !== $pass) {
+            $pass = rawurlencode($pass);
+        }
+
+        return [$user, $pass];
+    }
+
+    /**
+     * Returns the environment host.
+     *
+     * @throws InvalidUri If the host can not be detected
+     */
+    private static function fetchHostname(array $server): array
+    {
+        $server += ['SERVER_PORT' => null];
+        if (null !== $server['SERVER_PORT']) {
+            $server['SERVER_PORT'] = (int) $server['SERVER_PORT'];
+        }
+
+        if (isset($server['HTTP_HOST'])) {
+            preg_match(',^(?<host>(\[.*\]|[^:])*)(\:(?<port>[^/?\#]*))?$,x', $server['HTTP_HOST'], $matches);
+
+            return [
+                $matches['host'],
+                isset($matches['port']) ? (int) $matches['port'] : $server['SERVER_PORT'],
+            ];
+        }
+
+        if (!isset($server['SERVER_ADDR'])) {
+            throw new InvalidUri('The host could not be detected');
+        }
+
+        if (false === filter_var($server['SERVER_ADDR'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+            $server['SERVER_ADDR'] = '['.$server['SERVER_ADDR'].']';
+        }
+
+        return [$server['SERVER_ADDR'], $server['SERVER_PORT']];
+    }
+
+    /**
+     * Returns the environment path.
+     */
+    private static function fetchRequestUri(array $server): array
+    {
+        $server += ['IIS_WasUrlRewritten' => null, 'UNENCODED_URL' => '', 'PHP_SELF' => '', 'QUERY_STRING' => null];
+        if ('1' === $server['IIS_WasUrlRewritten'] && '' !== $server['UNENCODED_URL']) {
+            return explode('?', $server['UNENCODED_URL'], 2) + [1 => null];
+        }
+
+        if (isset($server['REQUEST_URI'])) {
+            [$path, ] = explode('?', $server['REQUEST_URI'], 2);
+            $query = ('' !== $server['QUERY_STRING']) ? $server['QUERY_STRING'] : null;
+
+            return [$path, $query];
+        }
+
+        return [$server['PHP_SELF'], $server['QUERY_STRING']];
+    }
+
+    /**
+     * Create a new instance from a file path.
+     *
+     * @param resource|null $context
+     *
+     * @throws InvalidUri If the file does not exist or is not readable
+     * @throws InvalidUri If the file mimetype can not be detected
+     */
+    public static function createFromDataPath(string $path, $context = null): self
+    {
+        $file_args = [$path, false];
+        $mime_args = [$path, FILEINFO_MIME];
+        if (null !== $context) {
+            $file_args[] = $context;
+            $mime_args[] = $context;
+        }
+
+        $raw = @file_get_contents(...$file_args);
+        if (false === $raw) {
+            throw new InvalidUri(sprintf('The file `%s` does not exist or is not readable', $path));
+        }
+
+        return new self(
+            'data',
+            null,
+            null,
+            null,
+            null,
+            str_replace(' ', '', (new finfo(FILEINFO_MIME))->file(...$mime_args)).';base64,'.base64_encode($raw)
+        );
+    }
+
+    /**
+     * Create a new instance from a Unix path string.
+     *
+     * @return self
+     */
+    public static function createFromUnixPath(string $uri = '')
+    {
+        $uri = implode('/', array_map('rawurlencode', explode('/', $uri)));
+        if ('/' === ($uri[0] ?? '')) {
+            return new self('file', null, null, '', null, $uri);
+        }
+
+        return new self(null, null, null, null, null, $uri);
+    }
+
+    /**
+     * Create a new instance from a local Windows path string.
+     *
+     * @return self
+     */
+    public static function createFromWindowsPath(string $uri = '')
+    {
+        $root = '';
+        if (1 === preg_match(self::REGEXP_WINDOW_PATH, $uri, $matches)) {
+            $root = substr($matches['root'], 0, -1).':';
+            $uri = substr($uri, strlen($root));
+        }
+        $uri = str_replace('\\', '/', $uri);
+        $uri = implode('/', array_map('rawurlencode', explode('/', $uri)));
+
+        //Local Windows absolute path
+        if ('' !== $root) {
+            return new self('file', null, null, '', null, '/'.$root.$uri);
+        }
+
+        //UNC Windows Path
+        if ('//' === substr($uri, 0, 2)) {
+            $parts = explode('/', substr($uri, 2), 2) + [1 => null];
+            return new self('file', null, null, $parts[0], null, '/'.$parts[1]);
+        }
+
+        return new self(null, null, null, null, null, $uri);
     }
 
     /**
@@ -206,7 +411,7 @@ class Uri implements UriInterface, JsonSerializable
     {
         $components = RFC3986::parse($uri);
 
-        return new static(
+        return new self(
             $components['scheme'],
             $components['user'],
             $components['pass'],
@@ -233,7 +438,7 @@ class Uri implements UriInterface, JsonSerializable
             'port' => null, 'path' => '', 'query' => null, 'fragment' => null,
         ];
 
-        return new static(
+        return new self(
             $components['scheme'],
             $components['user'],
             $components['pass'],
@@ -257,15 +462,15 @@ class Uri implements UriInterface, JsonSerializable
      * @param string|null $query    query component
      * @param string|null $fragment fragment component
      */
-    protected function __construct(
-        string $scheme = null,
-        string $user = null,
-        string $pass = null,
-        string $host = null,
-        int $port = null,
+    private function __construct(
+        ?string $scheme = null,
+        ?string $user = null,
+        ?string $pass = null,
+        ?string $host = null,
+        ?int $port = null,
         string $path,
-        string $query = null,
-        string $fragment = null
+        ?string $query = null,
+        ?string $fragment = null
     ) {
         $this->scheme = $this->formatScheme($scheme);
         $this->user_info = $this->formatUserInfo($user, $pass);
@@ -284,7 +489,7 @@ class Uri implements UriInterface, JsonSerializable
      * @param  ?string      $scheme
      * @throws MalformedUri if the scheme is invalid
      */
-    protected function formatScheme(?string $scheme = null): ?string
+    private function formatScheme(?string $scheme = null): ?string
     {
         if ('' === $scheme || null === $scheme) {
             return $scheme;
@@ -305,7 +510,7 @@ class Uri implements UriInterface, JsonSerializable
      * @param string|null $password the URI scheme component
      *
      */
-    protected function formatUserInfo(string $user = null, string $password = null): ?string
+    private function formatUserInfo(string $user = null, ?string $password = null): ?string
     {
         if (null === $user) {
             return $user;
@@ -333,8 +538,9 @@ class Uri implements UriInterface, JsonSerializable
     /**
      * Validate and Format the Host component.
      *
+     * @param ?string $host
      */
-    protected function formatHost(string $host = null): ?string
+    private function formatHost(?string $host): ?string
     {
         if (null === $host || '' === $host) {
             return $host;
@@ -494,7 +700,7 @@ class Uri implements UriInterface, JsonSerializable
      *
      * @param null|mixed $port
      */
-    protected function formatPort($port = null): ?int
+    private function formatPort($port = null): ?int
     {
         if (null === $port || '' === $port) {
             return null;
@@ -509,8 +715,8 @@ class Uri implements UriInterface, JsonSerializable
             throw new MalformedUri(sprintf('The port `%s` is invalid', $port));
         }
 
-        if (isset(static::$supported_schemes[$this->scheme])
-            && static::$supported_schemes[$this->scheme] === $port) {
+        $defaultPort = static::$supported_schemes[$this->scheme] ?? null;
+        if ($defaultPort === $port) {
             return null;
         }
 
@@ -521,7 +727,7 @@ class Uri implements UriInterface, JsonSerializable
      * Generate the URI authority part.
      *
      */
-    protected function setAuthority(): ?string
+    private function setAuthority(): ?string
     {
         $authority = null;
         if (null !== $this->user_info) {
@@ -542,11 +748,110 @@ class Uri implements UriInterface, JsonSerializable
     /**
      * Format the Path component.
      */
-    protected function formatPath(string $path): string
+    private function formatPath(string $path): string
     {
+        $path = $this->formatDataPath($path);
+
         static $pattern = '/(?:[^'.self::REGEXP_CHARS_UNRESERVED.self::REGEXP_CHARS_SUBDELIM.'%:@\/}{]++\|%(?![A-Fa-f0-9]{2}))/';
 
-        return (string) preg_replace_callback($pattern, [Uri::class, 'urlEncodeMatch'], $path);
+        $path = (string) preg_replace_callback($pattern, [Uri::class, 'urlEncodeMatch'], $path);
+
+        return $this->formatFilePath($path);
+    }
+
+    /**
+     * Filter the Path component.
+     *
+     * @see https://tools.ietf.org/html/rfc2397
+     *
+     * @throws InvalidUri If the path is not compliant with RFC2397
+     */
+    private function formatDataPath(string $path): string
+    {
+        if ('data' !== $this->scheme) {
+            return $path;
+        }
+
+        if ('' == $path) {
+            return 'text/plain;charset=us-ascii,';
+        }
+
+        if (false === mb_detect_encoding($path, 'US-ASCII', true) || false === strpos($path, ',')) {
+            throw new MalformedUri(sprintf('The path `%s` is invalid according to RFC2937', $path));
+        }
+
+        $parts = explode(',', $path, 2) + [1 => null];
+        $mediatype = explode(';', (string) $parts[0], 2) + [1 => null];
+        $data = (string) $parts[1];
+        $mimetype = $mediatype[0];
+        if (null === $mimetype || '' === $mimetype) {
+            $mimetype = 'text/plain';
+        }
+
+        $parameters = $mediatype[1];
+        if (null === $parameters || '' === $parameters) {
+            $parameters = 'charset=us-ascii';
+        }
+
+        $this->assertValidPath($mimetype, $parameters, $data);
+
+        return $mimetype.';'.$parameters.','.$data;
+    }
+
+    /**
+     * Assert the path is a compliant with RFC2397.
+     *
+     * @see https://tools.ietf.org/html/rfc2397
+     *
+     * @throws MalformedUri If the mediatype or the data are not compliant with the RFC2397
+     */
+    private function assertValidPath(string $mimetype, string $parameters, string $data): void
+    {
+        if (1 !== preg_match(self::REGEXP_MIMETYPE, $mimetype)) {
+            throw new MalformedUri(sprintf('The path mimetype `%s` is invalid', $mimetype));
+        }
+
+        $is_binary = 1 === preg_match(self::REGEXP_BINARY, $parameters, $matches);
+        if ($is_binary) {
+            $parameters = substr($parameters, 0, - strlen($matches[0]));
+        }
+
+        $res = array_filter(array_filter(explode(';', $parameters), [$this, 'validateParameter']));
+        if ([] !== $res) {
+            throw new MalformedUri(sprintf('The path paremeters `%s` is invalid', $parameters));
+        }
+
+        if (!$is_binary) {
+            return;
+        }
+
+        $res = base64_decode($data, true);
+        if (false === $res || $data !== base64_encode($res)) {
+            throw new MalformedUri(sprintf('The path data `%s` is invalid', $data));
+        }
+    }
+
+    /**
+     * Validate mediatype parameter.
+     */
+    private function validateParameter(string $parameter): bool
+    {
+        $properties = explode('=', $parameter);
+
+        return 2 != count($properties) || strtolower($properties[0]) === 'base64';
+    }
+
+    private function formatFilePath(string $path): string
+    {
+        if ('file' !== $this->scheme) {
+            return $path;
+        }
+
+        $replace = static function (array $matches): string {
+            return $matches['delim'].str_replace('|', ':', $matches['root']).$matches['rest'];
+        };
+
+        return (string) preg_replace_callback(self::REGEXP_FILE_PATH, $replace, $path);
     }
 
     /**
@@ -559,8 +864,9 @@ class Uri implements UriInterface, JsonSerializable
      * when building the URI string representation</li>
      * </ul>
      *
+     * @param ?string $component
      */
-    protected function formatQueryAndFragment(string $component = null): ?string
+    private function formatQueryAndFragment(?string $component): ?string
     {
         if (null === $component || '' === $component) {
             return $component;
@@ -579,7 +885,7 @@ class Uri implements UriInterface, JsonSerializable
      * @throws MalformedUri if the URI is in an invalid state according to RFC3986
      * @throws MalformedUri if the URI is in an invalid state according to scheme specific rules
      */
-    protected function assertValidState(): void
+    private function assertValidState(): void
     {
         $this->uri = null;
 
@@ -607,33 +913,61 @@ class Uri implements UriInterface, JsonSerializable
             );
         }
 
-        if (!$this->isValidUri()) {
-            throw new MalformedUri(sprintf('The uri `%s` is invalid for the following scheme(s): `%s`', (string) $this, implode(', ', array_keys(static::$supported_schemes))));
+        if ('data' === $this->scheme
+            && null === $this->authority
+            && null === $this->query
+            && null === $this->fragment) {
+            return;
         }
-    }
 
-    /**
-     * Tell whether the current URI is in valid state.
-     *
-     * The URI object validity depends on the scheme. This method
-     * MUST be implemented on every URI object
-     */
-    protected function isValidUri(): bool
-    {
-        return true;
+        if ('file' === $this->scheme
+            && null === $this->user_info
+            && null === $this->port
+            && null === $this->query
+            && null === $this->fragment
+            && !('' != $this->scheme && null === $this->host)) {
+            return;
+        }
+
+        if ('file' !== $this->scheme && 'data' !== $this->scheme && !isset(self::$supported_schemes[$this->scheme])) {
+            return;
+        }
+
+        if (in_array($this->scheme, ['http', 'https'], true)
+            && ('' !== $this->host && !(null !== $this->scheme && null === $this->host))) {
+            return;
+        }
+
+        if (in_array($this->scheme, ['ws', 'wss'], true) && ('' !== $this->host
+            && !(null !== $this->scheme && null === $this->host)
+            && null === $this->fragment)) {
+            return;
+        }
+
+        if (in_array($this->scheme, ['ftp', 'gopher'], true) && ('' !== $this->host
+            && !(null !== $this->scheme && null === $this->host)
+            && null === $this->fragment && null === $this->query)) {
+            return;
+        }
+
+        throw new MalformedUri(sprintf('The uri `%s` is invalid for the following scheme(s): `%s`', (string) $this, $this->scheme));
     }
 
     /**
      * Generate the URI string representation from its components.
      *
      * @see https://tools.ietf.org/html/rfc3986#section-5.3
+     * @param ?string $scheme
+     * @param ?string $authority
+     * @param ?string $query
+     * @param ?string $fragment
      */
-    protected function getUriString(
-        string $scheme = null,
-        string $authority = null,
+    private function getUriString(
+        ?string $scheme,
+        ?string $authority,
         string $path,
-        string $query = null,
-        string $fragment = null
+        ?string $query,
+        ?string $fragment
     ): string {
         if (null !== $scheme) {
             $scheme = $scheme.':';
@@ -697,39 +1031,39 @@ class Uri implements UriInterface, JsonSerializable
     /**
      * {@inheritdoc}
      */
-    public function getScheme(): string
+    public function getScheme(): ?string
     {
-        return (string) $this->scheme;
+        return $this->scheme;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getAuthority(): string
+    public function getAuthority(): ?string
     {
-        return (string) $this->authority;
+        return $this->authority;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getUserInfo(): string
+    public function getUserInfo(): ?string
     {
-        return (string) $this->user_info;
+        return $this->user_info;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getHost(): string
+    public function getHost(): ?string
     {
-        return (string) $this->host;
+        return $this->host;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getPort()
+    public function getPort(): ?int
     {
         return $this->port;
     }
@@ -745,17 +1079,17 @@ class Uri implements UriInterface, JsonSerializable
     /**
      * {@inheritdoc}
      */
-    public function getQuery(): string
+    public function getQuery(): ?string
     {
-        return (string) $this->query;
+        return $this->query;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getFragment(): string
+    public function getFragment(): ?string
     {
-        return (string) $this->fragment;
+        return $this->fragment;
     }
 
     /**
@@ -764,10 +1098,6 @@ class Uri implements UriInterface, JsonSerializable
     public function withScheme($scheme)
     {
         $scheme = $this->formatScheme($this->filterString($scheme));
-        if ('' === $scheme) {
-            $scheme = null;
-        }
-
         if ($scheme === $this->scheme) {
             return $this;
         }
@@ -789,8 +1119,12 @@ class Uri implements UriInterface, JsonSerializable
      * @throws MalformedUri if the submitted data can not be converted to string
      *
      */
-    private function filterString($str): string
+    private function filterString($str): ?string
     {
+        if (null === $str) {
+            return $str;
+        }
+
         if (!is_scalar($str) && !method_exists($str, '__toString')) {
             throw new TypeError(sprintf('The component must be a string, a scalar or a stringable object %s given', gettype($str)));
         }
@@ -837,10 +1171,6 @@ class Uri implements UriInterface, JsonSerializable
     public function withHost($host)
     {
         $host = $this->formatHost($this->filterString($host));
-        if ('' === $host) {
-            $host = null;
-        }
-
         if ($host === $this->host) {
             return $this;
         }
@@ -876,7 +1206,12 @@ class Uri implements UriInterface, JsonSerializable
      */
     public function withPath($path)
     {
-        $path = $this->formatPath($this->filterString($path));
+        $path = $this->filterString($path);
+        if (null === $path) {
+            throw new TypeError('A path must be a string NULL given');
+        }
+
+        $path = $this->formatPath($path);
         if ($path === $this->path) {
             return $this;
         }
@@ -894,10 +1229,6 @@ class Uri implements UriInterface, JsonSerializable
     public function withQuery($query)
     {
         $query = $this->formatQueryAndFragment($this->filterString($query));
-        if ('' === $query) {
-            $query = null;
-        }
-
         if ($query === $this->query) {
             return $this;
         }
@@ -915,10 +1246,6 @@ class Uri implements UriInterface, JsonSerializable
     public function withFragment($fragment)
     {
         $fragment = $this->formatQueryAndFragment($this->filterString($fragment));
-        if ('' === $fragment) {
-            $fragment = null;
-        }
-
         if ($fragment === $this->fragment) {
             return $this;
         }

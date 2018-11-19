@@ -46,28 +46,35 @@ final class Resolver
     /**
      * Resolve an URI against a base URI using RFC3986 rules.
      *
-     * @param Psr7UriInterface|UriInterface $uri
-     * @param Psr7UriInterface|UriInterface $base_uri
+     * @param Psr7UriInterface|Uri $uri
+     * @param Psr7UriInterface|Uri $base_uri
      *
-     * @return Psr7UriInterface|UriInterface
+     * @return Psr7UriInterface|Uri
      */
     public static function resolve($uri, $base_uri)
     {
         self::filterUri($uri);
         self::filterUri($base_uri);
+        $null = $uri instanceof Psr7UriInterface ? '' : null;
 
-        if ('' !== $uri->getScheme()) {
+        if ($null !== $uri->getScheme()) {
             return $uri
                 ->withPath(self::removeDotSegments($uri->getPath()));
         }
 
-        if ('' !== $uri->getAuthority()) {
+        if ($null !== $uri->getAuthority()) {
             return $uri
                 ->withScheme($base_uri->getScheme())
                 ->withPath(self::removeDotSegments($uri->getPath()));
         }
 
-        [$user, $pass] = explode(':', $base_uri->getUserInfo(), 2) + [1 => null];
+        $user = $null;
+        $pass = null;
+        $userInfo = $base_uri->getUserInfo();
+        if (null !== $userInfo) {
+            [$user, $pass] = explode(':', $userInfo, 2) + [1 => null];
+        }
+        
         [$uri_path, $uri_query] = self::resolvePathAndQuery($uri, $base_uri);
 
         return $uri
@@ -89,7 +96,7 @@ final class Resolver
      */
     private static function filterUri($uri): void
     {
-        if (!$uri instanceof Psr7UriInterface && !$uri instanceof UriInterface) {
+        if (!$uri instanceof Psr7UriInterface && !$uri instanceof Uri) {
             throw new TypeError(sprintf('The uri must be a valid URI object received `%s`', gettype($uri)));
         }
     }
@@ -140,29 +147,30 @@ final class Resolver
     /**
      * Resolve an URI path and query component.
      *
-     * @param Psr7UriInterface|UriInterface $uri
-     * @param Psr7UriInterface|UriInterface $base_uri
+     * @param Psr7UriInterface|Uri $uri
+     * @param Psr7UriInterface|Uri $base_uri
      *
-     * @return string[]
      */
     private static function resolvePathAndQuery($uri, $base_uri): array
     {
         $target_path = $uri->getPath();
         $target_query = $uri->getQuery();
+        $null = $uri instanceof Psr7UriInterface ? '' : null;
+        $baseNull = $base_uri instanceof Psr7UriInterface ? '' : null;
 
         if (0 === strpos($target_path, '/')) {
             return [$target_path, $target_query];
         }
 
         if ('' === $target_path) {
-            if ('' === $target_query) {
+            if ($null === $target_query) {
                 $target_query = $base_uri->getQuery();
             }
 
             $target_path = $base_uri->getPath();
             //@codeCoverageIgnoreStart
             //because some PSR-7 Uri implementations allow this RFC3986 forbidden construction
-            if ('' !== $base_uri->getAuthority() && 0 !== strpos($target_path, '/')) {
+            if ($baseNull !== $base_uri->getAuthority() && 0 !== strpos($target_path, '/')) {
                 $target_path = '/'.$target_path;
             }
             //@codeCoverageIgnoreEnd
@@ -171,7 +179,7 @@ final class Resolver
         }
 
         $base_path = $base_uri->getPath();
-        if ('' !== $base_uri->getAuthority() && '' === $base_path) {
+        if ($baseNull !== $base_uri->getAuthority() && '' === $base_path) {
             $target_path = '/'.$target_path;
         }
 

@@ -16,8 +16,6 @@
 
 namespace LeagueTest\Uri;
 
-use InvalidArgumentException;
-use League\Uri\Ftp;
 use League\Uri\Http;
 use League\Uri\Resolver;
 use League\Uri\Uri;
@@ -32,10 +30,10 @@ class ResolverTest extends TestCase
 {
     public function testResolveLetThrowResolvedInvalidUri(): void
     {
-        self::expectException(InvalidArgumentException::class);
         $http = Http::createFromString('http://example.com/path/to/file');
-        $ftp = Ftp::createFromString('ftp//a/b/c/d;p');
-        Resolver::resolve($ftp, $http);
+        $ftp = Uri::createFromString('ftp://a/b/c/d;p');
+        $res = Resolver::resolve($ftp, $http);
+        self::assertEquals($res, $ftp);
     }
 
     public function testResolveThrowExceptionOnConstructor(): void

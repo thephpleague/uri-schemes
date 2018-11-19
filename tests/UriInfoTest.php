@@ -16,11 +16,9 @@
 
 namespace LeagueTest\Uri;
 
-use League\Uri\Ftp;
 use League\Uri\Http;
 use League\Uri\Uri;
 use League\Uri\UriInfo;
-use League\Uri\UriInterface;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\UriInterface as Psr7UriInterface;
 use TypeError;
@@ -36,9 +34,9 @@ class UriInfoTest extends TestCase
     /**
      * @dataProvider uriProvider
      *
-     * @param Psr7UriInterface|UriInterface      $uri
-     * @param null|Psr7UriInterface|UriInterface $base_uri
-     * @param bool[]                             $infos
+     * @param Psr7UriInterface|Uri      $uri
+     * @param null|Psr7UriInterface|Uri $base_uri
+     * @param bool[]                    $infos
      */
     public function testInfo($uri, $base_uri, array $infos): void
     {
@@ -149,8 +147,8 @@ class UriInfoTest extends TestCase
     /**
      * @dataProvider sameValueAsProvider
      *
-     * @param Psr7UriInterface|UriInterface $uri1
-     * @param Psr7UriInterface|UriInterface $uri2
+     * @param Psr7UriInterface|Uri $uri1
+     * @param Psr7UriInterface|Uri $uri2
      */
     public function testSameValueAs($uri1, $uri2, bool $expected): void
     {
@@ -162,7 +160,7 @@ class UriInfoTest extends TestCase
         return [
             '2 disctincts URIs' => [
                 Http::createFromString('http://example.com'),
-                Ftp::createFromString('ftp://example.com'),
+                Uri::createFromString('ftp://example.com'),
                 false,
             ],
             '2 identical URIs' => [

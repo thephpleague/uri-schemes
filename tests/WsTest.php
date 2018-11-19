@@ -17,34 +17,23 @@
 namespace LeagueTest\Uri;
 
 use League\Uri\Exception\InvalidUri;
-use League\Uri\Exception\MalformedUri;
-use League\Uri\Ws;
+use League\Uri\Uri;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @group ws
- * @coversDefaultClass League\Uri\Ws
+ * @coversDefaultClass League\Uri\Uri
  */
 class WsTest extends TestCase
 {
     /**
-     * @covers ::isValidUri
+
      *
      * @dataProvider validUrlProvider
      */
     public function testCreateFromString(string $input, string $expected): void
     {
-        self::assertSame($expected, (string) Ws::createFromString($input));
-    }
-
-    /**
-     * @covers ::withPort
-     * @covers ::formatPort
-     */
-    public function testModificationFailedWithUnsupportedPort(): void
-    {
-        self::expectException(MalformedUri::class);
-        Ws::createFromString('wss://example.com/path')->withPort(12365894);
+        self::assertSame($expected, (string) Uri::createFromString($input));
     }
 
     public function validUrlProvider(): array
@@ -78,34 +67,29 @@ class WsTest extends TestCase
     }
 
     /**
-     * @covers ::isValidUri
      * @dataProvider invalidUrlProvider
      */
     public function testConstructorThrowInvalidArgumentException(string $uri): void
     {
         self::expectException(InvalidUri::class);
-        Ws::createFromString($uri);
+        Uri::createFromString($uri);
     }
 
     public function invalidUrlProvider(): array
     {
         return [
-            ['http://example.com'],
             ['wss:example.com'],
             ['wss:/example.com'],
-            ['//example.com:80/foo/bar?foo=bar#content'],
+            ['wss://example.com:80/foo/bar?foo=bar#content'],
         ];
     }
 
-    /**
-     * @covers ::isValidUri
-     */
     public function testModificationFailedWithEmptyAuthority(): void
     {
         self::expectException(InvalidUri::class);
-        Ws::createFromString('wss://example.com/path')
-            ->withScheme('')
-            ->withHost('')
+        Uri::createFromString('wss://example.com/path')
+            ->withScheme(null)
+            ->withHost(null)
             ->withPath('//toto');
     }
 
@@ -115,7 +99,7 @@ class WsTest extends TestCase
      */
     public function testPort(string $uri, ?int $port): void
     {
-        self::assertSame($port, Ws::createFromString($uri)->getPort());
+        self::assertSame($port, Uri::createFromString($uri)->getPort());
     }
 
     public function portProvider(): array

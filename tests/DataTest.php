@@ -16,39 +16,41 @@
 
 namespace LeagueTest\Uri;
 
-use League\Uri\Data;
 use League\Uri\Exception\InvalidUri;
 use League\Uri\Exception\MalformedUri;
+use League\Uri\Uri;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @group data
- * @coversDefaultClass League\Uri\Data
+ * @coversDefaultClass League\Uri\Uri
  */
 class DataTest extends TestCase
 {
     /**
-     * @covers ::isValidUri
-     * @covers ::formatPath
+
+     * @covers ::formatDataPath
      */
     public function testDefaultConstructor(): void
     {
         self::assertSame(
             'data:text/plain;charset=us-ascii,',
-            (string) Data::createFromString('data:')
+            (string) Uri::createFromString('data:')
         );
     }
 
     /**
-     * @covers ::isValidUri
+
      * @covers ::formatPath
+     * @covers ::formatDataPath
      * @covers ::assertValidPath
+     * @covers ::assertValidState
      *
      * @dataProvider validUrlProvider
      */
     public function testCreateFromString(string $uri, string $path): void
     {
-        self::assertSame($path, Data::createFromString($uri)->getPath());
+        self::assertSame($path, Uri::createFromString($uri)->getPath());
     }
 
     public function validUrlProvider(): array
@@ -78,36 +80,37 @@ class DataTest extends TestCase
     }
 
     /**
+     * @covers ::formatDataPath
      * @covers ::assertValidPath
-     * @covers ::isValidUri
+     * @covers ::assertValidState
      *
      * @dataProvider invalidUrlProvider
      */
     public function testCreateFromStringFailed(string $uri): void
     {
         self::expectException(InvalidUri::class);
-        Data::createFromString($uri);
+        Uri::createFromString($uri);
     }
 
     public function invalidUrlProvider(): array
     {
         return [
-            'invalid format' => ['foo:bar'],
             'invalid data' => ['data:image/png;base64,°28'],
         ];
     }
 
 
     /**
+     * @covers ::formatDataPath
      * @covers ::assertValidPath
-     * @covers ::isValidUri
+     * @covers ::assertValidState
      *
      * @dataProvider invalidComponentProvider
      */
     public function testCreateFromStringFailedWithWrongComponent(string $uri): void
     {
         self::expectException(MalformedUri::class);
-        Data::createFromString($uri);
+        Uri::createFromString($uri);
     }
 
     public function invalidComponentProvider(): array
@@ -121,7 +124,7 @@ class DataTest extends TestCase
 
 
     /**
-     * @covers ::createFromPath
+     * @covers ::createFromDataPath
      *
      * @dataProvider invalidDataPath
      *
@@ -130,7 +133,7 @@ class DataTest extends TestCase
     public function testCreateFromPathFailed($path): void
     {
         self::expectException(InvalidUri::class);
-        Data::createFromPath($path);
+        Uri::createFromDataPath($path);
     }
 
     public function invalidDataPath(): array
@@ -142,47 +145,49 @@ class DataTest extends TestCase
 
     /**
      * @covers ::assertValidPath
-     * @covers ::formatPath
+     * @covers ::formatDataPath
+     * @covers ::assertValidState
      */
     public function testCreateFromComponentsFailedWithInvalidArgumentException(): void
     {
         self::expectException(InvalidUri::class);
-        Data::createFromString('data:image/png;base64,°28');
+        Uri::createFromString('data:image/png;base64,°28');
     }
 
     /**
      * @covers ::assertValidPath
      * @covers ::validateParameter
-     * @covers ::formatPath
+     * @covers ::formatDataPath
+     * @covers ::assertValidState
      */
     public function testCreateFromComponentsFailedInvalidMediatype(): void
     {
         self::expectException(MalformedUri::class);
-        Data::createFromString('data:image/png;base64=toto;base64,dsqdfqfd');
+        Uri::createFromString('data:image/png;base64=toto;base64,dsqdfqfd');
     }
 
-    /**
-     * @covers ::isValidUri
-     */
+    
     public function testCreateFromComponentsFailedWithException(): void
     {
         self::expectException(InvalidUri::class);
-        Data::createFromString('data:text/plain;charset=us-ascii,Bonjour%20le%20monde%21#fragment');
+        Uri::createFromString('data:text/plain;charset=us-ascii,Bonjour%20le%20monde%21#fragment');
     }
 
     /**
      * @covers ::assertValidPath
-     * @covers ::formatPath
+     * @covers ::formatDataPath
+     * @covers ::assertValidState
      */
     public function testWithPath(): void
     {
         $path = 'text/plain;charset=us-ascii,Bonjour%20le%20monde%21';
-        $uri = Data::createFromString('data:'.$path);
+        $uri = Uri::createFromString('data:'.$path);
         self::assertSame($uri, $uri->withPath($path));
     }
 
     /**
-     * @covers ::createFromPath
+     * @covers ::createFromDataPath
+     * @covers ::assertValidState
      *
      * @dataProvider validFilePath
      */
@@ -195,7 +200,7 @@ class DataTest extends TestCase
             ],
         ]);
 
-        $uri = Data::createFromPath(__DIR__.'/data/'.$path, $context);
+        $uri = Uri::createFromDataPath(__DIR__.'/data/'.$path, $context);
         self::assertContains($expected, $uri->getPath());
     }
 
@@ -208,11 +213,11 @@ class DataTest extends TestCase
     }
 
     /**
-     * @covers ::isValidUri
+     * @covers ::assertValidState
      */
     public function testInvalidUri(): void
     {
         self::expectException(InvalidUri::class);
-        Data::createFromString('http:text/plain;charset=us-ascii,Bonjour%20le%20monde%21');
+        Uri::createFromString('http:text/plain;charset=us-ascii,Bonjour%20le%20monde%21');
     }
 }

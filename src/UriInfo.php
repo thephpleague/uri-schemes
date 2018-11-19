@@ -48,11 +48,11 @@ final class UriInfo
      *
      * @throws TypeError if the URI object does not implements the supported interfaces.
      *
-     * @return Psr7UriInterface|UriInterface
+     * @return Psr7UriInterface|Uri
      */
     private static function filterUri($uri)
     {
-        if ($uri instanceof Psr7UriInterface || $uri instanceof UriInterface) {
+        if ($uri instanceof Psr7UriInterface || $uri instanceof Uri) {
             return $uri;
         }
 
@@ -62,22 +62,24 @@ final class UriInfo
     /**
      * Normalize an URI for comparison.
      *
-     * @param Psr7UriInterface|UriInterface $uri
+     * @param Psr7UriInterface|Uri $uri
      *
-     * @return Psr7UriInterface|UriInterface
+     * @return Psr7UriInterface|Uri
      */
     private static function normalize($uri)
     {
         $uri = self::filterUri($uri);
+        $null = $uri instanceof Psr7UriInterface ? '' : null;
 
         $path = $uri->getPath();
         if ('/' === ($path[0] ?? '') || '' !== $uri->getScheme().$uri->getAuthority()) {
-            $path = Resolver::resolve($uri, $uri->withPath('')->withQuery(''))->getPath();
+            $path = Resolver::resolve($uri, $uri->withPath('')->withQuery($null))->getPath();
         }
 
         $query = $uri->getQuery();
         $fragment = $uri->getFragment();
-        $pairs = explode('&', $query);
+        $fragmentOrig = $fragment;
+        $pairs = null === $query ? [] : explode('&', $query);
         sort($pairs, SORT_REGULAR);
 
         $replace = static function (array $matches): string {
@@ -86,46 +88,49 @@ final class UriInfo
 
         $retval = preg_replace_callback(self::REGEXP_ENCODED_CHARS, $replace, [$path, implode('&', $pairs), $fragment]);
         if (null !== $retval) {
-            [$path, $query, $fragment] = $retval + ['', '', ''];
+            [$path, $query, $fragment] = $retval + ['', $null, $null];
         }
 
-        if ('' !== $uri->getAuthority() && '' === $path) {
+        if ($null !== $uri->getAuthority() && '' === $path) {
             $path = '/';
         }
 
         return $uri
             ->withHost(Uri::createFromComponents(['host' => $uri->getHost()])->getHost())
             ->withPath($path)
-            ->withQuery($query)
-            ->withFragment($fragment);
+            ->withQuery([] === $pairs ? $null : $query)
+            ->withFragment($null === $fragmentOrig ? $fragmentOrig : $fragment);
     }
 
     /**
      * Tell whether the URI represents an absolute URI.
      *
-     * @param Psr7UriInterface|UriInterface $uri
+     * @param Psr7UriInterface|Uri $uri
      */
     public static function isAbsolute($uri): bool
     {
-        return '' !== self::filterUri($uri)->getScheme();
+        $null = $uri instanceof Psr7UriInterface ? '' : null;
+
+        return $null !== self::filterUri($uri)->getScheme();
     }
 
     /**
      * Tell whether the URI represents a network path.
      *
-     * @param Psr7UriInterface|UriInterface $uri
+     * @param Psr7UriInterface|Uri $uri
      */
     public static function isNetworkPath($uri): bool
     {
         $uri = self::filterUri($uri);
+        $null = $uri instanceof Psr7UriInterface ? '' : null;
 
-        return '' === $uri->getScheme() && '' !== $uri->getAuthority();
+        return $null === $uri->getScheme() && $null !== $uri->getAuthority();
     }
 
     /**
      * Tell whether the URI represents an absolute path.
      *
-     * @param Psr7UriInterface|UriInterface $uri
+     * @param Psr7UriInterface|Uri $uri
      */
     public static function isAbsolutePath($uri): bool
     {
@@ -137,7 +142,7 @@ final class UriInfo
     /**
      * Tell whether the URI represents a relative path.
      *
-     * @param Psr7UriInterface|UriInterface $uri
+     * @param Psr7UriInterface|Uri $uri
      */
     public static function isRelativePath($uri): bool
     {
@@ -149,11 +154,16 @@ final class UriInfo
     /**
      * Tell whether both URI refers to the same document.
      *
-     * @param Psr7UriInterface|UriInterface $uri
-     * @param Psr7UriInterface|UriInterface $base_uri
+     * @param Psr7UriInterface|Uri $uri
+     * @param Psr7UriInterface|Uri $base_uri
      */
     public static function isSameDocument($uri, $base_uri): bool
     {
-        return (string) self::normalize($uri)->withFragment('') === (string) self::normalize($base_uri)->withFragment('');
+        $null = $uri instanceof Psr7UriInterface ? '' : null;
+        $baseNull = $base_uri instanceof Psr7UriInterface ? '' : null;
+        $uri = self::normalize($uri);
+        $base_uri = self::normalize($base_uri);
+
+        return (string) $uri->withFragment($null) === (string) $base_uri->withFragment($baseNull);
     }
 }

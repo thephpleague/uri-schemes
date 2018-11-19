@@ -17,12 +17,12 @@
 namespace LeagueTest\Uri;
 
 use League\Uri\Exception\InvalidUri;
-use League\Uri\File;
+use League\Uri\Uri;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @group file
- * @coversDefaultClass League\Uri\File
+ * @coversDefaultClass League\Uri\Uri
  */
 class FileTest extends TestCase
 {
@@ -31,19 +31,20 @@ class FileTest extends TestCase
      */
     public function testDefaultConstructor(): void
     {
-        self::assertSame('', (string) File::createFromString());
+        self::assertSame('', (string) Uri::createFromString());
     }
 
     /**
-     * @covers ::isValidUri
+
      * @covers ::formatHost
-     * @covers ::formatPath
+     * @covers ::formatFilePath
+     * @covers ::assertValidState
      *
      * @dataProvider validUrlProvider
      */
     public function testCreateFromString(string $uri, string $expected): void
     {
-        self::assertSame($expected, (string) File::createFromString($uri));
+        self::assertSame($expected, (string) Uri::createFromString($uri));
     }
 
     public function validUrlProvider(): array
@@ -71,7 +72,7 @@ class FileTest extends TestCase
             ],
             'with empty host' => [
                 '///path',
-                '//localhost/path',
+                '///path',
             ],
             'with scheme' => [
                 'file://localhost/path',
@@ -83,24 +84,25 @@ class FileTest extends TestCase
             ],
             'with empty host and scheme' => [
                 'FiLe:///path',
-                'file://localhost/path',
+                'file:///path',
             ],
             'with windows path' => [
                 'file:///C|/demo',
-                'file://localhost/C:/demo',
+                'file:///C:/demo',
             ],
         ];
     }
 
     /**
-     * @covers ::isValidUri
+
      *
      * @dataProvider invalidUrlProvider
+     * @covers ::assertValidState
      */
     public function testConstructorThrowsException(string $uri): void
     {
         self::expectException(InvalidUri::class);
-        File::createFromString($uri);
+        Uri::createFromString($uri);
     }
 
     public function invalidUrlProvider(): array
@@ -117,12 +119,13 @@ class FileTest extends TestCase
 
     /**
      * @covers ::createFromUnixPath
+     * @covers ::assertValidState
      *
      * @dataProvider unixpathProvider
      */
     public function testCreateFromUnixPath(string $uri, string $expected): void
     {
-        self::assertSame($expected, (string) File::createFromUnixPath($uri));
+        self::assertSame($expected, (string) Uri::createFromUnixPath($uri));
     }
 
     public function unixpathProvider(): array
@@ -134,11 +137,11 @@ class FileTest extends TestCase
             ],
             'absolute path' => [
                 'input' => '/path',
-                'expected' => 'file://localhost/path',
+                'expected' => 'file:///path',
             ],
             'path with empty char' => [
                 'input' => '/path empty/bar',
-                'expected' => 'file://localhost/path%20empty/bar',
+                'expected' => 'file:///path%20empty/bar',
             ],
             'relative path with dot segments' => [
                 'input' => 'path/./relative',
@@ -146,19 +149,20 @@ class FileTest extends TestCase
             ],
             'absolute path with dot segments' => [
                 'input' => '/path/./../relative',
-                'expected' => 'file://localhost/path/./../relative',
+                'expected' => 'file:///path/./../relative',
             ],
         ];
     }
 
     /**
      * @covers ::createFromWindowsPath
+     * @covers ::assertValidState
      *
      * @dataProvider windowLocalPathProvider
      */
     public function testCreateFromWindowsLocalPath(string $uri, string $expected): void
     {
-        self::assertSame($expected, (string) File::createFromWindowsPath($uri));
+        self::assertSame($expected, (string) Uri::createFromWindowsPath($uri));
     }
 
     public function windowLocalPathProvider(): array
@@ -174,19 +178,19 @@ class FileTest extends TestCase
             ],
             'absolute path' => [
                 'input' => 'c:\windows\My Documents 100%20\foo.txt',
-                'expected' => 'file://localhost/c:/windows/My%20Documents%20100%2520/foo.txt',
+                'expected' => 'file:///c:/windows/My%20Documents%20100%2520/foo.txt',
             ],
             'windows relative path' => [
                 'input' => 'c:My Documents 100%20\foo.txt',
-                'expected' => 'file://localhost/c:My%20Documents%20100%2520/foo.txt',
+                'expected' => 'file:///c:My%20Documents%20100%2520/foo.txt',
             ],
             'absolute path with `|`' => [
                 'input' => 'c|\windows\My Documents 100%20\foo.txt',
-                'expected' => 'file://localhost/c:/windows/My%20Documents%20100%2520/foo.txt',
+                'expected' => 'file:///c:/windows/My%20Documents%20100%2520/foo.txt',
             ],
             'windows relative path with `|`' => [
                 'input' => 'c:My Documents 100%20\foo.txt',
-                'expected' => 'file://localhost/c:My%20Documents%20100%2520/foo.txt',
+                'expected' => 'file:///c:My%20Documents%20100%2520/foo.txt',
             ],
             'absolute path with dot segments' => [
                 'input' => '\path\.\..\relative',

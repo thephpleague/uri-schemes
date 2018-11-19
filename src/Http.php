@@ -18,51 +18,42 @@ declare(strict_types=1);
 
 namespace League\Uri;
 
-use League\Uri\Exception\InvalidUri;
-use Psr\Http\Message\UriInterface;
-use function base64_decode;
-use function defined;
-use function explode;
-use function filter_var;
+use JsonSerializable;
+use League\Uri\Exception\MalformedUri;
+use Psr\Http\Message\UriInterface as Psr7UriInterface;
+use TypeError;
+use function gettype;
+use function in_array;
+use function is_scalar;
+use function method_exists;
 use function preg_match;
-use function rawurlencode;
-use function strpos;
-use function strtolower;
-use function substr;
-use const FILTER_FLAG_IPV4;
-use const FILTER_NULL_ON_FAILURE;
-use const FILTER_VALIDATE_BOOLEAN;
-use const FILTER_VALIDATE_IP;
+use function sprintf;
 
-final class Http extends Uri implements UriInterface
+final class Http implements Psr7UriInterface, JsonSerializable
 {
     /**
-     * {@inheritdoc}
+     * @var Uri
      */
-    protected static $supported_schemes = [
-        'http' => 80,
-        'https' => 443,
-    ];
+    private $uri;
 
     /**
-     * Tell whether the Http(s) URI is in valid state.
+     * Static method called by PHP's var export.
      *
-     * A valid HTTP(S) URI:
-     *
-     * <ul>
-     * <li>can be schemeless or supports only 'http' and 'https' schemes
-     * <li>Host can not be an empty string
-     * <li>If a scheme is defined an authority must be present
-     * </ul>
-     *
-     * @see https://tools.ietf.org/html/rfc6455#section-3
+     * @return static
      */
-    protected function isValidUri(): bool
+    public static function __set_state(array $components): self
     {
-        return '' !== $this->host
-            && (null === $this->scheme || isset(static::$supported_schemes[$this->scheme]))
-            && !('' != $this->scheme && null === $this->host)
-            && (null === $this->port || (0 < $this->port && 65536 > $this->port));
+        return new self($components['uri']);
+    }
+    /**
+     * Create a new instance from a hash of parse_url parts.
+     *
+     * @param array $components a hash representation of the URI similar
+     *                          to PHP parse_url function result
+     */
+    public static function createFromComponents(array $components): self
+    {
+        return new self(Uri::createFromComponents($components));
     }
 
     /**
@@ -70,100 +61,258 @@ final class Http extends Uri implements UriInterface
      */
     public static function createFromServer(array $server): self
     {
-        [$user, $pass] = self::fetchUserInfo($server);
-        [$host, $port] = self::fetchHostname($server);
-        [$path, $query] = self::fetchRequestUri($server);
-
-        return new self(self::fetchScheme($server), $user, $pass, $host, $port, $path, $query);
+        return new self(Uri::createFromServer($server));
     }
 
     /**
-     * Returns the environment scheme.
-     */
-    private static function fetchScheme(array $server): string
-    {
-        $server += ['HTTPS' => ''];
-        $res = filter_var($server['HTTPS'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
-
-        return $res !== false ? 'https' : 'http';
-    }
-
-    /**
-     * Returns the environment user info.
-     */
-    private static function fetchUserInfo(array $server): array
-    {
-        $server += ['PHP_AUTH_USER' => null, 'PHP_AUTH_PW' => null, 'HTTP_AUTHORIZATION' => ''];
-        $user = $server['PHP_AUTH_USER'];
-        $pass = $server['PHP_AUTH_PW'];
-        if (0 === strpos(strtolower($server['HTTP_AUTHORIZATION']), 'basic')) {
-            $userinfo = base64_decode(substr($server['HTTP_AUTHORIZATION'], 6), true);
-            if (false === $userinfo) {
-                throw new InvalidUri('The user info could not be detected');
-            }
-            [$user, $pass] = explode(':', $userinfo, 2) + [1 => null];
-        }
-
-        if (null !== $user) {
-            $user = rawurlencode($user);
-        }
-
-        if (null !== $pass) {
-            $pass = rawurlencode($pass);
-        }
-
-        return [$user, $pass];
-    }
-
-    /**
-     * Returns the environment host.
+     * Create a new instance from a string.
      *
-     * @throws InvalidUri If the host can not be detected
+     * @param string|mixed $uri
      */
-    private static function fetchHostname(array $server): array
+    public static function createFromString($uri = ''): self
     {
-        $server += ['SERVER_PORT' => null];
-        if (null !== $server['SERVER_PORT']) {
-            $server['SERVER_PORT'] = (int) $server['SERVER_PORT'];
-        }
-
-        if (isset($server['HTTP_HOST'])) {
-            preg_match(',^(?<host>(\[.*\]|[^:])*)(\:(?<port>[^/?\#]*))?$,x', $server['HTTP_HOST'], $matches);
-
-            return [
-                $matches['host'],
-                isset($matches['port']) ? (int) $matches['port'] : $server['SERVER_PORT'],
-            ];
-        }
-
-        if (!isset($server['SERVER_ADDR'])) {
-            throw new InvalidUri('The host could not be detected');
-        }
-
-        if (false === filter_var($server['SERVER_ADDR'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
-            $server['SERVER_ADDR'] = '['.$server['SERVER_ADDR'].']';
-        }
-
-        return [$server['SERVER_ADDR'], $server['SERVER_PORT']];
+        return new self(Uri::createFromString($uri));
     }
 
     /**
-     * Returns the environment path.
+     * New instance.
      */
-    private static function fetchRequestUri(array $server): array
+    public function __construct(Uri $uri)
     {
-        $server += ['IIS_WasUrlRewritten' => null, 'UNENCODED_URL' => '', 'PHP_SELF' => '', 'QUERY_STRING' => null];
-        if ('1' === $server['IIS_WasUrlRewritten'] && '' !== $server['UNENCODED_URL']) {
-            return explode('?', $server['UNENCODED_URL'], 2) + [1 => null];
+        $scheme = $uri->getScheme();
+        $port = $uri->getPort();
+        if (in_array($scheme, ['http', 'https'], true)
+            && (null !== $port && ($port < 1 || $port > 65536))) {
+            throw new MalformedUri('Invalid HTTPS URI according to PSR-7');
         }
 
-        if (isset($server['REQUEST_URI'])) {
-            [$path, ] = explode('?', $server['REQUEST_URI'], 2);
-            $query = ('' !== $server['QUERY_STRING']) ? $server['QUERY_STRING'] : null;
+        $this->uri = $uri;
+    }
 
-            return [$path, $query];
+    /**
+     * {@inheritdoc}
+     */
+    public function getScheme(): string
+    {
+        return (string) $this->uri->getScheme();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getAuthority(): string
+    {
+        return (string) $this->uri->getAuthority();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getUserInfo(): string
+    {
+        return (string) $this->uri->getUserInfo();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getHost(): string
+    {
+        return (string) $this->uri->getHost();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getPort(): ?int
+    {
+        return $this->uri->getPort();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getPath(): string
+    {
+        return $this->uri->getPath();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getQuery(): string
+    {
+        return (string) $this->uri->getQuery();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getFragment(): string
+    {
+        return (string) $this->uri->getFragment();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function withScheme($scheme): self
+    {
+        $scheme = $this->filterString($scheme);
+        if ('' === $scheme) {
+            $scheme = null;
         }
 
-        return [$server['PHP_SELF'], $server['QUERY_STRING']];
+        $uri = $this->uri->withScheme($scheme);
+        if ((string) $uri === (string) $this->uri) {
+            return $this;
+        }
+
+        return new self($uri);
+    }
+
+    /**
+     * Filter a string.
+     *
+     * @param mixed $str the value to evaluate as a string
+     *
+     * @throws MalformedUri if the submitted data can not be converted to string
+     *
+     */
+    private function filterString($str): ?string
+    {
+        if (!is_scalar($str) && !method_exists($str, '__toString')) {
+            throw new TypeError(sprintf('The component must be a string, a scalar or a stringable object %s given', gettype($str)));
+        }
+
+        $str = (string) $str;
+        static $pattern = '/[\x00-\x1f\x7f]/';
+        if (1 !== preg_match($pattern, $str)) {
+            return $str;
+        }
+
+        throw new MalformedUri(sprintf('The component `%s` contains invalid characters', $str));
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function withUserInfo($user, $password = null): self
+    {
+        $user = $this->filterString($user);
+        if ('' === $user) {
+            $user = null;
+        }
+
+        $uri = $this->uri->withUserInfo($user, $password);
+        if ((string) $uri === (string) $this->uri) {
+            return $this;
+        }
+
+        return new self($uri);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function withHost($host): self
+    {
+        $host = $this->filterString($host);
+        if ('' === $host) {
+            $host = null;
+        }
+
+        $uri = $this->uri->withHost($host);
+        if ((string) $uri === (string) $this->uri) {
+            return $this;
+        }
+
+        return new self($uri);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function withPort($port): self
+    {
+        $uri = $this->uri->withPort($port);
+        if ((string) $uri === (string) $this->uri) {
+            return $this;
+        }
+
+        return new self($uri);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function withPath($path): self
+    {
+        $uri = $this->uri->withPath($path);
+        if ((string) $uri === (string) $this->uri) {
+            return $this;
+        }
+
+        return new self($uri);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function withQuery($query): self
+    {
+        $query = $this->filterString($query);
+        if ('' === $query) {
+            $query = null;
+        }
+
+        $uri = $this->uri->withQuery($query);
+        if ((string) $uri === (string) $this->uri) {
+            return $this;
+        }
+
+        return new self($uri);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function withFragment($fragment): self
+    {
+        $fragment = $this->filterString($fragment);
+        if ('' === $fragment) {
+            $fragment = null;
+        }
+
+        $uri = $this->uri->withFragment($fragment);
+        if ((string) $uri === (string) $this->uri) {
+            return $this;
+        }
+
+        return new self($uri);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function __toString(): string
+    {
+        return $this->uri->__toString();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function jsonSerialize(): string
+    {
+        return $this->uri->__toString();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function __debugInfo(): array
+    {
+        return $this->uri->__debugInfo();
     }
 }

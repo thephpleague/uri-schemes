@@ -18,9 +18,7 @@ namespace LeagueTest\Uri;
 
 use League\Uri\Exception\InvalidUri;
 use League\Uri\Exception\MalformedUri;
-use League\Uri\Http;
 use League\Uri\Uri;
-use League\Uri\UriInterface;
 use PHPUnit\Framework\TestCase;
 use TypeError;
 
@@ -98,7 +96,7 @@ class UriTest extends TestCase
         self::assertNotEquals($this->uri, $this->uri->withScheme('https'));
         self::assertSame(
             '//login:pass@secure.example.com:443/test/query.php?kingkong=toto#doc3',
-            (string) $this->uri->withScheme('')
+            (string) $this->uri->withScheme(null)
         );
     }
 
@@ -114,7 +112,7 @@ class UriTest extends TestCase
         self::assertNotEquals($this->uri, $this->uri->withUserInfo('login', null));
         self::assertSame(
             'http://secure.example.com:443/test/query.php?kingkong=toto#doc3',
-            (string) $this->uri->withUserInfo('')
+            (string) $this->uri->withUserInfo(null)
         );
     }
 
@@ -149,10 +147,10 @@ class UriTest extends TestCase
     public function testRemoveAuthority(): void
     {
         $uri_with_host = (string) $this->uri
-            ->withUserInfo('')
+            ->withUserInfo(null)
             ->withPort(null)
-            ->withScheme('')
-            ->withHost('');
+            ->withScheme(null)
+            ->withHost(null);
         self::assertSame('/test/query.php?kingkong=toto#doc3', $uri_with_host);
     }
 
@@ -198,7 +196,7 @@ class UriTest extends TestCase
         self::assertNotEquals($this->uri, $this->uri->withQuery('kingkong=tata'));
         self::assertSame(
             'http://login:pass@secure.example.com:443/test/query.php#doc3',
-            (string) $this->uri->withQuery('')
+            (string) $this->uri->withQuery(null)
         );
     }
 
@@ -213,7 +211,7 @@ class UriTest extends TestCase
         self::assertNotEquals($this->uri, $this->uri->withFragment('doc2'));
         self::assertSame(
             'http://login:pass@secure.example.com:443/test/query.php?kingkong=toto',
-            (string) $this->uri->withFragment('')
+            (string) $this->uri->withFragment(null)
         );
     }
 
@@ -240,15 +238,6 @@ class UriTest extends TestCase
     {
         self::expectException(TypeError::class);
         Uri::createFromString('')->withPath(date_create());
-    }
-
-    /**
-     * @covers ::assertValidState
-     */
-    public function testWithSchemeFailedWithUnsupportedScheme(): void
-    {
-        self::expectException(InvalidUri::class);
-        Http::createFromString('http://example.com')->withScheme('telnet');
     }
 
     /**
@@ -287,8 +276,8 @@ class UriTest extends TestCase
     {
         self::expectException(InvalidUri::class);
         Uri::createFromString('http://example.com/path')
-            ->withScheme('')
-            ->withHost('')
+            ->withScheme(null)
+            ->withHost(null)
             ->withPath($path);
     }
 
@@ -324,11 +313,21 @@ class UriTest extends TestCase
     }
 
     /**
+     * @covers ::filterString
+     * @covers ::withPath
+     */
+    public function testWithPathThrowTypeErrorOnWrongType(): void
+    {
+        self::expectException(TypeError::class);
+        Uri::createFromString('https://example.com')->withPath(null);
+    }
+
+    /**
      * @dataProvider setStateDataProvider
      *
      * @covers ::__set_state
      */
-    public function testSetState(UriInterface $uri): void
+    public function testSetState(Uri $uri): void
     {
         self::assertEquals($uri, eval('return '.var_export($uri, true).';'));
     }

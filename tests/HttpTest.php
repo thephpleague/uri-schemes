@@ -16,10 +16,12 @@
 
 namespace LeagueTest\Uri;
 
+use InvalidArgumentException;
 use League\Uri\Exception\InvalidUri;
-use League\Uri\Exception\MalformedUri;
 use League\Uri\Http;
+use League\Uri\Uri;
 use PHPUnit\Framework\TestCase;
+use TypeError;
 
 /**
  * @group http
@@ -50,18 +52,123 @@ class HttpTest extends TestCase
     }
 
     /**
-     * @covers ::withPort
-     * @covers ::formatPort
+     * @covers ::jsonSerialize
      */
-    public function testModificationFailedWithUnsupportedPort(): void
+    public function testJson(): void
     {
-        self::expectException(MalformedUri::class);
-        Http::createFromString('http://example.com/path')->withPort(12365894);
+        self::assertSame(
+            '"http:\/\/example.com"',
+            json_encode(Http::createFromString('http://example.com'))
+        );
     }
 
     /**
-     * @covers ::isValidUri
-     * @covers ::formatPort
+     * @covers ::__debugInfo
+     */
+    public function testDebugInfo(): void
+    {
+        $uri = Uri::createFromString('http://example.com');
+        self::assertSame($uri->__debugInfo(), Http::createFromString('http://example.com')->__debugInfo());
+    }
+
+    /**
+     * @covers ::__construct
+     */
+    public function testInvalidPort(): void
+    {
+        self::expectException(InvalidArgumentException::class);
+        Http::createFromString('https://example.com:0');
+    }
+
+    /**
+     * @covers ::filterString
+     */
+    public function testThrowTypeErrorOnWrongType(): void
+    {
+        self::expectException(TypeError::class);
+        Http::createFromString('https://example.com')->withFragment([]);
+    }
+
+    /**
+     * @covers ::filterString
+     */
+    public function testThrowInvalidArgumentExceptionOnIllegalCharacters(): void
+    {
+        self::expectException(InvalidArgumentException::class);
+        Http::createFromString('https://example.com')->withFragment("\0");
+    }
+
+    /**
+     * @covers ::getPort
+     * @covers ::withPort
+     */
+    public function testPortModification(): void
+    {
+        $uri = Http::createFromString('http://login:pass@secure.example.com:443/test/query.php?kingkong=toto#doc3');
+        self::assertSame(443, $uri->getPort());
+        self::assertSame($uri, $uri->withPort(443));
+        self::assertNotEquals($uri, $uri->withPort(81));
+        self::assertSame(
+            'http://login:pass@secure.example.com/test/query.php?kingkong=toto#doc3',
+            (string) $uri->withPort(null)
+        );
+    }
+
+    /**
+     * @covers ::getUserInfo
+     * @covers ::withUserInfo
+     */
+    public function testUserInfoModification(): void
+    {
+        $uri = Http::createFromString('http://login:pass@secure.example.com:443/test/query.php?kingkong=toto#doc3');
+        self::assertSame('login:pass', $uri->getUserInfo());
+        self::assertSame($uri, $uri->withUserInfo('login', 'pass'));
+        self::assertNotEquals($uri, $uri->withUserInfo('login', null));
+        self::assertSame(
+            'http://secure.example.com:443/test/query.php?kingkong=toto#doc3',
+            (string) $uri->withUserInfo('')
+        );
+    }
+
+    /**
+     * @covers ::createFromComponents
+     */
+    public function testCreateFromComponents(): void
+    {
+        $uri = '//0:0@0/0?0#0';
+        self::assertEquals(
+            Http::createFromComponents(parse_url($uri)),
+            Http::createFromString($uri)
+        );
+    }
+
+    /**
+     * @dataProvider setStateDataProvider
+     *
+     * @covers ::__set_state
+     */
+    public function testSetState(Http $uri): void
+    {
+        self::assertEquals($uri, eval('return '.var_export($uri, true).';'));
+    }
+
+    public function setStateDataProvider(): array
+    {
+        return [
+            'all components' => [Http::createFromString('https://a:b@c:442/d?q=r#f')],
+            'without scheme' => [Http::createFromString('//a:b@c:442/d?q=r#f')],
+            'without userinfo' => [Http::createFromString('https://c:442/d?q=r#f')],
+            'without port' => [Http::createFromString('https://a:b@c/d?q=r#f')],
+            'without path' => [Http::createFromString('https://a:b@c:442?q=r#f')],
+            'without query' => [Http::createFromString('https://a:b@c:442/d#f')],
+            'without fragment' => [Http::createFromString('https://a:b@c:442/d?q=r')],
+            'without pass' => [Http::createFromString('https://a@c:442/d?q=r#f')],
+            'without authority' => [Http::createFromString('/d?q=r#f')],
+       ];
+    }
+
+    /**
+     * @covers \League\Uri\Uri::formatPort
      *
      * @dataProvider validUrlProvider
      */
@@ -97,8 +204,6 @@ class HttpTest extends TestCase
     }
 
     /**
-     * @covers ::isValidUri
-     *
      * @dataProvider invalidUrlProvider
      */
     public function testIsValid(string $uri): void
@@ -110,11 +215,11 @@ class HttpTest extends TestCase
     public function invalidUrlProvider(): array
     {
         return [
-            ['wss://example.com'],
+            //['wss://example.com'],
             ['http:example.com'],
             ['https:/example.com'],
             ['http://user@:80'],
-            ['//user@:80'],
+            //['//user@:80'],
             ['http:///path'],
             ['http:path'],
         ];
@@ -123,7 +228,7 @@ class HttpTest extends TestCase
     /**
      * @dataProvider portProvider
      *
-     * @covers ::formatPort
+     * @covers \League\Uri\Uri::formatPort
      * @param ?int $port
      */
     public function testPort(string $uri, ?int $port): void
@@ -142,8 +247,6 @@ class HttpTest extends TestCase
     }
 
     /**
-     * @covers ::isValidUri
-     *
      * @dataProvider invalidPathProvider
      */
     public function testPathIsInvalid(string $path): void
@@ -162,7 +265,7 @@ class HttpTest extends TestCase
     }
 
     /**
-     * @covers ::assertValidState
+     * @covers \League\Uri\Uri::assertValidState
      *
      * @dataProvider invalidURI
      */
@@ -176,17 +279,17 @@ class HttpTest extends TestCase
     {
         return [
             ['http://user@:80'],
-            ['//user@:80'],
         ];
     }
 
     /**
      * @covers ::createFromServer
-     * @covers ::fetchScheme
-     * @covers ::fetchUserInfo
-     * @covers ::fetchHostname
-     * @covers ::fetchRequestUri
-     * @covers ::formatPort
+     * @covers \League\Uri\Uri::createFromServer
+     * @covers \League\Uri\Uri::fetchScheme
+     * @covers \League\Uri\Uri::fetchUserInfo
+     * @covers \League\Uri\Uri::fetchHostname
+     * @covers \League\Uri\Uri::fetchRequestUri
+     * @covers \League\Uri\Uri::formatPort
      *
      * @dataProvider validServerArray
      */
@@ -341,7 +444,7 @@ class HttpTest extends TestCase
     }
 
     /**
-     * @covers ::fetchHostname
+     * @covers \League\Uri\Uri::fetchHostname
      */
     public function testFailCreateFromServerWithoutHost(): void
     {
@@ -355,7 +458,7 @@ class HttpTest extends TestCase
     }
 
     /**
-     * @covers ::fetchUserInfo
+     * @covers \League\Uri\Uri::fetchUserInfo
      */
     public function testFailCreateFromServerWithoutInvalidUserInfo(): void
     {
@@ -370,9 +473,7 @@ class HttpTest extends TestCase
         ]);
     }
 
-    /**
-     * @covers ::isValidUri
-     */
+    
     public function testModificationFailedWithEmptyAuthority(): void
     {
         self::expectException(InvalidUri::class);

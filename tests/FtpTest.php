@@ -17,22 +17,22 @@
 namespace LeagueTest\Uri;
 
 use League\Uri\Exception\InvalidUri;
-use League\Uri\Ftp;
+use League\Uri\Uri;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @group ftp
- * @coversDefaultClass League\Uri\Ftp
+ * @coversDefaultClass League\Uri\Uri
  */
 class FtpTest extends TestCase
 {
     /**
-     * @covers ::isValidUri
+
      * @dataProvider validUrlProvider
      */
     public function testCreateFromString(string $uri, string $expected): void
     {
-        self::assertSame($expected, (string) Ftp::createFromString($uri));
+        self::assertSame($expected, (string) Uri::createFromString($uri));
     }
 
     public function validUrlProvider(): array
@@ -66,35 +66,33 @@ class FtpTest extends TestCase
     }
 
     /**
-     * @covers ::isValidUri
+
      *
      * @dataProvider invalidUrlProvider
      */
     public function testConstructorThrowInvalidArgumentException(string $uri): void
     {
         self::expectException(InvalidUri::class);
-        Ftp::createFromString($uri);
+        Uri::createFromString($uri);
     }
 
     public function invalidUrlProvider(): array
     {
         return [
-            ['http://example.com'],
+            //['http://example.com'],
             ['ftp:/example.com'],
             ['ftp:example.com'],
             ['ftp://example.com?query#fragment'],
         ];
     }
 
-    /**
-     * @covers ::isValidUri
-     */
+    
     public function testModificationFailedWithEmptyAuthority(): void
     {
         self::expectException(InvalidUri::class);
-        Ftp::createFromString('ftp://example.com/path')
-            ->withScheme('')
-            ->withHost('')
+        Uri::createFromString('ftp://example.com/path')
+            ->withScheme(null)
+            ->withHost(null)
             ->withPath('//toto');
     }
 
@@ -104,7 +102,7 @@ class FtpTest extends TestCase
      */
     public function testPort(string $uri, ?int $port): void
     {
-        self::assertSame($port, Ftp::createFromString($uri)->getPort());
+        self::assertSame($port, Uri::createFromString($uri)->getPort());
     }
 
     public function portProvider(): array
