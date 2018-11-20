@@ -80,15 +80,11 @@ final class Factory implements UriFactoryInterface
     public function createUriFromUnixPath(string $uri = ''): Uri
     {
         $uri = implode('/', array_map('rawurlencode', explode('/', $uri)));
-        if ('/' === ($uri[0] ?? '')) {
-            return Uri::createFromComponents([
-                'scheme' => 'file',
-                'host' => '',
-                'path' => $uri,
-            ]);
+        if ('/' !== ($uri[0] ?? '')) {
+            return Uri::createFromComponents(['path' => $uri]);
         }
 
-        return Uri::createFromComponents(['path' => $uri]);
+        return Uri::createFromComponents(['path' => $uri, 'scheme' => 'file', 'host' => '']);
     }
 
     /**
@@ -106,25 +102,17 @@ final class Factory implements UriFactoryInterface
 
         //Local Windows absolute path
         if ('' !== $root) {
-            return Uri::createFromComponents([
-                'scheme' => 'file',
-                'host' => '',
-                'path' => '/'.$root.$uri,
-            ]);
+            return Uri::createFromComponents(['path' => '/'.$root.$uri, 'scheme' => 'file', 'host' => '']);
         }
 
         //UNC Windows Path
-        if ('//' === substr($uri, 0, 2)) {
-            $parts = explode('/', substr($uri, 2), 2) + [1 => null];
-
-            return Uri::createFromComponents([
-                'scheme' => 'file',
-                'host' => $parts[0],
-                'path' => '/'.$parts[1],
-            ]);
+        if ('//' !== substr($uri, 0, 2)) {
+            return Uri::createFromComponents(['path' => $uri]);
         }
 
-        return Uri::createFromComponents(['path' => $uri]);
+        $parts = explode('/', substr($uri, 2), 2) + [1 => null];
+
+        return Uri::createFromComponents(['host' => $parts[0], 'path' => '/'.$parts[1], 'scheme' => 'file']);
     }
 
     /**
@@ -196,7 +184,6 @@ final class Factory implements UriFactoryInterface
             'port' => $port,
             'path' => $path,
             'query' => $query,
-            'fragment' => null,
         ]);
     }
 
