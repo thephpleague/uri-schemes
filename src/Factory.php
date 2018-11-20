@@ -130,7 +130,7 @@ final class Factory implements UriFactoryInterface
     /**
      * {@inheritdoc}
      */
-    public function createUri($uri = ''): Psr7UriInterface
+    public function createUri(string $uri = ''): Psr7UriInterface
     {
         return Http::createFromString($uri);
     }
