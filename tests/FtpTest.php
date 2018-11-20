@@ -22,12 +22,12 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * @group ftp
+ * @group uri
  * @coversDefaultClass League\Uri\Uri
  */
 class FtpTest extends TestCase
 {
     /**
-
      * @dataProvider validUrlProvider
      */
     public function testCreateFromString(string $uri, string $expected): void
@@ -86,7 +86,6 @@ class FtpTest extends TestCase
         ];
     }
 
-    
     public function testModificationFailedWithEmptyAuthority(): void
     {
         self::expectException(InvalidUri::class);

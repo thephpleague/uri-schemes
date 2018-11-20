@@ -22,6 +22,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * @group ws
+ * @group uri
  * @coversDefaultClass League\Uri\Uri
  */
 class WsTest extends TestCase

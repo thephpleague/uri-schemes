@@ -18,15 +18,12 @@ namespace LeagueTest\Uri;
 
 use League\Uri\Http;
 use League\Uri\Relativizer;
-use League\Uri\Uri;
 use PHPUnit\Framework\TestCase;
 use TypeError;
 
 /**
- * @group uri
  * @group modifier
- * @group uri-modifier
- * @coversDefaultClass League\Uri\Info
+ * @coversDefaultClass League\Uri\Relativizer
  */
 class RelativizerTest extends TestCase
 {

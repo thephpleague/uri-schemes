@@ -24,9 +24,7 @@ use Psr\Http\Message\UriInterface as Psr7UriInterface;
 use TypeError;
 
 /**
- * @group uri
  * @group modifier
- * @group uri-modifier
  * @coversDefaultClass League\Uri\UriInfo
  */
 class UriInfoTest extends TestCase

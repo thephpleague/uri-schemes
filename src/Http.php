@@ -45,6 +45,7 @@ final class Http implements Psr7UriInterface, JsonSerializable
     {
         return new self($components['uri']);
     }
+
     /**
      * Create a new instance from a hash of parse_url parts.
      *
@@ -54,14 +55,6 @@ final class Http implements Psr7UriInterface, JsonSerializable
     public static function createFromComponents(array $components): self
     {
         return new self(Uri::createFromComponents($components));
-    }
-
-    /**
-     * Create a new instance from the environment.
-     */
-    public static function createFromServer(array $server): self
-    {
-        return new self(Uri::createFromServer($server));
     }
 
     /**
@@ -79,14 +72,31 @@ final class Http implements Psr7UriInterface, JsonSerializable
      */
     public function __construct(Uri $uri)
     {
+        $this->validate($uri);
+        $this->uri = $uri;
+    }
+
+    /**
+     * Validate the submitted uri against PSR-7 UriInterface.
+     *
+     * @throws MalformedUri if the given URI does not follow PSR-7 UriInterface rules
+     */
+    private function validate(Uri $uri): void
+    {
         $scheme = $uri->getScheme();
         $port = $uri->getPort();
         if (in_array($scheme, ['http', 'https'], true)
             && (null !== $port && ($port < 1 || $port > 65536))) {
-            throw new MalformedUri('Invalid HTTPS URI according to PSR-7');
+            throw new MalformedUri(sprintf('Invalid URI according to PSR-7 %s', (string) $uri));
         }
 
-        $this->uri = $uri;
+        if (null !== $scheme) {
+            return;
+        }
+
+        if ('' === $uri->getHost()) {
+            throw new MalformedUri(sprintf('Invalid URI according to PSR-7 %s', (string) $uri));
+        }
     }
 
     /**
@@ -177,7 +187,6 @@ final class Http implements Psr7UriInterface, JsonSerializable
      * @param mixed $str the value to evaluate as a string
      *
      * @throws MalformedUri if the submitted data can not be converted to string
-     *
      */
     private function filterString($str): ?string
     {
@@ -306,13 +315,5 @@ final class Http implements Psr7UriInterface, JsonSerializable
     public function jsonSerialize(): string
     {
         return $this->uri->__toString();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function __debugInfo(): array
-    {
-        return $this->uri->__debugInfo();
     }
 }

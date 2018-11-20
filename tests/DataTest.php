@@ -23,6 +23,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * @group data
+ * @group uri
  * @coversDefaultClass League\Uri\Uri
  */
 class DataTest extends TestCase
@@ -122,27 +123,6 @@ class DataTest extends TestCase
         ];
     }
 
-
-    /**
-     * @covers ::createFromDataPath
-     *
-     * @dataProvider invalidDataPath
-     *
-     * @param string $path
-     */
-    public function testCreateFromPathFailed($path): void
-    {
-        self::expectException(InvalidUri::class);
-        Uri::createFromDataPath($path);
-    }
-
-    public function invalidDataPath(): array
-    {
-        return [
-            'invalid format' => ['/usr/bin/yeah'],
-        ];
-    }
-
     /**
      * @covers ::assertValidPath
      * @covers ::formatDataPath
@@ -166,7 +146,6 @@ class DataTest extends TestCase
         Uri::createFromString('data:image/png;base64=toto;base64,dsqdfqfd');
     }
 
-    
     public function testCreateFromComponentsFailedWithException(): void
     {
         self::expectException(InvalidUri::class);
@@ -183,33 +162,6 @@ class DataTest extends TestCase
         $path = 'text/plain;charset=us-ascii,Bonjour%20le%20monde%21';
         $uri = Uri::createFromString('data:'.$path);
         self::assertSame($uri, $uri->withPath($path));
-    }
-
-    /**
-     * @covers ::createFromDataPath
-     * @covers ::assertValidState
-     *
-     * @dataProvider validFilePath
-     */
-    public function testCreateFromPath(string $path, string $expected): void
-    {
-        $context = stream_context_create([
-            'http'=> [
-                'method' => 'GET',
-                'header' => "Accept-language: en\r\nCookie: foo=bar\r\n",
-            ],
-        ]);
-
-        $uri = Uri::createFromDataPath(__DIR__.'/data/'.$path, $context);
-        self::assertContains($expected, $uri->getPath());
-    }
-
-    public function validFilePath(): array
-    {
-        return [
-            'text file' => ['hello-world.txt', 'text/plain'],
-            'img file' => ['red-nose.gif', 'image/gif'],
-        ];
     }
 
     /**

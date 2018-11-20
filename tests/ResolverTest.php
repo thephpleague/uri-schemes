@@ -23,8 +23,8 @@ use PHPUnit\Framework\TestCase;
 use TypeError;
 
 /**
+ * @group modifer
  * @coversDefaultClass \League\Uri\Resolver
- * @group factory
  */
 class ResolverTest extends TestCase
 {

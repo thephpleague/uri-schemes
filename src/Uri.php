@@ -18,7 +18,6 @@ declare(strict_types=1);
 
 namespace League\Uri;
 
-use finfo;
 use JsonSerializable;
 use League\Uri\Exception\InvalidUri;
 use League\Uri\Exception\MalformedUri;
@@ -26,13 +25,11 @@ use League\Uri\Parser\RFC3986;
 use TypeError;
 use UnexpectedValueException;
 use function array_filter;
-use function array_map;
 use function base64_decode;
 use function base64_encode;
 use function count;
 use function defined;
 use function explode;
-use function file_get_contents;
 use function function_exists;
 use function idn_to_ascii;
 use function implode;
@@ -51,7 +48,6 @@ use function strlen;
 use function strpos;
 use function strtolower;
 use function substr;
-use const FILEINFO_MIME;
 use const FILTER_FLAG_IPV6;
 use const FILTER_VALIDATE_IP;
 use const IDNA_ERROR_BIDI;
@@ -111,8 +107,6 @@ final class Uri implements JsonSerializable
     private const HOST_ADDRESS_BLOCK = "\xfe\x80";
 
     private const REGEXP_FILE_PATH = ',^(?<delim>/)?(?<root>[a-zA-Z][:|\|])(?<rest>.*)?,';
-
-    private const REGEXP_WINDOW_PATH = ',^(?<root>[a-zA-Z][:|\|]),';
 
     private const REGEXP_MIMETYPE = ',^\w+/[-.\w]+(?:\+[-.\w]+)?$,';
 
@@ -223,184 +217,6 @@ final class Uri implements JsonSerializable
     }
 
     /**
-     * Create a new instance from the environment.
-     */
-    public static function createFromServer(array $server): self
-    {
-        [$user, $pass] = self::fetchUserInfo($server);
-        [$host, $port] = self::fetchHostname($server);
-        [$path, $query] = self::fetchRequestUri($server);
-
-        return new self(self::fetchScheme($server), $user, $pass, $host, $port, $path, $query);
-    }
-
-    /**
-     * Returns the environment scheme.
-     */
-    private static function fetchScheme(array $server): string
-    {
-        $server += ['HTTPS' => ''];
-        $res = filter_var($server['HTTPS'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
-
-        return $res !== false ? 'https' : 'http';
-    }
-
-    /**
-     * Returns the environment user info.
-     */
-    private static function fetchUserInfo(array $server): array
-    {
-        $server += ['PHP_AUTH_USER' => null, 'PHP_AUTH_PW' => null, 'HTTP_AUTHORIZATION' => ''];
-        $user = $server['PHP_AUTH_USER'];
-        $pass = $server['PHP_AUTH_PW'];
-        if (0 === strpos(strtolower($server['HTTP_AUTHORIZATION']), 'basic')) {
-            $userinfo = base64_decode(substr($server['HTTP_AUTHORIZATION'], 6), true);
-            if (false === $userinfo) {
-                throw new InvalidUri('The user info could not be detected');
-            }
-            [$user, $pass] = explode(':', $userinfo, 2) + [1 => null];
-        }
-
-        if (null !== $user) {
-            $user = rawurlencode($user);
-        }
-
-        if (null !== $pass) {
-            $pass = rawurlencode($pass);
-        }
-
-        return [$user, $pass];
-    }
-
-    /**
-     * Returns the environment host.
-     *
-     * @throws InvalidUri If the host can not be detected
-     */
-    private static function fetchHostname(array $server): array
-    {
-        $server += ['SERVER_PORT' => null];
-        if (null !== $server['SERVER_PORT']) {
-            $server['SERVER_PORT'] = (int) $server['SERVER_PORT'];
-        }
-
-        if (isset($server['HTTP_HOST'])) {
-            preg_match(',^(?<host>(\[.*\]|[^:])*)(\:(?<port>[^/?\#]*))?$,x', $server['HTTP_HOST'], $matches);
-
-            return [
-                $matches['host'],
-                isset($matches['port']) ? (int) $matches['port'] : $server['SERVER_PORT'],
-            ];
-        }
-
-        if (!isset($server['SERVER_ADDR'])) {
-            throw new InvalidUri('The host could not be detected');
-        }
-
-        if (false === filter_var($server['SERVER_ADDR'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
-            $server['SERVER_ADDR'] = '['.$server['SERVER_ADDR'].']';
-        }
-
-        return [$server['SERVER_ADDR'], $server['SERVER_PORT']];
-    }
-
-    /**
-     * Returns the environment path.
-     */
-    private static function fetchRequestUri(array $server): array
-    {
-        $server += ['IIS_WasUrlRewritten' => null, 'UNENCODED_URL' => '', 'PHP_SELF' => '', 'QUERY_STRING' => null];
-        if ('1' === $server['IIS_WasUrlRewritten'] && '' !== $server['UNENCODED_URL']) {
-            return explode('?', $server['UNENCODED_URL'], 2) + [1 => null];
-        }
-
-        if (isset($server['REQUEST_URI'])) {
-            [$path, ] = explode('?', $server['REQUEST_URI'], 2);
-            $query = ('' !== $server['QUERY_STRING']) ? $server['QUERY_STRING'] : null;
-
-            return [$path, $query];
-        }
-
-        return [$server['PHP_SELF'], $server['QUERY_STRING']];
-    }
-
-    /**
-     * Create a new instance from a file path.
-     *
-     * @param resource|null $context
-     *
-     * @throws InvalidUri If the file does not exist or is not readable
-     * @throws InvalidUri If the file mimetype can not be detected
-     */
-    public static function createFromDataPath(string $path, $context = null): self
-    {
-        $file_args = [$path, false];
-        $mime_args = [$path, FILEINFO_MIME];
-        if (null !== $context) {
-            $file_args[] = $context;
-            $mime_args[] = $context;
-        }
-
-        $raw = @file_get_contents(...$file_args);
-        if (false === $raw) {
-            throw new InvalidUri(sprintf('The file `%s` does not exist or is not readable', $path));
-        }
-
-        return new self(
-            'data',
-            null,
-            null,
-            null,
-            null,
-            str_replace(' ', '', (new finfo(FILEINFO_MIME))->file(...$mime_args)).';base64,'.base64_encode($raw)
-        );
-    }
-
-    /**
-     * Create a new instance from a Unix path string.
-     *
-     * @return self
-     */
-    public static function createFromUnixPath(string $uri = '')
-    {
-        $uri = implode('/', array_map('rawurlencode', explode('/', $uri)));
-        if ('/' === ($uri[0] ?? '')) {
-            return new self('file', null, null, '', null, $uri);
-        }
-
-        return new self(null, null, null, null, null, $uri);
-    }
-
-    /**
-     * Create a new instance from a local Windows path string.
-     *
-     * @return self
-     */
-    public static function createFromWindowsPath(string $uri = '')
-    {
-        $root = '';
-        if (1 === preg_match(self::REGEXP_WINDOW_PATH, $uri, $matches)) {
-            $root = substr($matches['root'], 0, -1).':';
-            $uri = substr($uri, strlen($root));
-        }
-        $uri = str_replace('\\', '/', $uri);
-        $uri = implode('/', array_map('rawurlencode', explode('/', $uri)));
-
-        //Local Windows absolute path
-        if ('' !== $root) {
-            return new self('file', null, null, '', null, '/'.$root.$uri);
-        }
-
-        //UNC Windows Path
-        if ('//' === substr($uri, 0, 2)) {
-            $parts = explode('/', substr($uri, 2), 2) + [1 => null];
-            return new self('file', null, null, $parts[0], null, '/'.$parts[1]);
-        }
-
-        return new self(null, null, null, null, null, $uri);
-    }
-
-    /**
      * Create a new instance from a string.
      *
      * @param string|mixed $uri
@@ -453,24 +269,23 @@ final class Uri implements JsonSerializable
     /**
      * Create a new instance.
      *
-     * @param string|null $scheme   scheme component
-     * @param string|null $user     user component
-     * @param string|null $pass     pass component
-     * @param string|null $host     host component
-     * @param int|null    $port     port component
-     * @param string      $path     path component
-     * @param string|null $query    query component
-     * @param string|null $fragment fragment component
+     * @param ?string $scheme
+     * @param ?string $user
+     * @param ?string $pass
+     * @param ?string $host
+     * @param ?int    $port
+     * @param ?string $query
+     * @param ?string $fragment
      */
     private function __construct(
-        ?string $scheme = null,
-        ?string $user = null,
-        ?string $pass = null,
-        ?string $host = null,
-        ?int $port = null,
+        ?string $scheme,
+        ?string $user,
+        ?string $pass,
+        ?string $host,
+        ?int $port,
         string $path,
-        ?string $query = null,
-        ?string $fragment = null
+        ?string $query,
+        ?string $fragment
     ) {
         $this->scheme = $this->formatScheme($scheme);
         $this->user_info = $this->formatUserInfo($user, $pass);
@@ -486,10 +301,11 @@ final class Uri implements JsonSerializable
     /**
      * Format the Scheme and Host component.
      *
-     * @param  ?string      $scheme
+     * @param ?string $scheme
+     *
      * @throws MalformedUri if the scheme is invalid
      */
-    private function formatScheme(?string $scheme = null): ?string
+    private function formatScheme(?string $scheme): ?string
     {
         if ('' === $scheme || null === $scheme) {
             return $scheme;
@@ -506,11 +322,10 @@ final class Uri implements JsonSerializable
     /**
      * Set the UserInfo component.
      *
-     * @param string|null $user     the URI scheme component
-     * @param string|null $password the URI scheme component
-     *
+     * @param ?string $user
+     * @param ?string $password
      */
-    private function formatUserInfo(string $user = null, ?string $password = null): ?string
+    private function formatUserInfo(?string $user, ?string $password): ?string
     {
         if (null === $user) {
             return $user;
@@ -1055,6 +870,34 @@ final class Uri implements JsonSerializable
     /**
      * {@inheritdoc}
      */
+    public function getUser(): ?string
+    {
+        if (null === $this->user_info) {
+            return null;
+        }
+
+        [$user, ] = explode(':', $this->user_info, 2);
+
+        return $user;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getPass(): ?string
+    {
+        if (null === $this->user_info) {
+            return null;
+        }
+
+        [$user, $pass] = explode(':', $this->user_info, 2) + [1 => null];
+
+        return $pass;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function getHost(): ?string
     {
         return $this->host;
@@ -1095,7 +938,7 @@ final class Uri implements JsonSerializable
     /**
      * {@inheritdoc}
      */
-    public function withScheme($scheme)
+    public function withScheme($scheme): self
     {
         $scheme = $this->formatScheme($this->filterString($scheme));
         if ($scheme === $this->scheme) {
@@ -1141,7 +984,7 @@ final class Uri implements JsonSerializable
     /**
      * {@inheritdoc}
      */
-    public function withUserInfo($user, $password = null)
+    public function withUserInfo($user, $password = null): self
     {
         $user_info = null;
         $user = $this->filterString($user);
@@ -1168,7 +1011,7 @@ final class Uri implements JsonSerializable
     /**
      * {@inheritdoc}
      */
-    public function withHost($host)
+    public function withHost($host): self
     {
         $host = $this->formatHost($this->filterString($host));
         if ($host === $this->host) {
@@ -1186,7 +1029,7 @@ final class Uri implements JsonSerializable
     /**
      * {@inheritdoc}
      */
-    public function withPort($port)
+    public function withPort($port): self
     {
         $port = $this->formatPort($port);
         if ($port === $this->port) {
@@ -1204,7 +1047,7 @@ final class Uri implements JsonSerializable
     /**
      * {@inheritdoc}
      */
-    public function withPath($path)
+    public function withPath($path): self
     {
         $path = $this->filterString($path);
         if (null === $path) {
@@ -1226,7 +1069,7 @@ final class Uri implements JsonSerializable
     /**
      * {@inheritdoc}
      */
-    public function withQuery($query)
+    public function withQuery($query): self
     {
         $query = $this->formatQueryAndFragment($this->filterString($query));
         if ($query === $this->query) {
@@ -1243,7 +1086,7 @@ final class Uri implements JsonSerializable
     /**
      * {@inheritdoc}
      */
-    public function withFragment($fragment)
+    public function withFragment($fragment): self
     {
         $fragment = $this->formatQueryAndFragment($this->filterString($fragment));
         if ($fragment === $this->fragment) {

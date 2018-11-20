@@ -102,18 +102,28 @@ class UriTest extends TestCase
 
     /**
      * @covers ::getUserInfo
+     * @covers ::getUser
+     * @covers ::getPass
      * @covers ::withUserInfo
      * @covers ::formatUserInfo
      */
     public function testUserInfo(): void
     {
         self::assertSame('login:pass', $this->uri->getUserInfo());
+        self::assertSame('login', $this->uri->getUser());
+        self::assertSame('pass', $this->uri->getPass());
         self::assertSame($this->uri, $this->uri->withUserInfo('login', 'pass'));
-        self::assertNotEquals($this->uri, $this->uri->withUserInfo('login', null));
-        self::assertSame(
-            'http://secure.example.com:443/test/query.php?kingkong=toto#doc3',
-            (string) $this->uri->withUserInfo(null)
-        );
+
+        $newUri = $this->uri->withUserInfo('login', null);
+        self::assertNotEquals($this->uri, $newUri);
+        self::assertNull($newUri->getPass());
+
+        $altUri = $this->uri->withUserInfo(null);
+        self::assertNotEquals($this->uri, $altUri);
+        self::assertNull($altUri->getPass());
+        self::assertNull($altUri->getUser());
+
+        self::assertSame('http://secure.example.com:443/test/query.php?kingkong=toto#doc3', (string) $altUri);
     }
 
     /**

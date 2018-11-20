@@ -22,6 +22,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * @group file
+ * @group uri
  * @coversDefaultClass League\Uri\Uri
  */
 class FileTest extends TestCase
@@ -35,7 +36,6 @@ class FileTest extends TestCase
     }
 
     /**
-
      * @covers ::formatHost
      * @covers ::formatFilePath
      * @covers ::assertValidState
@@ -94,8 +94,6 @@ class FileTest extends TestCase
     }
 
     /**
-
-     *
      * @dataProvider invalidUrlProvider
      * @covers ::assertValidState
      */
@@ -114,92 +112,6 @@ class FileTest extends TestCase
             'fragment' => ['file://example.com#'],
             'user info' => ['file://user:pass@example.com'],
             'port' => ['file://example.com:42'],
-        ];
-    }
-
-    /**
-     * @covers ::createFromUnixPath
-     * @covers ::assertValidState
-     *
-     * @dataProvider unixpathProvider
-     */
-    public function testCreateFromUnixPath(string $uri, string $expected): void
-    {
-        self::assertSame($expected, (string) Uri::createFromUnixPath($uri));
-    }
-
-    public function unixpathProvider(): array
-    {
-        return [
-            'relative path' => [
-                'input' => 'path',
-                'expected' => 'path',
-            ],
-            'absolute path' => [
-                'input' => '/path',
-                'expected' => 'file:///path',
-            ],
-            'path with empty char' => [
-                'input' => '/path empty/bar',
-                'expected' => 'file:///path%20empty/bar',
-            ],
-            'relative path with dot segments' => [
-                'input' => 'path/./relative',
-                'expected' => 'path/./relative',
-            ],
-            'absolute path with dot segments' => [
-                'input' => '/path/./../relative',
-                'expected' => 'file:///path/./../relative',
-            ],
-        ];
-    }
-
-    /**
-     * @covers ::createFromWindowsPath
-     * @covers ::assertValidState
-     *
-     * @dataProvider windowLocalPathProvider
-     */
-    public function testCreateFromWindowsLocalPath(string $uri, string $expected): void
-    {
-        self::assertSame($expected, (string) Uri::createFromWindowsPath($uri));
-    }
-
-    public function windowLocalPathProvider(): array
-    {
-        return [
-            'relative path' => [
-                'input' => 'path',
-                'expected' => 'path',
-            ],
-            'relative path with dot segments' => [
-                'input' => 'path\.\relative',
-                'expected' => 'path/./relative',
-            ],
-            'absolute path' => [
-                'input' => 'c:\windows\My Documents 100%20\foo.txt',
-                'expected' => 'file:///c:/windows/My%20Documents%20100%2520/foo.txt',
-            ],
-            'windows relative path' => [
-                'input' => 'c:My Documents 100%20\foo.txt',
-                'expected' => 'file:///c:My%20Documents%20100%2520/foo.txt',
-            ],
-            'absolute path with `|`' => [
-                'input' => 'c|\windows\My Documents 100%20\foo.txt',
-                'expected' => 'file:///c:/windows/My%20Documents%20100%2520/foo.txt',
-            ],
-            'windows relative path with `|`' => [
-                'input' => 'c:My Documents 100%20\foo.txt',
-                'expected' => 'file:///c:My%20Documents%20100%2520/foo.txt',
-            ],
-            'absolute path with dot segments' => [
-                'input' => '\path\.\..\relative',
-                'expected' => '/path/./../relative',
-            ],
-            'absolute UNC path' => [
-                'input' => '\\\\server\share\My Documents 100%20\foo.txt',
-                'expected' => 'file://server/share/My%20Documents%20100%2520/foo.txt',
-            ],
         ];
     }
 }

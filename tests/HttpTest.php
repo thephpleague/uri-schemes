@@ -19,7 +19,6 @@ namespace LeagueTest\Uri;
 use InvalidArgumentException;
 use League\Uri\Exception\InvalidUri;
 use League\Uri\Http;
-use League\Uri\Uri;
 use PHPUnit\Framework\TestCase;
 use TypeError;
 
@@ -60,15 +59,6 @@ class HttpTest extends TestCase
             '"http:\/\/example.com"',
             json_encode(Http::createFromString('http://example.com'))
         );
-    }
-
-    /**
-     * @covers ::__debugInfo
-     */
-    public function testDebugInfo(): void
-    {
-        $uri = Uri::createFromString('http://example.com');
-        self::assertSame($uri->__debugInfo(), Http::createFromString('http://example.com')->__debugInfo());
     }
 
     /**
@@ -265,7 +255,7 @@ class HttpTest extends TestCase
     }
 
     /**
-     * @covers \League\Uri\Uri::assertValidState
+     * @covers ::validate
      *
      * @dataProvider invalidURI
      */
@@ -279,201 +269,10 @@ class HttpTest extends TestCase
     {
         return [
             ['http://user@:80'],
+            ['http://example.com:0'],
+            ['///path?query'],
         ];
     }
-
-    /**
-     * @covers ::createFromServer
-     * @covers \League\Uri\Uri::createFromServer
-     * @covers \League\Uri\Uri::fetchScheme
-     * @covers \League\Uri\Uri::fetchUserInfo
-     * @covers \League\Uri\Uri::fetchHostname
-     * @covers \League\Uri\Uri::fetchRequestUri
-     * @covers \League\Uri\Uri::formatPort
-     *
-     * @dataProvider validServerArray
-     */
-    public function testCreateFromServer(string $expected, array $input): void
-    {
-        self::assertSame($expected, (string) Http::createFromServer($input));
-    }
-
-    public function validServerArray(): array
-    {
-        return [
-            'with host' => [
-                'https://example.com:23',
-                [
-                    'PHP_SELF' => '',
-                    'REQUEST_URI' => '',
-                    'SERVER_ADDR' => '127.0.0.1',
-                    'HTTPS' => 'on',
-                    'SERVER_PORT' => '23',
-                    'HTTP_HOST' => 'example.com',
-                ],
-            ],
-            'server address IPv4' => [
-                'https://127.0.0.1:23',
-                [
-                    'PHP_SELF' => '',
-                    'REQUEST_URI' => '',
-                    'SERVER_ADDR' => '127.0.0.1',
-                    'HTTPS' => 'on',
-                    'SERVER_PORT' => 23,
-                ],
-            ],
-            'server address IPv6' => [
-                'https://[::1]:23',
-                [
-                    'PHP_SELF' => '',
-                    'REQUEST_URI' => '',
-                    'SERVER_ADDR' => '::1',
-                    'HTTPS' => 'on',
-                    'SERVER_PORT' => 23,
-                ],
-            ],
-            'with port attached to host' => [
-                'https://localhost:23',
-                [
-                    'PHP_SELF' => '',
-                    'REQUEST_URI' => '',
-                    'SERVER_ADDR' => '127.0.0.1',
-                    'HTTPS' => 'on',
-                    'SERVER_PORT' => 80,
-                    'HTTP_HOST' => 'localhost:23',
-                ],
-            ],
-            'with standard apache HTTP server' => [
-                'http://localhost:23',
-                [
-                    'PHP_SELF' => '',
-                    'REQUEST_URI' => '',
-                    'SERVER_ADDR' => '127.0.0.1',
-                    'HTTPS' => '',
-                    'SERVER_PORT' => 80,
-                    'HTTP_HOST' => 'localhost:23',
-                ],
-            ],
-            'with IIS HTTP server' => [
-                'http://localhost:23',
-                [
-                    'PHP_SELF' => '',
-                    'REQUEST_URI' => '',
-                    'SERVER_ADDR' => '127.0.0.1',
-                    'HTTPS' => 'off',
-                    'SERVER_PORT' => 80,
-                    'HTTP_HOST' => 'localhost:23',
-                ],
-            ],
-            'with IIS Rewritting server' => [
-                'http://localhost:23/foo/bar?foo=bar',
-                [
-                    'PHP_SELF' => '',
-                    'IIS_WasUrlRewritten' => '1',
-                    'UNENCODED_URL' => '/foo/bar?foo=bar',
-                    'REQUEST_URI' => 'toto',
-                    'SERVER_PORT' => 23,
-                    'HTTP_HOST' => 'localhost',
-                ],
-            ],
-            'with standard port setting' => [
-                'https://localhost:23',
-                [
-                    'PHP_SELF' => '',
-                    'REQUEST_URI' => '',
-                    'SERVER_ADDR' => '127.0.0.1',
-                    'HTTPS' => 'on',
-                    'SERVER_PORT' => 23,
-                    'HTTP_HOST' => 'localhost',
-                ],
-            ],
-            'without port' => [
-                'https://localhost',
-                [
-                    'PHP_SELF' => '',
-                    'REQUEST_URI' => '',
-                    'SERVER_ADDR' => '127.0.0.1',
-                    'HTTPS' => 'on',
-                    'HTTP_HOST' => 'localhost',
-                ],
-            ],
-            'with user info' => [
-                'https://foo:bar@localhost:23',
-                [
-                    'PHP_SELF' => '',
-                    'REQUEST_URI' => '',
-                    'SERVER_ADDR' => '127.0.0.1',
-                    'PHP_AUTH_USER' => 'foo',
-                    'PHP_AUTH_PW' => 'bar',
-                    'HTTPS' => 'on',
-                    'SERVER_PORT' => 23,
-                    'HTTP_HOST' => 'localhost:23',
-                ],
-            ],
-            'with user info and HTTP AUTHORIZATION' => [
-                'https://foo:bar@localhost:23',
-                [
-                    'PHP_SELF' => '',
-                    'REQUEST_URI' => '',
-                    'SERVER_ADDR' => '127.0.0.1',
-                    'HTTP_AUTHORIZATION' => 'basic '.base64_encode('foo:bar'),
-                    'HTTPS' => 'on',
-                    'SERVER_PORT' => 23,
-                    'HTTP_HOST' => 'localhost:23',
-                ],
-            ],
-            'without request uri' => [
-                'https://127.0.0.1:23/toto?foo=bar',
-                [
-                    'PHP_SELF' => '/toto',
-                    'SERVER_ADDR' => '127.0.0.1',
-                    'HTTPS' => 'on',
-                    'SERVER_PORT' => 23,
-                    'QUERY_STRING' => 'foo=bar',
-                ],
-            ],
-            'without request uri and server host' => [
-                'https://127.0.0.1:23',
-                [
-                    'SERVER_ADDR' => '127.0.0.1',
-                    'HTTPS' => 'on',
-                    'SERVER_PORT' => 23,
-                ],
-            ],
-        ];
-    }
-
-    /**
-     * @covers \League\Uri\Uri::fetchHostname
-     */
-    public function testFailCreateFromServerWithoutHost(): void
-    {
-        self::expectException(InvalidUri::class);
-        Http::createFromServer([
-            'PHP_SELF' => '',
-            'REQUEST_URI' => '',
-            'HTTPS' => 'on',
-            'SERVER_PORT' => 23,
-        ]);
-    }
-
-    /**
-     * @covers \League\Uri\Uri::fetchUserInfo
-     */
-    public function testFailCreateFromServerWithoutInvalidUserInfo(): void
-    {
-        self::expectException(InvalidUri::class);
-        Http::createFromServer([
-            'PHP_SELF' => '/toto',
-            'SERVER_ADDR' => '127.0.0.1',
-            'HTTPS' => 'on',
-            'SERVER_PORT' => 23,
-            'QUERY_STRING' => 'foo=bar',
-            'HTTP_AUTHORIZATION' => 'basic foo:bar',
-        ]);
-    }
-
-    
     public function testModificationFailedWithEmptyAuthority(): void
     {
         self::expectException(InvalidUri::class);

@@ -11,15 +11,15 @@ System Requirements
 
 You need:
 
-- **PHP >= 7.0** but the latest stable version of PHP is recommended
+- **PHP >= 7.1.3** but the latest stable version of PHP is recommended
 - the `mbstring` extension
 - the `intl` extension
 
 Dependencies
 -------
 
-- [PSR-7](http://www.php-fig.org/psr/psr-7/)
-- [League URI Interfaces](https://github.com/thephpleague/uri-interfaces)
+- [PSR-7](https://www.php-fig.org/psr/psr-7/)
+- [PSR-17](https://www.php-fig.org/psr/psr-17/)
 - [League URI Parser](https://github.com/thephpleague/uri-parser)
 
 Installation
