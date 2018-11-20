@@ -81,16 +81,12 @@ final class Http implements Psr7UriInterface, JsonSerializable
     {
         $scheme = $uri->getScheme();
         if (null === $scheme && '' === $uri->getHost()) {
-            throw new MalformedUri(sprintf('%s is an invalid URI according to PSR-7', (string) $uri));
-        }
-
-        if ('http' !== $scheme && 'https' !== $scheme) {
-            return;
+            throw new MalformedUri(sprintf('an URI without scheme can not contains a empty host string according to PSR-7: %s', (string) $uri));
         }
 
         $port = $uri->getPort();
         if (null !== $port && ($port < 0 || $port > 65535)) {
-            throw new MalformedUri(sprintf('%s is an invalid URI according to PSR-7', (string) $uri));
+            throw new MalformedUri(sprintf('The URI port is outside the established TCP and UDP port ranges: %s', (string) $uri->getPort()));
         }
     }
 
