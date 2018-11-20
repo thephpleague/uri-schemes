@@ -21,12 +21,9 @@ namespace League\Uri;
 use JsonSerializable;
 use League\Uri\Exception\MalformedUri;
 use Psr\Http\Message\UriInterface as Psr7UriInterface;
-use TypeError;
-use function gettype;
 use function in_array;
 use function is_scalar;
 use function method_exists;
-use function preg_match;
 use function sprintf;
 
 final class Http implements Psr7UriInterface, JsonSerializable
@@ -86,16 +83,12 @@ final class Http implements Psr7UriInterface, JsonSerializable
         $scheme = $uri->getScheme();
         $port = $uri->getPort();
         if (in_array($scheme, ['http', 'https'], true)
-            && (null !== $port && ($port < 1 || $port > 65536))) {
-            throw new MalformedUri(sprintf('Invalid URI according to PSR-7 %s', (string) $uri));
+            && (null !== $port && ($port < 0 || $port > 65535))) {
+            throw new MalformedUri(sprintf('%s is an invalid URI according to PSR-7', (string) $uri));
         }
 
-        if (null !== $scheme) {
-            return;
-        }
-
-        if ('' === $uri->getHost()) {
-            throw new MalformedUri(sprintf('Invalid URI according to PSR-7 %s', (string) $uri));
+        if (null === $scheme && '' === $uri->getHost()) {
+            throw new MalformedUri(sprintf('%s is an invalid URI according to PSR-7', (string) $uri));
         }
     }
 
@@ -168,7 +161,7 @@ final class Http implements Psr7UriInterface, JsonSerializable
      */
     public function withScheme($scheme): self
     {
-        $scheme = $this->filterString($scheme);
+        $scheme = $this->filterInput($scheme);
         if ('' === $scheme) {
             $scheme = null;
         }
@@ -182,25 +175,21 @@ final class Http implements Psr7UriInterface, JsonSerializable
     }
 
     /**
-     * Filter a string.
+     * Safely stringify input when possible.
      *
      * @param mixed $str the value to evaluate as a string
      *
      * @throws MalformedUri if the submitted data can not be converted to string
+     *
+     * @return string|mixed
      */
-    private function filterString($str): ?string
+    private function filterInput($str)
     {
-        if (!is_scalar($str) && !method_exists($str, '__toString')) {
-            throw new TypeError(sprintf('The component must be a string, a scalar or a stringable object %s given', gettype($str)));
+        if (is_scalar($str) || method_exists($str, '__toString')) {
+            return (string) $str;
         }
 
-        $str = (string) $str;
-        static $pattern = '/[\x00-\x1f\x7f]/';
-        if (1 !== preg_match($pattern, $str)) {
-            return $str;
-        }
-
-        throw new MalformedUri(sprintf('The component `%s` contains invalid characters', $str));
+        return $str;
     }
 
     /**
@@ -208,7 +197,7 @@ final class Http implements Psr7UriInterface, JsonSerializable
      */
     public function withUserInfo($user, $password = null): self
     {
-        $user = $this->filterString($user);
+        $user = $this->filterInput($user);
         if ('' === $user) {
             $user = null;
         }
@@ -226,7 +215,7 @@ final class Http implements Psr7UriInterface, JsonSerializable
      */
     public function withHost($host): self
     {
-        $host = $this->filterString($host);
+        $host = $this->filterInput($host);
         if ('' === $host) {
             $host = null;
         }
@@ -270,7 +259,7 @@ final class Http implements Psr7UriInterface, JsonSerializable
      */
     public function withQuery($query): self
     {
-        $query = $this->filterString($query);
+        $query = $this->filterInput($query);
         if ('' === $query) {
             $query = null;
         }
@@ -288,7 +277,7 @@ final class Http implements Psr7UriInterface, JsonSerializable
      */
     public function withFragment($fragment): self
     {
-        $fragment = $this->filterString($fragment);
+        $fragment = $this->filterInput($fragment);
         if ('' === $fragment) {
             $fragment = null;
         }

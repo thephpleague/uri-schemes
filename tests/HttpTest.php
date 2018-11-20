@@ -67,11 +67,11 @@ class HttpTest extends TestCase
     public function testInvalidPort(): void
     {
         self::expectException(InvalidArgumentException::class);
-        Http::createFromString('https://example.com:0');
+        Http::createFromString('https://example.com:-1');
     }
 
     /**
-     * @covers ::filterString
+     * @covers ::filterInput
      */
     public function testThrowTypeErrorOnWrongType(): void
     {
@@ -80,7 +80,7 @@ class HttpTest extends TestCase
     }
 
     /**
-     * @covers ::filterString
+     * @covers ::filterInput
      */
     public function testThrowInvalidArgumentExceptionOnIllegalCharacters(): void
     {
@@ -269,7 +269,8 @@ class HttpTest extends TestCase
     {
         return [
             ['http://user@:80'],
-            ['http://example.com:0'],
+            ['http://example.com:655356'],
+            ['http://example.com:-1'],
             ['///path?query'],
         ];
     }

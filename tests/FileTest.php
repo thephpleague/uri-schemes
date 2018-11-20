@@ -39,6 +39,7 @@ class FileTest extends TestCase
      * @covers ::formatHost
      * @covers ::formatFilePath
      * @covers ::assertValidState
+     * @covers ::isUriWithSchemeHostAndPathOnly
      *
      * @dataProvider validUrlProvider
      */
@@ -96,6 +97,7 @@ class FileTest extends TestCase
     /**
      * @dataProvider invalidUrlProvider
      * @covers ::assertValidState
+     * @covers ::isUriWithSchemeHostAndPathOnly
      */
     public function testConstructorThrowsException(string $uri): void
     {

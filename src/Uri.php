@@ -68,6 +68,15 @@ use const INTL_IDNA_VARIANT_UTS46;
 final class Uri implements JsonSerializable
 {
     /**
+     * RFC3986 invalid characters.
+     *
+     * @see http://tools.ietf.org/html/rfc3986#section-2.2
+     *
+     * @var string
+     */
+    private const REGEXP_INVALID_CHARS = '/[\x00-\x1f\x7f]/';
+
+    /**
      * RFC3986 Sub delimiter characters regular expression pattern.
      *
      * @see http://tools.ietf.org/html/rfc3986#section-2.2
@@ -111,6 +120,57 @@ final class Uri implements JsonSerializable
     private const REGEXP_MIMETYPE = ',^\w+/[-.\w]+(?:\+[-.\w]+)?$,';
 
     private const REGEXP_BINARY = ',(;|^)base64$,';
+
+    /**
+     * IDNA errors.
+     */
+    private const IDNA_ERRORS = [
+        IDNA_ERROR_EMPTY_LABEL => 'a non-final domain name label (or the whole domain name) is empty',
+        IDNA_ERROR_LABEL_TOO_LONG => 'a domain name label is longer than 63 bytes',
+        IDNA_ERROR_DOMAIN_NAME_TOO_LONG => 'a domain name is longer than 255 bytes in its storage form',
+        IDNA_ERROR_LEADING_HYPHEN => 'a label starts with a hyphen-minus ("-")',
+        IDNA_ERROR_TRAILING_HYPHEN => 'a label ends with a hyphen-minus ("-")',
+        IDNA_ERROR_HYPHEN_3_4 => 'a label contains hyphen-minus ("-") in the third and fourth positions',
+        IDNA_ERROR_LEADING_COMBINING_MARK => 'a label starts with a combining mark',
+        IDNA_ERROR_DISALLOWED => 'a label or domain name contains disallowed characters',
+        IDNA_ERROR_PUNYCODE => 'a label starts with "xn--" but does not contain valid Punycode',
+        IDNA_ERROR_LABEL_HAS_DOT => 'a label contains a dot=full stop',
+        IDNA_ERROR_INVALID_ACE_LABEL => 'An ACE label does not contain a valid label string',
+        IDNA_ERROR_BIDI => 'a label does not meet the IDNA BiDi requirements (for right-to-left characters)',
+        IDNA_ERROR_CONTEXTJ => 'a label does not meet the IDNA CONTEXTJ requirements',
+    ];
+
+    /**
+     * Supported schemes and corresponding default port.
+     *
+     * @var array
+     */
+    private const SCHEME_DEFAULT_PORT = [
+        'http' => 80,
+        'https' => 443,
+        'ws' => 80,
+        'wss' => 443,
+        'ftp' => 21,
+        'gopher' => 70,
+        'file' => null,
+        'data' => null,
+    ];
+
+    /**
+     * URI validation methods per scheme.
+     *
+     * @var array
+     */
+    private const SCHEME_VALIDATION_METHODS = [
+        'data' => 'isUriWithSchemeAndPathOnly',
+        'file' => 'isUriWithSchemeHostAndPathOnly',
+        'http' => 'isNonEmptyHostUri',
+        'https' => 'isNonEmptyHostUri',
+        'ws' => 'isNonEmptyHostUriWithForbiddenFragment',
+        'wss' => 'isNonEmptyHostUriWithForbiddenFragment',
+        'gopher' => 'isNonEmptyHostUriWithForbiddenFragmentAndQuery',
+        'ftp' => 'isNonEmptyHostUriWithForbiddenFragmentAndQuery',
+    ];
 
     /**
      * URI scheme component.
@@ -176,27 +236,9 @@ final class Uri implements JsonSerializable
     private $uri;
 
     /**
-     * Supported schemes and corresponding default port.
-     *
-     * @var array
-     */
-    private static $supported_schemes = [
-        'http' => 80,
-        'https' => 443,
-        'ws' => 80,
-        'wss' => 443,
-        'file' => null,
-        'ftp' => 21,
-        'data' => null,
-        'gopher' => 70,
-    ];
-
-    /**
      * Static method called by PHP's var export.
-     *
-     * @return static
      */
-    public static function __set_state(array $components)
+    public static function __set_state(array $components): self
     {
         $components['user'] = null;
         $components['pass'] = null;
@@ -220,10 +262,8 @@ final class Uri implements JsonSerializable
      * Create a new instance from a string.
      *
      * @param string|mixed $uri
-     *
-     * @return static
      */
-    public static function createFromString($uri = '')
+    public static function createFromString($uri = ''): self
     {
         $components = RFC3986::parse($uri);
 
@@ -244,10 +284,8 @@ final class Uri implements JsonSerializable
      *
      * @param array $components a hash representation of the URI similar
      *                          to PHP parse_url function result
-     *
-     * @return static
      */
-    public static function createFromComponents(array $components = [])
+    public static function createFromComponents(array $components = []): self
     {
         $components += [
             'scheme' => null, 'user' => null, 'pass' => null, 'host' => null,
@@ -441,27 +479,8 @@ final class Uri implements JsonSerializable
      */
     private function getIDNAErrors(int $error_byte): string
     {
-        /**
-         * IDNA errors.
-         */
-        static $idn_errors = [
-            IDNA_ERROR_EMPTY_LABEL => 'a non-final domain name label (or the whole domain name) is empty',
-            IDNA_ERROR_LABEL_TOO_LONG => 'a domain name label is longer than 63 bytes',
-            IDNA_ERROR_DOMAIN_NAME_TOO_LONG => 'a domain name is longer than 255 bytes in its storage form',
-            IDNA_ERROR_LEADING_HYPHEN => 'a label starts with a hyphen-minus ("-")',
-            IDNA_ERROR_TRAILING_HYPHEN => 'a label ends with a hyphen-minus ("-")',
-            IDNA_ERROR_HYPHEN_3_4 => 'a label contains hyphen-minus ("-") in the third and fourth positions',
-            IDNA_ERROR_LEADING_COMBINING_MARK => 'a label starts with a combining mark',
-            IDNA_ERROR_DISALLOWED => 'a label or domain name contains disallowed characters',
-            IDNA_ERROR_PUNYCODE => 'a label starts with "xn--" but does not contain valid Punycode',
-            IDNA_ERROR_LABEL_HAS_DOT => 'a label contains a dot=full stop',
-            IDNA_ERROR_INVALID_ACE_LABEL => 'An ACE label does not contain a valid label string',
-            IDNA_ERROR_BIDI => 'a label does not meet the IDNA BiDi requirements (for right-to-left characters)',
-            IDNA_ERROR_CONTEXTJ => 'a label does not meet the IDNA CONTEXTJ requirements',
-        ];
-
         $res = [];
-        foreach ($idn_errors as $error => $reason) {
+        foreach (self::IDNA_ERRORS as $error => $reason) {
             if (1 === ($error_byte & $error)) {
                 $res[] = $reason;
             }
@@ -530,7 +549,7 @@ final class Uri implements JsonSerializable
             throw new MalformedUri(sprintf('The port `%s` is invalid', $port));
         }
 
-        $defaultPort = static::$supported_schemes[$this->scheme] ?? null;
+        $defaultPort = self::SCHEME_DEFAULT_PORT[$this->scheme] ?? null;
         if ($defaultPort === $port) {
             return null;
         }
@@ -702,19 +721,12 @@ final class Uri implements JsonSerializable
      */
     private function assertValidState(): void
     {
-        $this->uri = null;
-
         if (null !== $this->authority && ('' !== $this->path && '/' !== $this->path[0])) {
-            throw new MalformedUri(
-                'If an authority is present the path must be empty or start with a `/`'
-            );
+            throw new MalformedUri('If an authority is present the path must be empty or start with a `/`');
         }
 
         if (null === $this->authority && 0 === strpos($this->path, '//')) {
-            throw new MalformedUri(sprintf(
-                'If there is no authority the path `%s` can not start with a `//`',
-                $this->path
-            ));
+            throw new MalformedUri(sprintf('If there is no authority the path `%s` can not start with a `//`', $this->path));
         }
 
         $pos = strpos($this->path, ':');
@@ -723,49 +735,66 @@ final class Uri implements JsonSerializable
             && false !== $pos
             && false === strpos(substr($this->path, 0, $pos), '/')
         ) {
-            throw new MalformedUri(
-                'In absence of a scheme and an authority the first path segment cannot contain a colon (":") character.'
-            );
+            throw new MalformedUri('In absence of a scheme and an authority the first path segment cannot contain a colon (":") character.');
         }
 
-        if ('data' === $this->scheme
-            && null === $this->authority
-            && null === $this->query
-            && null === $this->fragment) {
+        $validationMethod = self::SCHEME_VALIDATION_METHODS[$this->scheme] ?? null;
+        if (null === $validationMethod || true === $this->$validationMethod()) {
+            $this->uri = null;
+
             return;
         }
 
-        if ('file' === $this->scheme
-            && null === $this->user_info
+        throw new MalformedUri(sprintf('The uri `%s` is invalid for the data scheme', (string) $this));
+    }
+
+    /**
+     * URI validation for URI schemes which allows only scheme and path components.
+     */
+    private function isUriWithSchemeAndPathOnly()
+    {
+        return null === $this->authority
+            && null === $this->query
+            && null === $this->fragment;
+    }
+
+    /**
+     * URI validation for URI schemes which allows only scheme, host and path components.
+     */
+    private function isUriWithSchemeHostAndPathOnly()
+    {
+        return null === $this->user_info
             && null === $this->port
             && null === $this->query
             && null === $this->fragment
-            && !('' != $this->scheme && null === $this->host)) {
-            return;
-        }
+            && !('' != $this->scheme && null === $this->host);
+    }
 
-        if ('file' !== $this->scheme && 'data' !== $this->scheme && !isset(self::$supported_schemes[$this->scheme])) {
-            return;
-        }
+    /**
+     * URI validation for URI schemes which disallow the empty '' host.
+     */
+    private function isNonEmptyHostUri()
+    {
+        return '' !== $this->host
+            && !(null !== $this->scheme && null === $this->host);
+    }
 
-        if (in_array($this->scheme, ['http', 'https'], true)
-            && ('' !== $this->host && !(null !== $this->scheme && null === $this->host))) {
-            return;
-        }
+    /**
+     * URI validation for URIs schemes which disallow the empty '' host
+     * and forbids the fragment component.
+     */
+    private function isNonEmptyHostUriWithForbiddenFragment()
+    {
+        return $this->isNonEmptyHostUri() && null === $this->fragment;
+    }
 
-        if (in_array($this->scheme, ['ws', 'wss'], true) && ('' !== $this->host
-            && !(null !== $this->scheme && null === $this->host)
-            && null === $this->fragment)) {
-            return;
-        }
-
-        if (in_array($this->scheme, ['ftp', 'gopher'], true) && ('' !== $this->host
-            && !(null !== $this->scheme && null === $this->host)
-            && null === $this->fragment && null === $this->query)) {
-            return;
-        }
-
-        throw new MalformedUri(sprintf('The uri `%s` is invalid for the following scheme(s): `%s`', (string) $this, $this->scheme));
+    /**
+     * URI validation for URIs schemes which disallow the empty '' host
+     * and forbids fragment and query components.
+     */
+    private function isNonEmptyHostUriWithForbiddenFragmentAndQuery()
+    {
+        return $this->isNonEmptyHostUri() && null === $this->fragment && null === $this->query;
     }
 
     /**
@@ -973,8 +1002,7 @@ final class Uri implements JsonSerializable
         }
 
         $str = (string) $str;
-        static $pattern = '/[\x00-\x1f\x7f]/';
-        if (1 !== preg_match($pattern, $str)) {
+        if (1 !== preg_match(self::REGEXP_INVALID_CHARS, $str)) {
             return $str;
         }
 
