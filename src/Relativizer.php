@@ -71,7 +71,7 @@ final class Relativizer
         }
 
         if ($uri->getQuery() === $base_uri->getQuery()) {
-            return $uri->withPath($null)->withQuery($null);
+            return $uri->withPath('')->withQuery($null);
         }
 
         if ('' === $uri->getQuery()) {
