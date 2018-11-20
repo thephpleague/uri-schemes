@@ -169,7 +169,7 @@ final class Http implements Psr7UriInterface, JsonSerializable
         }
 
         $uri = $this->uri->withScheme($scheme);
-        if ((string) $uri === (string) $this->uri) {
+        if ($uri->getScheme() === $this->uri->getScheme()) {
             return $this;
         }
 
@@ -205,7 +205,7 @@ final class Http implements Psr7UriInterface, JsonSerializable
         }
 
         $uri = $this->uri->withUserInfo($user, $password);
-        if ((string) $uri === (string) $this->uri) {
+        if ($uri->getUserInfo() === $this->uri->getUserInfo()) {
             return $this;
         }
 
@@ -223,7 +223,7 @@ final class Http implements Psr7UriInterface, JsonSerializable
         }
 
         $uri = $this->uri->withHost($host);
-        if ((string) $uri === (string) $this->uri) {
+        if ($uri->getHost() === $this->uri->getHost()) {
             return $this;
         }
 
@@ -236,7 +236,7 @@ final class Http implements Psr7UriInterface, JsonSerializable
     public function withPort($port): self
     {
         $uri = $this->uri->withPort($port);
-        if ((string) $uri === (string) $this->uri) {
+        if ($uri->getPort() === $this->uri->getPort()) {
             return $this;
         }
 
@@ -249,7 +249,7 @@ final class Http implements Psr7UriInterface, JsonSerializable
     public function withPath($path): self
     {
         $uri = $this->uri->withPath($path);
-        if ((string) $uri === (string) $this->uri) {
+        if ($uri->getPath() === $this->uri->getPath()) {
             return $this;
         }
 
@@ -267,7 +267,7 @@ final class Http implements Psr7UriInterface, JsonSerializable
         }
 
         $uri = $this->uri->withQuery($query);
-        if ((string) $uri === (string) $this->uri) {
+        if ($uri->getQuery() === $this->uri->getQuery()) {
             return $this;
         }
 
@@ -285,7 +285,7 @@ final class Http implements Psr7UriInterface, JsonSerializable
         }
 
         $uri = $this->uri->withFragment($fragment);
-        if ((string) $uri === (string) $this->uri) {
+        if ($uri->getFragment() === $this->uri->getFragment()) {
             return $this;
         }
 
