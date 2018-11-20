@@ -4,4 +4,5 @@ includes:
 parameters:
     ignoreErrors:
         - '#Strict comparison using === between false and string will always evaluate to false\.#'
+        - '#Parameter \#1 \$components of static method League\\Uri\\Uri::createFromComponents\(\) expects array, array<string, int\|string\|null>\|string\|null given\.#'
     reportUnmatchedIgnoredErrors: false

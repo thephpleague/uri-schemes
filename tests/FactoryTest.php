@@ -169,9 +169,11 @@ class FactoryTest extends TestCase
     public function testCreateUri(): void
     {
         $expected = 'http://login:pass@secure.example.com:443/test/query.php?kingkong=toto#doc3';
-        $uri = $this->factory->createUri($expected);
+        $psr7 = $this->factory->createUri($expected);
+        self::assertSame($expected, (string) $psr7);
 
-        self::assertSame($expected, (string) $uri);
+        $uri = $this->factory->createFromPsr7($psr7);
+        self::assertSame((string) $psr7, (string) $uri);
     }
 
     /**

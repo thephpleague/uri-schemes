@@ -282,8 +282,8 @@ final class Uri implements JsonSerializable
     /**
      * Create a new instance from a hash of parse_url parts.
      *
-     * @param array $components a hash representation of the URI similar
-     *                          to PHP parse_url function result
+     * Create an new instance from a hash representation of the URI similar
+     * to PHP parse_url function result
      */
     public static function createFromComponents(array $components = []): self
     {

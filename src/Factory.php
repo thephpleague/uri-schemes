@@ -128,6 +128,50 @@ final class Factory implements UriFactoryInterface
     }
 
     /**
+     * Create a new instance from a PSR7 UriInterface object.
+     */
+    public function createFromPsr7(Psr7UriInterface $uri): Uri
+    {
+        $components = [
+            'scheme' => null,
+            'user' => null,
+            'pass' => null,
+            'host' => null,
+            'port' => $uri->getPort(),
+            'path' => $uri->getPath(),
+            'query' => null,
+            'fragment' => null,
+        ];
+
+        $scheme = $uri->getScheme();
+        if ('' !== $scheme) {
+            $components['scheme'] = $scheme;
+        }
+
+        $fragment = $uri->getFragment();
+        if ('' !== $fragment) {
+            $components['fragment'] = $fragment;
+        }
+
+        $query = $uri->getQuery();
+        if ('' !== $query) {
+            $components['query'] = $query;
+        }
+
+        $host = $uri->getHost();
+        if ('' !== $host) {
+            $components['host'] = $host;
+        }
+
+        $user_info = $uri->getUserInfo();
+        if (null !== $user_info) {
+            [$components['user'], $components['pass']] = explode(':', $user_info, 2) + [1 => null];
+        }
+
+        return Uri::createFromComponents($components);
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function createUri(string $uri = ''): Psr7UriInterface
