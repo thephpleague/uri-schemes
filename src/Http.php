@@ -21,7 +21,6 @@ namespace League\Uri;
 use JsonSerializable;
 use League\Uri\Exception\MalformedUri;
 use Psr\Http\Message\UriInterface as Psr7UriInterface;
-use function in_array;
 use function is_scalar;
 use function method_exists;
 use function sprintf;
@@ -81,13 +80,16 @@ final class Http implements Psr7UriInterface, JsonSerializable
     private function validate(Uri $uri): void
     {
         $scheme = $uri->getScheme();
-        $port = $uri->getPort();
-        if (in_array($scheme, ['http', 'https'], true)
-            && (null !== $port && ($port < 0 || $port > 65535))) {
+        if (null === $scheme && '' === $uri->getHost()) {
             throw new MalformedUri(sprintf('%s is an invalid URI according to PSR-7', (string) $uri));
         }
 
-        if (null === $scheme && '' === $uri->getHost()) {
+        if ('http' !== $scheme && 'https' !== $scheme) {
+            return;
+        }
+
+        $port = $uri->getPort();
+        if (null !== $port && ($port < 0 || $port > 65535)) {
             throw new MalformedUri(sprintf('%s is an invalid URI according to PSR-7', (string) $uri));
         }
     }

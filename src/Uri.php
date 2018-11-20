@@ -146,14 +146,14 @@ final class Uri implements JsonSerializable
      * @var array
      */
     private const SCHEME_DEFAULT_PORT = [
+        'data' => null,
+        'file' => null,
+        'ftp' => 21,
+        'gopher' => 70,
         'http' => 80,
         'https' => 443,
         'ws' => 80,
         'wss' => 443,
-        'ftp' => 21,
-        'gopher' => 70,
-        'file' => null,
-        'data' => null,
     ];
 
     /**
@@ -161,15 +161,15 @@ final class Uri implements JsonSerializable
      *
      * @var array
      */
-    private const SCHEME_VALIDATION_METHODS = [
+    private const SCHEME_VALIDATION_METHOD = [
         'data' => 'isUriWithSchemeAndPathOnly',
         'file' => 'isUriWithSchemeHostAndPathOnly',
+        'ftp' => 'isNonEmptyHostUriWithoutFragmentAndQuery',
+        'gopher' => 'isNonEmptyHostUriWithoutFragmentAndQuery',
         'http' => 'isNonEmptyHostUri',
         'https' => 'isNonEmptyHostUri',
-        'ws' => 'isNonEmptyHostUriWithForbiddenFragment',
-        'wss' => 'isNonEmptyHostUriWithForbiddenFragment',
-        'gopher' => 'isNonEmptyHostUriWithForbiddenFragmentAndQuery',
-        'ftp' => 'isNonEmptyHostUriWithForbiddenFragmentAndQuery',
+        'ws' => 'isNonEmptyHostUriWithoutFragment',
+        'wss' => 'isNonEmptyHostUriWithoutFragment',
     ];
 
     /**
@@ -501,7 +501,6 @@ final class Uri implements JsonSerializable
             return $host;
         }
 
-
         if (1 === preg_match(self::REGEXP_HOST_IPFUTURE, $ip, $matches) && !in_array($matches['version'], ['4', '6'], true)) {
             return $host;
         }
@@ -738,7 +737,7 @@ final class Uri implements JsonSerializable
             throw new MalformedUri('In absence of a scheme and an authority the first path segment cannot contain a colon (":") character.');
         }
 
-        $validationMethod = self::SCHEME_VALIDATION_METHODS[$this->scheme] ?? null;
+        $validationMethod = self::SCHEME_VALIDATION_METHOD[$this->scheme] ?? null;
         if (null === $validationMethod || true === $this->$validationMethod()) {
             $this->uri = null;
 
@@ -783,7 +782,7 @@ final class Uri implements JsonSerializable
      * URI validation for URIs schemes which disallow the empty '' host
      * and forbids the fragment component.
      */
-    private function isNonEmptyHostUriWithForbiddenFragment()
+    private function isNonEmptyHostUriWithoutFragment()
     {
         return $this->isNonEmptyHostUri() && null === $this->fragment;
     }
@@ -792,7 +791,7 @@ final class Uri implements JsonSerializable
      * URI validation for URIs schemes which disallow the empty '' host
      * and forbids fragment and query components.
      */
-    private function isNonEmptyHostUriWithForbiddenFragmentAndQuery()
+    private function isNonEmptyHostUriWithoutFragmentAndQuery()
     {
         return $this->isNonEmptyHostUri() && null === $this->fragment && null === $this->query;
     }
