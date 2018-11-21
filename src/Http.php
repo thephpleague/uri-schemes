@@ -28,7 +28,7 @@ use function sprintf;
 final class Http implements Psr7UriInterface, JsonSerializable
 {
     /**
-     * @var Uri
+     * @var RFC3986UriInterface
      */
     private $uri;
 
@@ -66,7 +66,7 @@ final class Http implements Psr7UriInterface, JsonSerializable
     /**
      * New instance.
      */
-    public function __construct(Uri $uri)
+    public function __construct(RFC3986UriInterface $uri)
     {
         $this->validate($uri);
         $this->uri = $uri;
@@ -77,7 +77,7 @@ final class Http implements Psr7UriInterface, JsonSerializable
      *
      * @throws MalformedUri if the given URI does not follow PSR-7 UriInterface rules
      */
-    private function validate(Uri $uri): void
+    private function validate(RFC3986UriInterface $uri): void
     {
         $scheme = $uri->getScheme();
         if (null === $scheme && '' === $uri->getHost()) {

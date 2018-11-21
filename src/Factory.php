@@ -47,13 +47,20 @@ final class Factory
     private const REGEXP_WINDOW_PATH = ',^(?<root>[a-zA-Z][:|\|]),';
 
     /**
+     * @codeCoverageIgnore
+     */
+    private function __construct()
+    {
+    }
+
+    /**
      * Create a new instance from a data file path.
      *
      * @param resource|null $context
      *
      * @throws InvalidUri If the file does not exist or is not readable
      */
-    public static function createFromDataPath(string $path, $context = null): Uri
+    public static function createFromDataPath(string $path, $context = null): RFC3986UriInterface
     {
         $file_args = [$path, false];
         $mime_args = [$path, FILEINFO_MIME];
@@ -76,7 +83,7 @@ final class Factory
     /**
      * Create a new instance from a Unix path string.
      */
-    public static function createFromUnixPath(string $uri = ''): Uri
+    public static function createFromUnixPath(string $uri = ''): RFC3986UriInterface
     {
         $uri = implode('/', array_map('rawurlencode', explode('/', $uri)));
         if ('/' !== ($uri[0] ?? '')) {
@@ -89,7 +96,7 @@ final class Factory
     /**
      * Create a new instance from a local Windows path string.
      */
-    public static function createFromWindowsPath(string $uri = ''): Uri
+    public static function createFromWindowsPath(string $uri = ''): RFC3986UriInterface
     {
         $root = '';
         if (1 === preg_match(self::REGEXP_WINDOW_PATH, $uri, $matches)) {
@@ -117,7 +124,7 @@ final class Factory
     /**
      * Create a new instance from a PSR7 UriInterface object.
      */
-    public static function createFromPsr7(Psr7UriInterface $uri): Uri
+    public static function createFromPsr7(Psr7UriInterface $uri): RFC3986UriInterface
     {
         $components = [
             'scheme' => null,
