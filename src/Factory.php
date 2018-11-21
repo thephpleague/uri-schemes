@@ -20,7 +20,6 @@ namespace League\Uri;
 
 use finfo;
 use League\Uri\Exception\InvalidUri;
-use Psr\Http\Message\UriFactoryInterface;
 use Psr\Http\Message\UriInterface as Psr7UriInterface;
 use function array_map;
 use function base64_decode;
@@ -43,7 +42,7 @@ use const FILTER_NULL_ON_FAILURE;
 use const FILTER_VALIDATE_BOOLEAN;
 use const FILTER_VALIDATE_IP;
 
-final class Factory implements UriFactoryInterface
+final class Factory
 {
     private const REGEXP_WINDOW_PATH = ',^(?<root>[a-zA-Z][:|\|]),';
 
@@ -54,7 +53,7 @@ final class Factory implements UriFactoryInterface
      *
      * @throws InvalidUri If the file does not exist or is not readable
      */
-    public function createUriFromDataPath(string $path, $context = null): Uri
+    public static function createFromDataPath(string $path, $context = null): Uri
     {
         $file_args = [$path, false];
         $mime_args = [$path, FILEINFO_MIME];
@@ -77,7 +76,7 @@ final class Factory implements UriFactoryInterface
     /**
      * Create a new instance from a Unix path string.
      */
-    public function createUriFromUnixPath(string $uri = ''): Uri
+    public static function createFromUnixPath(string $uri = ''): Uri
     {
         $uri = implode('/', array_map('rawurlencode', explode('/', $uri)));
         if ('/' !== ($uri[0] ?? '')) {
@@ -90,7 +89,7 @@ final class Factory implements UriFactoryInterface
     /**
      * Create a new instance from a local Windows path string.
      */
-    public function createUriFromWindowsPath(string $uri = ''): Uri
+    public static function createFromWindowsPath(string $uri = ''): Uri
     {
         $root = '';
         if (1 === preg_match(self::REGEXP_WINDOW_PATH, $uri, $matches)) {
@@ -118,7 +117,7 @@ final class Factory implements UriFactoryInterface
     /**
      * Create a new instance from a PSR7 UriInterface object.
      */
-    public function createFromPsr7(Psr7UriInterface $uri): Uri
+    public static function createFromPsr7(Psr7UriInterface $uri): Uri
     {
         $components = [
             'scheme' => null,
@@ -160,24 +159,16 @@ final class Factory implements UriFactoryInterface
     }
 
     /**
-     * {@inheritdoc}
-     */
-    public function createUri(string $uri = ''): Psr7UriInterface
-    {
-        return Http::createFromString($uri);
-    }
-
-    /**
      * Create a new instance from the environment.
      */
-    public function createUriFromEnvironment(array $server): Psr7UriInterface
+    public static function createFromEnvironment(array $server): Psr7UriInterface
     {
-        [$user, $pass] = $this->fetchUserInfo($server);
-        [$host, $port] = $this->fetchHostname($server);
-        [$path, $query] = $this->fetchRequestUri($server);
+        [$user, $pass] = self::fetchUserInfo($server);
+        [$host, $port] = self::fetchHostname($server);
+        [$path, $query] = self::fetchRequestUri($server);
 
         return Http::createFromComponents([
-            'scheme' => $this->fetchScheme($server),
+            'scheme' => self::fetchScheme($server),
             'user' => $user,
             'pass' => $pass,
             'host' => $host,
@@ -190,7 +181,7 @@ final class Factory implements UriFactoryInterface
     /**
      * Returns the environment scheme.
      */
-    private function fetchScheme(array $server): string
+    private static function fetchScheme(array $server): string
     {
         $server += ['HTTPS' => ''];
         $res = filter_var($server['HTTPS'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
@@ -201,7 +192,7 @@ final class Factory implements UriFactoryInterface
     /**
      * Returns the environment user info.
      */
-    private function fetchUserInfo(array $server): array
+    private static function fetchUserInfo(array $server): array
     {
         $server += ['PHP_AUTH_USER' => null, 'PHP_AUTH_PW' => null, 'HTTP_AUTHORIZATION' => ''];
         $user = $server['PHP_AUTH_USER'];
@@ -230,7 +221,7 @@ final class Factory implements UriFactoryInterface
      *
      * @throws InvalidUri If the host can not be detected
      */
-    private function fetchHostname(array $server): array
+    private static function fetchHostname(array $server): array
     {
         $server += ['SERVER_PORT' => null];
         if (null !== $server['SERVER_PORT']) {
@@ -260,7 +251,7 @@ final class Factory implements UriFactoryInterface
     /**
      * Returns the environment path.
      */
-    private function fetchRequestUri(array $server): array
+    private static function fetchRequestUri(array $server): array
     {
         $server += ['IIS_WasUrlRewritten' => null, 'UNENCODED_URL' => '', 'PHP_SELF' => '', 'QUERY_STRING' => null];
         if ('1' === $server['IIS_WasUrlRewritten'] && '' !== $server['UNENCODED_URL']) {

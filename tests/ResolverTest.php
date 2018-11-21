@@ -30,8 +30,8 @@ class ResolverTest extends TestCase
 {
     public function testResolveLetThrowResolvedInvalidUri(): void
     {
-        $http = Http::createFromString('http://example.com/path/to/file');
-        $ftp = Uri::createFromString('ftp://a/b/c/d;p');
+        $http = Uri::createFromString('http://example.com/path/to/file');
+        $ftp = Http::createFromString('ftp://a/b/c/d;p');
         $res = Resolver::resolve($ftp, $http);
         self::assertEquals($res, $ftp);
     }
@@ -49,7 +49,7 @@ class ResolverTest extends TestCase
     {
         self::assertSame($expected, (string) Resolver::resolve(
             Uri::createFromString($uri),
-            Uri::createFromString($base_uri)
+            Http::createFromString($base_uri)
         ));
     }
 

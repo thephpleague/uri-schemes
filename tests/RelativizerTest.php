@@ -17,17 +17,26 @@
 namespace LeagueTest\Uri;
 
 use League\Uri\Http;
-use League\Uri\Relativizer;
+use League\Uri\Resolver;
+use League\Uri\Uri;
 use PHPUnit\Framework\TestCase;
 use TypeError;
 
 /**
  * @group modifier
- * @coversDefaultClass League\Uri\Relativizer
+ * @coversDefaultClass League\Uri\Resolver
  */
 class RelativizerTest extends TestCase
 {
     const BASE_URI = 'http://a/b/c/d;p?q';
+
+    public function testRelativizeIsNotMade(): void
+    {
+        $uri = Uri::createFromString('//path#fragment');
+        $base_uri = Http::createFromString('http://example.com/path');
+        $result = Resolver::relativize($uri, $base_uri);
+        self::assertEquals($result, $uri);
+    }
 
     /**
      * @dataProvider relativizeProvider
@@ -35,8 +44,8 @@ class RelativizerTest extends TestCase
     public function testRelativize(string $uri, string $resolved, string $expected): void
     {
         $uri   = Http::createFromString($uri);
-        $resolved = Http::createFromString($resolved);
-        self::assertSame($expected, (string) Relativizer::relativize($resolved, $uri));
+        $resolved = Uri::createFromString($resolved);
+        self::assertSame($expected, (string) Resolver::relativize($resolved, $uri));
     }
 
     public function relativizeProvider(): array
@@ -82,10 +91,10 @@ class RelativizerTest extends TestCase
         ];
     }
 
-    public function testRelativizerThrowExceptionOnConstructor(): void
+    public function testResolverThrowExceptionOnConstructor(): void
     {
         self::expectException(TypeError::class);
-        Relativizer::relativize('ftp//a/b/c/d;p', 'toto');
+        Resolver::relativize('ftp//a/b/c/d;p', 'toto');
     }
 
     /**
@@ -97,10 +106,10 @@ class RelativizerTest extends TestCase
         string $expectedRelativize,
         string $expectedResolved
     ): void {
-        $baseUri = Http::createFromString($baseUri);
+        $baseUri = Uri::createFromString($baseUri);
         $uri = Http::createFromString($uri);
 
-        $relativeUri = Relativizer::relativize($uri, $baseUri);
+        $relativeUri = Resolver::relativize($uri, $baseUri);
         self::assertSame($expectedRelativize, (string) $relativeUri);
     }
 

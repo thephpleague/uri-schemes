@@ -22,12 +22,16 @@ use Psr\Http\Message\UriInterface as Psr7UriInterface;
 use TypeError;
 use function array_pop;
 use function array_reduce;
+use function count;
 use function end;
 use function explode;
 use function gettype;
 use function implode;
+use function in_array;
 use function sprintf;
+use function str_repeat;
 use function strpos;
+use function substr;
 
 final class Resolver
 {
@@ -46,10 +50,10 @@ final class Resolver
     /**
      * Resolve an URI against a base URI using RFC3986 rules.
      *
-     * @param Psr7UriInterface|Uri $uri
-     * @param Psr7UriInterface|Uri $base_uri
+     * @param Psr7UriInterface|RFC3986UriInterface $uri
+     * @param Psr7UriInterface|RFC3986UriInterface $base_uri
      *
-     * @return Psr7UriInterface|Uri
+     * @return Psr7UriInterface|RFC3986UriInterface
      */
     public static function resolve($uri, $base_uri)
     {
@@ -74,7 +78,7 @@ final class Resolver
         if (null !== $userInfo) {
             [$user, $pass] = explode(':', $userInfo, 2) + [1 => null];
         }
-        
+
         [$uri_path, $uri_query] = self::resolvePathAndQuery($uri, $base_uri);
 
         return $uri
@@ -96,7 +100,7 @@ final class Resolver
      */
     private static function filterUri($uri): void
     {
-        if (!$uri instanceof Psr7UriInterface && !$uri instanceof Uri) {
+        if (!$uri instanceof Psr7UriInterface && !$uri instanceof RFC3986UriInterface) {
             throw new TypeError(sprintf('The uri must be a valid URI object received `%s`', gettype($uri)));
         }
     }
@@ -147,9 +151,8 @@ final class Resolver
     /**
      * Resolve an URI path and query component.
      *
-     * @param Psr7UriInterface|Uri $uri
-     * @param Psr7UriInterface|Uri $base_uri
-     *
+     * @param Psr7UriInterface|RFC3986UriInterface $uri
+     * @param Psr7UriInterface|RFC3986UriInterface $base_uri
      */
     private static function resolvePathAndQuery($uri, $base_uri): array
     {
@@ -192,5 +195,165 @@ final class Resolver
         }
 
         return [$target_path, $target_query];
+    }
+
+    /**
+     * Relativize an URI according to a base URI.
+     *
+     * This method MUST retain the state of the submitted URI instance, and return
+     * an URI instance of the same type that contains the applied modifications.
+     *
+     * This method MUST be transparent when dealing with error and exceptions.
+     * It MUST not alter of silence them apart from validating its own parameters.
+     *
+     * @param Psr7UriInterface|RFC3986UriInterface $uri
+     * @param Psr7UriInterface|RFC3986UriInterface $base_uri
+     *
+     * @return Psr7UriInterface|RFC3986UriInterface
+     */
+    public static function relativize($uri, $base_uri)
+    {
+        self::filterUri($uri);
+        self::filterUri($base_uri);
+        $uri = self::formatHost($uri);
+        $base_uri = self::formatHost($base_uri);
+        if (!self::isRelativizable($uri, $base_uri)) {
+            return $uri;
+        }
+
+        $null = $uri instanceof Psr7UriInterface ? '' : null;
+        $uri = $uri->withScheme($null)->withPort(null)->withUserInfo($null)->withHost($null);
+        $target_path = $uri->getPath();
+        if ($target_path !== $base_uri->getPath()) {
+            return $uri->withPath(self::relativizePath($target_path, $base_uri->getPath()));
+        }
+
+        if (self::componentEquals('getQuery', $uri, $base_uri)) {
+            return $uri->withPath('')->withQuery($null);
+        }
+
+        if ($null === $uri->getQuery()) {
+            return $uri->withPath(self::formatPathWithEmptyBaseQuery($target_path));
+        }
+
+        return $uri->withPath('');
+    }
+
+    private static function componentEquals(string $method, $uri, $base_uri): bool
+    {
+        return self::getComponent($method, $uri) === self::getComponent($method, $base_uri);
+    }
+
+    private static function getComponent(string $method, $uri): ?string
+    {
+        $component = $uri->$method();
+        if ($uri instanceof Psr7UriInterface && '' === $component) {
+            return null;
+        }
+
+        return $component;
+    }
+
+    /**
+     * Filter the URI object.
+     *
+     * @param null|mixed $uri
+     *
+     * @throws TypeError if the URI object does not implements the supported interfaces.
+     *
+     * @return Psr7UriInterface|RFC3986UriInterface
+     */
+    private static function formatHost($uri)
+    {
+        if (!$uri instanceof Psr7UriInterface) {
+            return $uri;
+        }
+
+        $host = $uri->getHost();
+        if ('' === $host) {
+            return $uri;
+        }
+
+        return $uri->withHost((string) Uri::createFromComponents(['host' => $host])->getHost());
+    }
+
+    /**
+     * Tell whether the submitted URI object can be relativize.
+     *
+     * @param Psr7UriInterface|RFC3986UriInterface $uri
+     * @param Psr7UriInterface|RFC3986UriInterface $base_uri
+     */
+    private static function isRelativizable($uri, $base_uri): bool
+    {
+        return !UriInfo::isRelativePath($uri)
+            && self::componentEquals('getScheme', $uri, $base_uri)
+            &&  self::componentEquals('getAuthority', $uri, $base_uri);
+    }
+
+    /**
+     * Relative the URI for a authority-less target URI.
+     */
+    private static function relativizePath(string $path, string $basepath): string
+    {
+        $base_segments = self::getSegments($basepath);
+        $target_segments = self::getSegments($path);
+        $target_basename = array_pop($target_segments);
+        array_pop($base_segments);
+        foreach ($base_segments as $offset => $segment) {
+            if (!isset($target_segments[$offset]) || $segment !== $target_segments[$offset]) {
+                break;
+            }
+            unset($base_segments[$offset], $target_segments[$offset]);
+        }
+        $target_segments[] = $target_basename;
+
+        return self::formatPath(
+            str_repeat('../', count($base_segments)).implode('/', $target_segments),
+            $basepath
+        );
+    }
+
+    /**
+     * returns the path segments.
+     */
+    private static function getSegments(string $path): array
+    {
+        if ('' !== $path && '/' === $path[0]) {
+            $path = substr($path, 1);
+        }
+
+        return explode('/', $path);
+    }
+
+    /**
+     * Formatting the path to keep a valid URI.
+     */
+    private static function formatPath(string $path, string $basepath): string
+    {
+        if ('' === $path) {
+            return in_array($basepath, ['', '/'], true) ? $basepath : './';
+        }
+
+        if (false === ($colon_pos = strpos($path, ':'))) {
+            return $path;
+        }
+
+        $slash_pos = strpos($path, '/');
+        if (false === $slash_pos || $colon_pos < $slash_pos) {
+            return "./$path";
+        }
+
+        return $path;
+    }
+
+    /**
+     * Formatting the path to keep a resolvable URI.
+     */
+    private static function formatPathWithEmptyBaseQuery(string $path): string
+    {
+        $target_segments = self::getSegments($path);
+        $basename = end($target_segments);
+
+        return '' === $basename ? './' : $basename;
     }
 }

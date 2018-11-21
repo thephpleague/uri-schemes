@@ -18,6 +18,7 @@ namespace LeagueTest\Uri;
 
 use League\Uri\Exception\InvalidUri;
 use League\Uri\Factory;
+use League\Uri\Http;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -27,17 +28,7 @@ use PHPUnit\Framework\TestCase;
 class FactoryTest extends TestCase
 {
     /**
-     * @var Factory
-     */
-    private $factory;
-
-    protected function setUp(): void
-    {
-        $this->factory = new Factory();
-    }
-
-    /**
-     * @covers ::createUriFromDataPath
+     * @covers ::createFromDataPath
      *
      * @dataProvider invalidDataPath
      *
@@ -46,7 +37,7 @@ class FactoryTest extends TestCase
     public function testCreateFromPathFailed($path): void
     {
         self::expectException(InvalidUri::class);
-        $this->factory->createUriFromDataPath($path);
+        Factory::createFromDataPath($path);
     }
 
     public function invalidDataPath(): array
@@ -57,7 +48,7 @@ class FactoryTest extends TestCase
     }
 
     /**
-     * @covers ::createUriFromDataPath
+     * @covers ::createFromDataPath
      *
      * @dataProvider validFilePath
      */
@@ -70,7 +61,7 @@ class FactoryTest extends TestCase
             ],
         ]);
 
-        $uri = $this->factory->createUriFromDataPath(__DIR__.'/data/'.$path, $context);
+        $uri = Factory::createFromDataPath(__DIR__.'/data/'.$path, $context);
         self::assertContains($expected, $uri->getPath());
     }
 
@@ -83,13 +74,13 @@ class FactoryTest extends TestCase
     }
 
     /**
-     * @covers ::createUriFromUnixPath
+     * @covers ::createFromUnixPath
      *
      * @dataProvider unixpathProvider
      */
     public function testCreateFromUnixPath(string $uri, string $expected): void
     {
-        self::assertSame($expected, (string) $this->factory->createUriFromUnixPath($uri));
+        self::assertSame($expected, (string) Factory::createFromUnixPath($uri));
     }
 
     public function unixpathProvider(): array
@@ -119,13 +110,13 @@ class FactoryTest extends TestCase
     }
 
     /**
-     * @covers ::createUriFromWindowsPath
+     * @covers ::createFromWindowsPath
      *
      * @dataProvider windowLocalPathProvider
      */
     public function testCreateFromWindowsLocalPath(string $uri, string $expected): void
     {
-        self::assertSame($expected, (string) $this->factory->createUriFromWindowsPath($uri));
+        self::assertSame($expected, (string) Factory::createFromWindowsPath($uri));
     }
 
     public function windowLocalPathProvider(): array
@@ -169,15 +160,14 @@ class FactoryTest extends TestCase
     public function testCreateUri(): void
     {
         $expected = 'http://login:pass@secure.example.com:443/test/query.php?kingkong=toto#doc3';
-        $psr7 = $this->factory->createUri($expected);
-        self::assertSame($expected, (string) $psr7);
+        $psr7 = Http::createFromString($expected);
 
-        $uri = $this->factory->createFromPsr7($psr7);
+        $uri = Factory::createFromPsr7($psr7);
         self::assertSame((string) $psr7, (string) $uri);
     }
 
     /**
-     * @covers ::createUriFromEnvironment
+     * @covers ::createFromEnvironment
      * @covers ::fetchScheme
      * @covers ::fetchUserInfo
      * @covers ::fetchHostname
@@ -187,7 +177,7 @@ class FactoryTest extends TestCase
      */
     public function testCreateFromServer(string $expected, array $input): void
     {
-        self::assertSame($expected, (string) $this->factory->createUriFromEnvironment($input));
+        self::assertSame($expected, (string) Factory::createFromEnvironment($input));
     }
 
     public function validServerArray(): array
@@ -341,7 +331,7 @@ class FactoryTest extends TestCase
     public function testFailCreateFromServerWithoutHost(): void
     {
         self::expectException(InvalidUri::class);
-        $this->factory->createUriFromEnvironment([
+        Factory::createFromEnvironment([
             'PHP_SELF' => '',
             'REQUEST_URI' => '',
             'HTTPS' => 'on',
@@ -355,7 +345,7 @@ class FactoryTest extends TestCase
     public function testFailCreateFromServerWithoutInvalidUserInfo(): void
     {
         self::expectException(InvalidUri::class);
-        $this->factory->createUriFromEnvironment([
+        Factory::createFromEnvironment([
             'PHP_SELF' => '/toto',
             'SERVER_ADDR' => '127.0.0.1',
             'HTTPS' => 'on',

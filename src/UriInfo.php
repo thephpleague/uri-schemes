@@ -41,18 +41,18 @@ final class UriInfo
      * Filter the URI object.
      *
      * To be valid an URI MUST implement at least one of the following interface:
-     *     - League\Uri\UriInterface
+     *     - League\Uri\RFC3986UriInterface
      *     - Psr\Http\Message\UriInterface
      *
      * @param null|mixed $uri
      *
      * @throws TypeError if the URI object does not implements the supported interfaces.
      *
-     * @return Psr7UriInterface|Uri
+     * @return Psr7UriInterface|RFC3986UriInterface
      */
     private static function filterUri($uri)
     {
-        if ($uri instanceof Psr7UriInterface || $uri instanceof Uri) {
+        if ($uri instanceof Psr7UriInterface || $uri instanceof RFC3986UriInterface) {
             return $uri;
         }
 
@@ -62,9 +62,9 @@ final class UriInfo
     /**
      * Normalize an URI for comparison.
      *
-     * @param Psr7UriInterface|Uri $uri
+     * @param Psr7UriInterface|RFC3986UriInterface $uri
      *
-     * @return Psr7UriInterface|Uri
+     * @return Psr7UriInterface|RFC3986UriInterface
      */
     private static function normalize($uri)
     {
@@ -105,7 +105,7 @@ final class UriInfo
     /**
      * Tell whether the URI represents an absolute URI.
      *
-     * @param Psr7UriInterface|Uri $uri
+     * @param Psr7UriInterface|RFC3986UriInterface $uri
      */
     public static function isAbsolute($uri): bool
     {
@@ -117,7 +117,7 @@ final class UriInfo
     /**
      * Tell whether the URI represents a network path.
      *
-     * @param Psr7UriInterface|Uri $uri
+     * @param Psr7UriInterface|RFC3986UriInterface $uri
      */
     public static function isNetworkPath($uri): bool
     {
@@ -130,40 +130,45 @@ final class UriInfo
     /**
      * Tell whether the URI represents an absolute path.
      *
-     * @param Psr7UriInterface|Uri $uri
+     * @param Psr7UriInterface|RFC3986UriInterface $uri
      */
     public static function isAbsolutePath($uri): bool
     {
         $uri = self::filterUri($uri);
+        $null = $uri instanceof Psr7UriInterface ? '' : null;
 
-        return '' === $uri->getScheme().$uri->getAuthority() && '/' === ($uri->getPath()[0] ?? '');
+        return $null === $uri->getScheme()
+            && $null === $uri->getAuthority()
+            && '/' === ($uri->getPath()[0] ?? '');
     }
 
     /**
      * Tell whether the URI represents a relative path.
      *
-     * @param Psr7UriInterface|Uri $uri
+     * @param Psr7UriInterface|RFC3986UriInterface $uri
      */
     public static function isRelativePath($uri): bool
     {
         $uri = self::filterUri($uri);
+        $null = $uri instanceof Psr7UriInterface ? '' : null;
 
-        return '' === $uri->getScheme().$uri->getAuthority()  && '/' !== ($uri->getPath()[0] ?? '');
+        return $null === $uri->getScheme()
+            && $null === $uri->getAuthority()
+            && '/' !== ($uri->getPath()[0] ?? '');
     }
 
     /**
      * Tell whether both URI refers to the same document.
      *
-     * @param Psr7UriInterface|Uri $uri
-     * @param Psr7UriInterface|Uri $base_uri
+     * @param Psr7UriInterface|RFC3986UriInterface $uri
+     * @param Psr7UriInterface|RFC3986UriInterface $base_uri
      */
     public static function isSameDocument($uri, $base_uri): bool
     {
-        $null = $uri instanceof Psr7UriInterface ? '' : null;
-        $baseNull = $base_uri instanceof Psr7UriInterface ? '' : null;
         $uri = self::normalize($uri);
         $base_uri = self::normalize($base_uri);
 
-        return (string) $uri->withFragment($null) === (string) $base_uri->withFragment($baseNull);
+        return (string) $uri->withFragment($uri instanceof Psr7UriInterface ? '' : null)
+            === (string) $base_uri->withFragment($base_uri instanceof Psr7UriInterface ? '' : null);
     }
 }
