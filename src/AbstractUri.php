@@ -225,13 +225,6 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
     /**
      * Create a new instance.
      *
-     * @param null|string $scheme
-     * @param null|string $user
-     * @param null|string $pass
-     * @param null|string $host
-     * @param null|int    $port
-     * @param null|string $query
-     * @param null|string $fragment
      */
     protected function __construct(
         string $scheme = null,
@@ -257,7 +250,6 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
     /**
      * Format the Scheme and Host component.
      *
-     * @param null|string $scheme
      *
      * @return string|null
      */
@@ -279,8 +271,6 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
     /**
      * Set the UserInfo component.
      *
-     * @param  null|string $user
-     * @param  null|string $password
      * @return string|null
      */
     protected static function formatUserInfo(string $user = null, string $password = null)
@@ -617,10 +607,6 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
      * Generate the URI string representation from its components.
      *
      * @see https://tools.ietf.org/html/rfc3986#section-5.3
-     * @param null|string $scheme
-     * @param null|string $authority
-     * @param null|string $query
-     * @param null|string $fragment
      */
     protected function getUriString(
         string $scheme = null,
