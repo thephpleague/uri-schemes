@@ -268,7 +268,7 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
         }
 
         $formatted_scheme = strtolower($scheme);
-        static $pattern = '/^[a-z][a-z\+\.\-]*$/';
+        static $pattern = '/^[a-z][a-z0-9\+\.\-]*$/';
         if (preg_match($pattern, $formatted_scheme)) {
             return $formatted_scheme;
         }
