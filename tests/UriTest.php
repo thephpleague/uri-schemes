@@ -78,6 +78,28 @@ class UriTest extends TestCase
     }
 
     /**
+     * @covers ::__toString
+     * @covers ::formatScheme
+     */
+    public function testConstructingUrisWithSchemesWithNonLeadingDigits()
+    {
+        $uri = 's3://somebucket/somefile.txt';
+        self::assertSame($uri, (string) Uri::createFromString($uri));
+    }
+
+    /**
+     * @covers ::__toString
+     * @covers ::formatScheme
+     * @covers ::withScheme
+     */
+    public function testSettingSchemesWithNonLeadingDigits()
+    {
+        $uri = 'http://somebucket/somefile.txt';
+        $expected_uri = 's3://somebucket/somefile.txt';
+        self::assertSame($expected_uri, (string) Uri::createFromString($uri)->withScheme('s3'));
+    }
+
+    /**
      * @covers ::getUriString
      * @covers ::__toString
      * @covers ::formatUserInfo

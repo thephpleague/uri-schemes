@@ -164,9 +164,7 @@ class Factory
      */
     protected function filterBaseUri($uri)
     {
-        if (!$uri instanceof Psr7UriInterface
-            && !$uri instanceof UriInterface
-            && !$uri instanceof DeprecatedLeagueUriInterface) {
+        if (!$uri instanceof Psr7UriInterface && !$uri instanceof UriInterface) {
             return $this->create($uri);
         }
 
