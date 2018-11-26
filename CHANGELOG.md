@@ -12,6 +12,7 @@ All Notable changes to `League\Uri\Schemes` will be documented in this file
 
 - Bug fix regression in scheme resolution see [#13](https://github.com/thephpleague/uri-schemes/issues/13) by [@mudhoney](https://github.com/mudhoney)
 - `Uri::formatRegisteredName` throws a `UnexpectedValueException` if the Intl extension is misconfigured.
+- Library is now tested against PHP7.3 via travis
 
 ### Deprecated
 
