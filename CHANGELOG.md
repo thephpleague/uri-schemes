@@ -2,6 +2,25 @@
 
 All Notable changes to `League\Uri\Schemes` will be documented in this file
 
+## 1.2.1 - 2018-11-26
+
+### Added
+
+- None
+
+### Fixed
+
+- Bug fix regression in scheme resolution see [#13](https://github.com/thephpleague/uri-schemes/issues/13) by [@mudhoney](https://github.com/mudhoney)
+- `Uri::formatRegisteredName` throws a `UnexpectedValueException` if the Intl extension is misconfigured.
+
+### Deprecated
+
+- None
+
+### Remove
+
+- None
+
 ## 1.2.0 - 2018-03-14
 
 ### Added

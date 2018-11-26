@@ -20,8 +20,7 @@ namespace League\Uri;
 
 use BadMethodCallException;
 use League\Uri\Interfaces\Uri as DeprecatedLeagueUriInterface;
-use const FILTER_FLAG_IPV6;
-use const FILTER_VALIDATE_IP;
+use UnexpectedValueException;
 use function array_keys;
 use function defined;
 use function explode;
@@ -39,6 +38,8 @@ use function sprintf;
 use function strpos;
 use function strtolower;
 use function substr;
+use const FILTER_FLAG_IPV6;
+use const FILTER_VALIDATE_IP;
 
 /**
  * common URI Object properties and methods.
@@ -355,11 +356,17 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
         }
 
         $formatted_host = idn_to_ascii($formatted_host, 0, INTL_IDNA_VARIANT_UTS46, $arr);
-        if (0 === $arr['errors']) {
-            return $formatted_host;
+        if (0 !== $arr['errors']) {
+            throw new UriException(sprintf('Host `%s` is invalid : %s', $host, $this->getIdnaErrorMessage($arr['errors'])));
         }
 
-        throw new UriException(sprintf('Host `%s` is invalid : %s', $host, $this->getIdnaErrorMessage($arr['errors'])));
+        // @codeCoverageIgnoreStart
+        if (false === $formatted_host) {
+            throw new UnexpectedValueException(sprintf('The Intl extension is misconfigured for %s, please correct this issue before proceeding.', PHP_OS));
+        }
+        // @codeCoverageIgnoreEnd
+
+        return $formatted_host;
     }
 
     /**

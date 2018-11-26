@@ -248,7 +248,7 @@ class UriTest extends TestCase
     public function testCannotConvertInvalidHost()
     {
         self::expectException(ParserException::class);
-        Uri::createFromString('http://_b%C3%A9bé.be-/foo/bar');
+        Uri::createFromString()->withHost('_b%C3%A9bé.be-');
     }
 
     public function testWithSchemeFailedWithInvalidSchemeValue()

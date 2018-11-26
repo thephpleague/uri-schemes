@@ -20,10 +20,6 @@ namespace League\Uri;
 
 use Psr\Http\Message\UriInterface as Psr7UriInterface;
 
-use const FILTER_FLAG_IPV4;
-use const FILTER_NULL_ON_FAILURE;
-use const FILTER_VALIDATE_BOOLEAN;
-use const FILTER_VALIDATE_IP;
 use function base64_decode;
 use function explode;
 use function filter_var;
@@ -32,6 +28,10 @@ use function rawurlencode;
 use function strpos;
 use function strtolower;
 use function substr;
+use const FILTER_FLAG_IPV4;
+use const FILTER_NULL_ON_FAILURE;
+use const FILTER_VALIDATE_BOOLEAN;
+use const FILTER_VALIDATE_IP;
 
 /**
  * Immutable Value object representing a HTTP(s) Uri.
