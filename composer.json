@@ -63,9 +63,9 @@
         ],
         "phpunit": "phpunit --coverage-text",
         "test": [
-            "@phpunit",
             "@phpcs",
-            "@phpstan"
+            "@phpstan",
+            "@phpunit"
         ]
     },
     "suggest": {

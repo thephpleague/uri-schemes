@@ -33,13 +33,13 @@ final class Http implements Psr7UriInterface, JsonSerializable
     private $uri;
 
     /**
-     * Static method called by PHP's var export.
+     * Create a new instance from a string.
      *
-     * @return static
+     * @param string|mixed $uri
      */
-    public static function __set_state(array $components): self
+    public static function createFromString($uri = ''): self
     {
-        return new self($components['uri']);
+        return new self(Uri::createFromString($uri));
     }
 
     /**
@@ -54,13 +54,13 @@ final class Http implements Psr7UriInterface, JsonSerializable
     }
 
     /**
-     * Create a new instance from a string.
+     * Static method called by PHP's var export.
      *
-     * @param string|mixed $uri
+     * @return static
      */
-    public static function createFromString($uri = ''): self
+    public static function __set_state(array $components): self
     {
-        return new self(Uri::createFromString($uri));
+        return new self($components['uri']);
     }
 
     /**

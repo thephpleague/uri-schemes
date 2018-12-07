@@ -18,17 +18,22 @@ declare(strict_types=1);
 
 namespace League\Uri;
 
+use finfo;
 use League\Uri\Exception\InvalidUri;
 use League\Uri\Exception\MalformedUri;
 use League\Uri\Parser\RFC3986;
+use Psr\Http\Message\UriInterface as Psr7UriInterface;
 use TypeError;
 use UnexpectedValueException;
 use function array_filter;
+use function array_map;
 use function base64_decode;
 use function base64_encode;
 use function count;
 use function defined;
 use function explode;
+use function file_get_contents;
+use function filter_var;
 use function function_exists;
 use function idn_to_ascii;
 use function implode;
@@ -47,7 +52,11 @@ use function strlen;
 use function strpos;
 use function strtolower;
 use function substr;
+use const FILEINFO_MIME;
+use const FILTER_FLAG_IPV4;
 use const FILTER_FLAG_IPV6;
+use const FILTER_NULL_ON_FAILURE;
+use const FILTER_VALIDATE_BOOLEAN;
 use const FILTER_VALIDATE_IP;
 use const IDNA_ERROR_BIDI;
 use const IDNA_ERROR_CONTEXTJ;
@@ -138,6 +147,8 @@ final class Uri implements RFC3986UriInterface
         IDNA_ERROR_BIDI => 'a label does not meet the IDNA BiDi requirements (for right-to-left characters)',
         IDNA_ERROR_CONTEXTJ => 'a label does not meet the IDNA CONTEXTJ requirements',
     ];
+
+    private const REGEXP_WINDOW_PATH = ',^(?<root>[a-zA-Z][:|\|]),';
 
     /**
      * Supported schemes and corresponding default port.
@@ -235,26 +246,40 @@ final class Uri implements RFC3986UriInterface
     private $uri;
 
     /**
-     * {@inheritdoc}
+     * Create a new instance from a URI and a Base URI.
+     *
+     * The returned URI must be absolute.
+     *
+     * @param mixed $uri      the input URI to create
+     * @param mixed $base_uri the base URI used for reference
      */
-    public static function __set_state(array $components): self
+    public static function create($uri, $base_uri = null): RFC3986UriInterface
     {
-        $components['user'] = null;
-        $components['pass'] = null;
-        if (null !== $components['user_info']) {
-            [$components['user'], $components['pass']] = explode(':', $components['user_info'], 2) + [1 => null];
+        if (!$uri instanceof RFC3986UriInterface) {
+            $uri = self::createFromString($uri);
         }
 
-        return new self(
-            $components['scheme'],
-            $components['user'],
-            $components['pass'],
-            $components['host'],
-            $components['port'],
-            $components['path'],
-            $components['query'],
-            $components['fragment']
-        );
+        if (null === $base_uri) {
+            if (null === $uri->getScheme()) {
+                throw new MalformedUri(sprintf('the URI `%s` must be absolute', (string) $uri));
+            }
+
+            if (null === $uri->getAuthority()) {
+                return $uri;
+            }
+
+            return Resolver::resolve($uri, $uri->withFragment(null)->withQuery(null)->withPath(''));
+        }
+
+        if (!$base_uri instanceof RFC3986UriInterface) {
+            $base_uri = self::createFromString($base_uri);
+        }
+
+        if (null === $base_uri->getScheme()) {
+            throw new MalformedUri(sprintf('the base URI `%s` must be absolute', (string) $base_uri));
+        }
+
+        return Resolver::resolve($uri, $base_uri);
     }
 
     /**
@@ -290,6 +315,252 @@ final class Uri implements RFC3986UriInterface
             'scheme' => null, 'user' => null, 'pass' => null, 'host' => null,
             'port' => null, 'path' => '', 'query' => null, 'fragment' => null,
         ];
+
+        return new self(
+            $components['scheme'],
+            $components['user'],
+            $components['pass'],
+            $components['host'],
+            $components['port'],
+            $components['path'],
+            $components['query'],
+            $components['fragment']
+        );
+    }
+
+
+    /**
+     * Create a new instance from a data file path.
+     *
+     * @param resource|null $context
+     *
+     * @throws InvalidUri If the file does not exist or is not readable
+     */
+    public static function createFromDataPath(string $path, $context = null): self
+    {
+        $file_args = [$path, false];
+        $mime_args = [$path, FILEINFO_MIME];
+        if (null !== $context) {
+            $file_args[] = $context;
+            $mime_args[] = $context;
+        }
+
+        $raw = @file_get_contents(...$file_args);
+        if (false === $raw) {
+            throw new InvalidUri(sprintf('The file `%s` does not exist or is not readable', $path));
+        }
+
+        return Uri::createFromComponents([
+            'scheme' => 'data',
+            'path' => str_replace(' ', '', (new finfo(FILEINFO_MIME))->file(...$mime_args)).';base64,'.base64_encode($raw),
+        ]);
+    }
+
+    /**
+     * Create a new instance from a Unix path string.
+     */
+    public static function createFromUnixPath(string $uri = ''): self
+    {
+        $uri = implode('/', array_map('rawurlencode', explode('/', $uri)));
+        if ('/' !== ($uri[0] ?? '')) {
+            return Uri::createFromComponents(['path' => $uri]);
+        }
+
+        return Uri::createFromComponents(['path' => $uri, 'scheme' => 'file', 'host' => '']);
+    }
+
+    /**
+     * Create a new instance from a local Windows path string.
+     */
+    public static function createFromWindowsPath(string $uri = ''): self
+    {
+        $root = '';
+        if (1 === preg_match(self::REGEXP_WINDOW_PATH, $uri, $matches)) {
+            $root = substr($matches['root'], 0, -1).':';
+            $uri = substr($uri, strlen($root));
+        }
+        $uri = str_replace('\\', '/', $uri);
+        $uri = implode('/', array_map('rawurlencode', explode('/', $uri)));
+
+        //Local Windows absolute path
+        if ('' !== $root) {
+            return Uri::createFromComponents(['path' => '/'.$root.$uri, 'scheme' => 'file', 'host' => '']);
+        }
+
+        //UNC Windows Path
+        if ('//' !== substr($uri, 0, 2)) {
+            return Uri::createFromComponents(['path' => $uri]);
+        }
+
+        $parts = explode('/', substr($uri, 2), 2) + [1 => null];
+
+        return Uri::createFromComponents(['host' => $parts[0], 'path' => '/'.$parts[1], 'scheme' => 'file']);
+    }
+
+    /**
+     * Create a new instance from a PSR7 UriInterface object.
+     */
+    public static function createFromPsr7(Psr7UriInterface $uri): self
+    {
+        $components = [
+            'scheme' => null,
+            'user' => null,
+            'pass' => null,
+            'host' => null,
+            'port' => $uri->getPort(),
+            'path' => $uri->getPath(),
+            'query' => null,
+            'fragment' => null,
+        ];
+
+        $scheme = $uri->getScheme();
+        if ('' !== $scheme) {
+            $components['scheme'] = $scheme;
+        }
+
+        $fragment = $uri->getFragment();
+        if ('' !== $fragment) {
+            $components['fragment'] = $fragment;
+        }
+
+        $query = $uri->getQuery();
+        if ('' !== $query) {
+            $components['query'] = $query;
+        }
+
+        $host = $uri->getHost();
+        if ('' !== $host) {
+            $components['host'] = $host;
+        }
+
+        $user_info = $uri->getUserInfo();
+        if (null !== $user_info) {
+            [$components['user'], $components['pass']] = explode(':', $user_info, 2) + [1 => null];
+        }
+
+        return Uri::createFromComponents($components);
+    }
+
+    /**
+     * Create a new instance from the environment.
+     */
+    public static function createFromEnvironment(array $server): self
+    {
+        [$user, $pass] = self::fetchUserInfo($server);
+        [$host, $port] = self::fetchHostname($server);
+        [$path, $query] = self::fetchRequestUri($server);
+
+        return Uri::createFromComponents([
+            'scheme' => self::fetchScheme($server),
+            'user' => $user,
+            'pass' => $pass,
+            'host' => $host,
+            'port' => $port,
+            'path' => $path,
+            'query' => $query,
+        ]);
+    }
+
+    /**
+     * Returns the environment scheme.
+     */
+    private static function fetchScheme(array $server): string
+    {
+        $server += ['HTTPS' => ''];
+        $res = filter_var($server['HTTPS'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+
+        return $res !== false ? 'https' : 'http';
+    }
+
+    /**
+     * Returns the environment user info.
+     */
+    private static function fetchUserInfo(array $server): array
+    {
+        $server += ['PHP_AUTH_USER' => null, 'PHP_AUTH_PW' => null, 'HTTP_AUTHORIZATION' => ''];
+        $user = $server['PHP_AUTH_USER'];
+        $pass = $server['PHP_AUTH_PW'];
+        if (0 === strpos(strtolower($server['HTTP_AUTHORIZATION']), 'basic')) {
+            $userinfo = base64_decode(substr($server['HTTP_AUTHORIZATION'], 6), true);
+            if (false === $userinfo) {
+                throw new InvalidUri('The user info could not be detected');
+            }
+            [$user, $pass] = explode(':', $userinfo, 2) + [1 => null];
+        }
+
+        if (null !== $user) {
+            $user = rawurlencode($user);
+        }
+
+        if (null !== $pass) {
+            $pass = rawurlencode($pass);
+        }
+
+        return [$user, $pass];
+    }
+
+    /**
+     * Returns the environment host.
+     *
+     * @throws InvalidUri If the host can not be detected
+     */
+    private static function fetchHostname(array $server): array
+    {
+        $server += ['SERVER_PORT' => null];
+        if (null !== $server['SERVER_PORT']) {
+            $server['SERVER_PORT'] = (int) $server['SERVER_PORT'];
+        }
+
+        if (isset($server['HTTP_HOST'])) {
+            preg_match(',^(?<host>(\[.*\]|[^:])*)(\:(?<port>[^/?\#]*))?$,x', $server['HTTP_HOST'], $matches);
+
+            return [
+                $matches['host'],
+                isset($matches['port']) ? (int) $matches['port'] : $server['SERVER_PORT'],
+            ];
+        }
+
+        if (!isset($server['SERVER_ADDR'])) {
+            throw new InvalidUri('The host could not be detected');
+        }
+
+        if (false === filter_var($server['SERVER_ADDR'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+            $server['SERVER_ADDR'] = '['.$server['SERVER_ADDR'].']';
+        }
+
+        return [$server['SERVER_ADDR'], $server['SERVER_PORT']];
+    }
+
+    /**
+     * Returns the environment path.
+     */
+    private static function fetchRequestUri(array $server): array
+    {
+        $server += ['IIS_WasUrlRewritten' => null, 'UNENCODED_URL' => '', 'PHP_SELF' => '', 'QUERY_STRING' => null];
+        if ('1' === $server['IIS_WasUrlRewritten'] && '' !== $server['UNENCODED_URL']) {
+            return explode('?', $server['UNENCODED_URL'], 2) + [1 => null];
+        }
+
+        if (isset($server['REQUEST_URI'])) {
+            [$path, ] = explode('?', $server['REQUEST_URI'], 2);
+            $query = ('' !== $server['QUERY_STRING']) ? $server['QUERY_STRING'] : null;
+
+            return [$path, $query];
+        }
+
+        return [$server['PHP_SELF'], $server['QUERY_STRING']];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public static function __set_state(array $components): self
+    {
+        $components['user'] = null;
+        $components['pass'] = null;
+        if (null !== $components['user_info']) {
+            [$components['user'], $components['pass']] = explode(':', $components['user_info'], 2) + [1 => null];
+        }
 
         return new self(
             $components['scheme'],

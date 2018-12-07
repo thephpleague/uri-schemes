@@ -17,13 +17,13 @@
 namespace LeagueTest\Uri;
 
 use League\Uri\Exception\InvalidUri;
-use League\Uri\Factory;
 use League\Uri\Http;
+use League\Uri\Uri;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @group factory
- * @coversDefaultClass League\Uri\Factory
+ * @coversDefaultClass League\Uri\Uri
  */
 class FactoryTest extends TestCase
 {
@@ -37,7 +37,7 @@ class FactoryTest extends TestCase
     public function testCreateFromPathFailed($path): void
     {
         self::expectException(InvalidUri::class);
-        Factory::createFromDataPath($path);
+        Uri::createFromDataPath($path);
     }
 
     public function invalidDataPath(): array
@@ -61,7 +61,7 @@ class FactoryTest extends TestCase
             ],
         ]);
 
-        $uri = Factory::createFromDataPath(__DIR__.'/data/'.$path, $context);
+        $uri = Uri::createFromDataPath(__DIR__.'/data/'.$path, $context);
         self::assertContains($expected, $uri->getPath());
     }
 
@@ -80,7 +80,7 @@ class FactoryTest extends TestCase
      */
     public function testCreateFromUnixPath(string $uri, string $expected): void
     {
-        self::assertSame($expected, (string) Factory::createFromUnixPath($uri));
+        self::assertSame($expected, (string) Uri::createFromUnixPath($uri));
     }
 
     public function unixpathProvider(): array
@@ -116,7 +116,7 @@ class FactoryTest extends TestCase
      */
     public function testCreateFromWindowsLocalPath(string $uri, string $expected): void
     {
-        self::assertSame($expected, (string) Factory::createFromWindowsPath($uri));
+        self::assertSame($expected, (string) Uri::createFromWindowsPath($uri));
     }
 
     public function windowLocalPathProvider(): array
@@ -162,7 +162,7 @@ class FactoryTest extends TestCase
         $expected = 'http://login:pass@secure.example.com:443/test/query.php?kingkong=toto#doc3';
         $psr7 = Http::createFromString($expected);
 
-        $uri = Factory::createFromPsr7($psr7);
+        $uri = Uri::createFromPsr7($psr7);
         self::assertSame((string) $psr7, (string) $uri);
     }
 
@@ -177,7 +177,7 @@ class FactoryTest extends TestCase
      */
     public function testCreateFromServer(string $expected, array $input): void
     {
-        self::assertSame($expected, (string) Factory::createFromEnvironment($input));
+        self::assertSame($expected, (string) Uri::createFromEnvironment($input));
     }
 
     public function validServerArray(): array
@@ -331,7 +331,7 @@ class FactoryTest extends TestCase
     public function testFailCreateFromServerWithoutHost(): void
     {
         self::expectException(InvalidUri::class);
-        Factory::createFromEnvironment([
+        Uri::createFromEnvironment([
             'PHP_SELF' => '',
             'REQUEST_URI' => '',
             'HTTPS' => 'on',
@@ -345,7 +345,7 @@ class FactoryTest extends TestCase
     public function testFailCreateFromServerWithoutInvalidUserInfo(): void
     {
         self::expectException(InvalidUri::class);
-        Factory::createFromEnvironment([
+        Uri::createFromEnvironment([
             'PHP_SELF' => '/toto',
             'SERVER_ADDR' => '127.0.0.1',
             'HTTPS' => 'on',
@@ -353,5 +353,101 @@ class FactoryTest extends TestCase
             'QUERY_STRING' => 'foo=bar',
             'HTTP_AUTHORIZATION' => 'basic foo:bar',
         ]);
+    }
+
+    /**
+     * @covers ::create
+     *
+     * @dataProvider createProvider
+     */
+    public function testCreate(string $base_uri, string $uri, string $expected): void
+    {
+        self::assertSame($expected, (string) Uri::create($uri, $base_uri));
+    }
+    public function createProvider(): array
+    {
+        $base_uri = 'http://a/b/c/d;p?q';
+
+        return [
+            'base uri'                => [$base_uri, '',              $base_uri],
+            'scheme'                  => [$base_uri, 'http://d/e/f',  'http://d/e/f'],
+            'path 1'                  => [$base_uri, 'g',             'http://a/b/c/g'],
+            'path 2'                  => [$base_uri, './g',           'http://a/b/c/g'],
+            'path 3'                  => [$base_uri, 'g/',            'http://a/b/c/g/'],
+            'path 4'                  => [$base_uri, '/g',            'http://a/g'],
+            'authority'               => [$base_uri, '//g',           'http://g'],
+            'query'                   => [$base_uri, '?y',            'http://a/b/c/d;p?y'],
+            'path + query'            => [$base_uri, 'g?y',           'http://a/b/c/g?y'],
+            'fragment'                => [$base_uri, '#s',            'http://a/b/c/d;p?q#s'],
+            'path + fragment'         => [$base_uri, 'g#s',           'http://a/b/c/g#s'],
+            'path + query + fragment' => [$base_uri, 'g?y#s',         'http://a/b/c/g?y#s'],
+            'single dot 1'            => [$base_uri, '.',             'http://a/b/c/'],
+            'single dot 2'            => [$base_uri, './',            'http://a/b/c/'],
+            'single dot 3'            => [$base_uri, './g/.',         'http://a/b/c/g/'],
+            'single dot 4'            => [$base_uri, 'g/./h',         'http://a/b/c/g/h'],
+            'double dot 1'            => [$base_uri, '..',            'http://a/b/'],
+            'double dot 2'            => [$base_uri, '../',           'http://a/b/'],
+            'double dot 3'            => [$base_uri, '../g',          'http://a/b/g'],
+            'double dot 4'            => [$base_uri, '../..',         'http://a/'],
+            'double dot 5'            => [$base_uri, '../../',        'http://a/'],
+            'double dot 6'            => [$base_uri, '../../g',       'http://a/g'],
+            'double dot 7'            => [$base_uri, '../../../g',    'http://a/g'],
+            'double dot 8'            => [$base_uri, '../../../../g', 'http://a/g'],
+            'double dot 9'            => [$base_uri, 'g/../h' ,       'http://a/b/c/h'],
+            'mulitple slashes'        => [$base_uri, 'foo////g',      'http://a/b/c/foo////g'],
+            'complex path 1'          => [$base_uri, ';x',            'http://a/b/c/;x'],
+            'complex path 2'          => [$base_uri, 'g;x',           'http://a/b/c/g;x'],
+            'complex path 3'          => [$base_uri, 'g;x?y#s',       'http://a/b/c/g;x?y#s'],
+            'complex path 4'          => [$base_uri, 'g;x=1/./y',     'http://a/b/c/g;x=1/y'],
+            'complex path 5'          => [$base_uri, 'g;x=1/../y',    'http://a/b/c/y'],
+            'dot segments presence 1' => [$base_uri, '/./g',          'http://a/g'],
+            'dot segments presence 2' => [$base_uri, '/../g',         'http://a/g'],
+            'dot segments presence 3' => [$base_uri, 'g.',            'http://a/b/c/g.'],
+            'dot segments presence 4' => [$base_uri, '.g',            'http://a/b/c/.g'],
+            'dot segments presence 5' => [$base_uri, 'g..',           'http://a/b/c/g..'],
+            'dot segments presence 6' => [$base_uri, '..g',           'http://a/b/c/..g'],
+            'origin uri without path' => ['http://h:b@a', 'b/../y',   'http://h:b@a/y'],
+            'uri without auhtority'   => ['mailto:f@a.b', 'b@c.d?subject=baz', 'mailto:b@c.d?subject=baz'],
+        ];
+    }
+
+    /**
+     * @covers ::create
+     */
+    public function testCreateThrowExceptionWithBaseUriNotAbsolute(): void
+    {
+        self::expectException(InvalidUri::class);
+        Uri::create('/path/to/you', '//example.com');
+    }
+
+    /**
+     * @covers ::create
+     */
+    public function testCreateThrowExceptionWithUriNotAbsolute(): void
+    {
+        self::expectException(InvalidUri::class);
+        Uri::create('/path/to/you');
+    }
+
+    /**
+     * @covers ::create
+     */
+    public function testCreateWithUriWithoutAuthority(): void
+    {
+        self::assertSame(
+            'data:text/plain;charset=us-ascii,',
+            (string) Uri::create('data:text/plain;charset=us-ascii,')
+        );
+    }
+
+    /**
+     * @covers ::create
+     */
+    public function testCreateWithAbasoluteUriWithoutBaseUri(): void
+    {
+        self::assertSame(
+            'scheme://host/sky?q#f',
+            (string) Uri::create('scheme://host/path/../sky?q#f')
+        );
     }
 }
