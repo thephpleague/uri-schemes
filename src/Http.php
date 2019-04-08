@@ -1,14 +1,9 @@
 <?php
 
 /**
- * League.Uri (http://uri.thephpleague.com)
+ * League.Uri (https://uri.thephpleague.com)
  *
- * @package    League\Uri
- * @subpackage League\Uri\Schemes
- * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
- * @license    https://github.com/thephpleague/uri-schemes/blob/master/LICENSE (MIT License)
- * @version    2.0.0
- * @link       https://github.com/thephpleague/uri-schemes
+ * (c) Ignace Nyamagana Butera <nyamsprod@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -31,37 +26,6 @@ final class Http implements UriInterface, JsonSerializable
      * @var RFC3986Uri
      */
     private $uri;
-
-    /**
-     * Create a new instance from a string.
-     *
-     * @param string|mixed $uri
-     */
-    public static function createFromString($uri = ''): self
-    {
-        return new self(Uri::createFromString($uri));
-    }
-
-    /**
-     * Create a new instance from a hash of parse_url parts.
-     *
-     * @param array $components a hash representation of the URI similar
-     *                          to PHP parse_url function result
-     */
-    public static function createFromComponents(array $components): self
-    {
-        return new self(Uri::createFromComponents($components));
-    }
-
-    /**
-     * Static method called by PHP's var export.
-     *
-     * @return static
-     */
-    public static function __set_state(array $components): self
-    {
-        return new self($components['uri']);
-    }
 
     /**
      * New instance.
@@ -88,6 +52,37 @@ final class Http implements UriInterface, JsonSerializable
         if (null !== $port && ($port < 0 || $port > 65535)) {
             throw new MalformedUri(sprintf('The URI port is outside the established TCP and UDP port ranges: %s', (string) $uri->getPort()));
         }
+    }
+
+    /**
+     * Static method called by PHP's var export.
+     *
+     * @return static
+     */
+    public static function __set_state(array $components): self
+    {
+        return new self($components['uri']);
+    }
+
+    /**
+     * Create a new instance from a string.
+     *
+     * @param string|mixed $uri
+     */
+    public static function createFromString($uri = ''): self
+    {
+        return new self(Uri::createFromString($uri));
+    }
+
+    /**
+     * Create a new instance from a hash of parse_url parts.
+     *
+     * @param array $components a hash representation of the URI similar
+     *                          to PHP parse_url function result
+     */
+    public static function createFromComponents(array $components): self
+    {
+        return new self(Uri::createFromComponents($components));
     }
 
     /**

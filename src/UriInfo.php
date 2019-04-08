@@ -1,14 +1,9 @@
 <?php
 
 /**
- * League.Uri (http://uri.thephpleague.com)
+ * League.Uri (https://uri.thephpleague.com)
  *
- * @package    League\Uri
- * @subpackage League\Uri\Schemes
- * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
- * @license    https://github.com/thephpleague/uri-schemes/blob/master/LICENSE (MIT License)
- * @version    2.0.0
- * @link       https://github.com/thephpleague/uri-schemes
+ * (c) Ignace Nyamagana Butera <nyamsprod@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -44,11 +39,11 @@ final class UriInfo
      *     - League\Uri\RFC3986Uri
      *     - Psr\Http\Message\UriInterface
      *
-     * @param null|mixed $uri
+     * @param mixed $uri the URI to validate
      *
      * @throws TypeError if the URI object does not implements the supported interfaces.
      *
-     * @return UriInterface|RFC3986Uri
+     * @return RFC3986Uri|UriInterface
      */
     private static function filterUri($uri)
     {
@@ -62,9 +57,9 @@ final class UriInfo
     /**
      * Normalize an URI for comparison.
      *
-     * @param UriInterface|RFC3986Uri $uri
+     * @param RFC3986Uri|UriInterface $uri
      *
-     * @return UriInterface|RFC3986Uri
+     * @return RFC3986Uri|UriInterface
      */
     private static function normalize($uri)
     {
@@ -105,7 +100,7 @@ final class UriInfo
     /**
      * Tell whether the URI represents an absolute URI.
      *
-     * @param UriInterface|RFC3986Uri $uri
+     * @param RFC3986Uri|UriInterface $uri
      */
     public static function isAbsolute($uri): bool
     {
@@ -117,7 +112,7 @@ final class UriInfo
     /**
      * Tell whether the URI represents a network path.
      *
-     * @param UriInterface|RFC3986Uri $uri
+     * @param RFC3986Uri|UriInterface $uri
      */
     public static function isNetworkPath($uri): bool
     {
@@ -130,7 +125,7 @@ final class UriInfo
     /**
      * Tell whether the URI represents an absolute path.
      *
-     * @param UriInterface|RFC3986Uri $uri
+     * @param RFC3986Uri|UriInterface $uri
      */
     public static function isAbsolutePath($uri): bool
     {
@@ -145,7 +140,7 @@ final class UriInfo
     /**
      * Tell whether the URI represents a relative path.
      *
-     * @param UriInterface|RFC3986Uri $uri
+     * @param RFC3986Uri|UriInterface $uri
      */
     public static function isRelativePath($uri): bool
     {
@@ -160,8 +155,8 @@ final class UriInfo
     /**
      * Tell whether both URI refers to the same document.
      *
-     * @param UriInterface|RFC3986Uri $uri
-     * @param UriInterface|RFC3986Uri $base_uri
+     * @param RFC3986Uri|UriInterface $uri
+     * @param RFC3986Uri|UriInterface $base_uri
      */
     public static function isSameDocument($uri, $base_uri): bool
     {

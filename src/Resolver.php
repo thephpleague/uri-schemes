@@ -1,14 +1,9 @@
 <?php
 
 /**
- * League.Uri (http://uri.thephpleague.com)
+ * League.Uri (https://uri.thephpleague.com)
  *
- * @package    League\Uri
- * @subpackage League\Uri\Schemes
- * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
- * @license    https://github.com/thephpleague/uri-schemes/blob/master/LICENSE (MIT License)
- * @version    2.0.0
- * @link       https://github.com/thephpleague/uri-schemes
+ * (c) Ignace Nyamagana Butera <nyamsprod@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -50,10 +45,13 @@ final class Resolver
     /**
      * Resolve an URI against a base URI using RFC3986 rules.
      *
-     * @param UriInterface|RFC3986Uri $uri
-     * @param UriInterface|RFC3986Uri $base_uri
+     * If the first argument is a RFC3986Uri the method returns a RFC3986Uri object
+     * If the first argument is a UriInterface the method returns a RFC3986Uri object
      *
-     * @return UriInterface|RFC3986Uri
+     * @param RFC3986Uri|UriInterface $uri
+     * @param RFC3986Uri|UriInterface $base_uri
+     *
+     * @return RFC3986Uri|UriInterface
      */
     public static function resolve($uri, $base_uri)
     {
@@ -94,7 +92,7 @@ final class Resolver
     /**
      * Filter the URI object.
      *
-     * @param null|mixed $uri
+     * @param mixed $uri an URI object
      *
      * @throws TypeError if the URI object does not implements the supported interfaces.
      */
@@ -151,8 +149,8 @@ final class Resolver
     /**
      * Resolve an URI path and query component.
      *
-     * @param UriInterface|RFC3986Uri $uri
-     * @param UriInterface|RFC3986Uri $base_uri
+     * @param RFC3986Uri|UriInterface $uri
+     * @param RFC3986Uri|UriInterface $base_uri
      */
     private static function resolvePathAndQuery($uri, $base_uri): array
     {
@@ -206,10 +204,10 @@ final class Resolver
      * This method MUST be transparent when dealing with error and exceptions.
      * It MUST not alter of silence them apart from validating its own parameters.
      *
-     * @param UriInterface|RFC3986Uri $uri
-     * @param UriInterface|RFC3986Uri $base_uri
+     * @param RFC3986Uri|UriInterface $uri
+     * @param RFC3986Uri|UriInterface $base_uri
      *
-     * @return UriInterface|RFC3986Uri
+     * @return RFC3986Uri|UriInterface
      */
     public static function relativize($uri, $base_uri)
     {
@@ -261,7 +259,7 @@ final class Resolver
      *
      * @throws TypeError if the URI object does not implements the supported interfaces.
      *
-     * @return UriInterface|RFC3986Uri
+     * @return RFC3986Uri|UriInterface
      */
     private static function formatHost($uri)
     {
@@ -280,8 +278,8 @@ final class Resolver
     /**
      * Tell whether the submitted URI object can be relativize.
      *
-     * @param UriInterface|RFC3986Uri $uri
-     * @param UriInterface|RFC3986Uri $base_uri
+     * @param RFC3986Uri|UriInterface $uri
+     * @param RFC3986Uri|UriInterface $base_uri
      */
     private static function isRelativizable($uri, $base_uri): bool
     {

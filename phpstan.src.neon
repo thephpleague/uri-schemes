@@ -3,6 +3,5 @@ includes:
     - vendor/phpstan/phpstan-phpunit/rules.neon
 parameters:
     ignoreErrors:
-        - '#Parameter \#1 \$components of static method League\\Uri\\Uri::createFromComponents\(\) expects array, array<string, int\|string\|null>\|string\|null given\.#'
         - '#Method League\\Uri\\Uri::create\(\) should return League\\Uri\\RFC3986Uri but returns League\\Uri\\RFC3986Uri\|Psr\\Http\\Message\\UriInterface.#'
     reportUnmatchedIgnoredErrors: true

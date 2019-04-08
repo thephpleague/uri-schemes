@@ -1,14 +1,9 @@
 <?php
 
 /**
- * League.Uri (http://uri.thephpleague.com)
+ * League.Uri (https://uri.thephpleague.com)
  *
- * @package    League\Uri
- * @subpackage League\Uri\Schemes
- * @author     Ignace Nyamagana Butera <nyamsprod@gmail.com>
- * @license    https://github.com/thephpleague/uri-schemes/blob/master/LICENSE (MIT License)
- * @version    2.0.0
- * @link       https://github.com/thephpleague/uri-schemes
+ * (c) Ignace Nyamagana Butera <nyamsprod@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -58,6 +53,8 @@ use const FILTER_FLAG_IPV6;
 use const FILTER_NULL_ON_FAILURE;
 use const FILTER_VALIDATE_BOOLEAN;
 use const FILTER_VALIDATE_IP;
+use const IDNA_CHECK_BIDI;
+use const IDNA_CHECK_CONTEXTJ;
 use const IDNA_ERROR_BIDI;
 use const IDNA_ERROR_CONTEXTJ;
 use const IDNA_ERROR_DISALLOWED;
@@ -71,6 +68,8 @@ use const IDNA_ERROR_LEADING_COMBINING_MARK;
 use const IDNA_ERROR_LEADING_HYPHEN;
 use const IDNA_ERROR_PUNYCODE;
 use const IDNA_ERROR_TRAILING_HYPHEN;
+use const IDNA_NONTRANSITIONAL_TO_ASCII;
+use const IDNA_NONTRANSITIONAL_TO_UNICODE;
 use const INTL_IDNA_VARIANT_UTS46;
 
 final class Uri implements RFC3986Uri
@@ -246,6 +245,292 @@ final class Uri implements RFC3986Uri
     private $uri;
 
     /**
+     * Create a new instance.
+     *
+     * @param ?string $scheme
+     * @param ?string $user
+     * @param ?string $pass
+     * @param ?string $host
+     * @param ?int    $port
+     * @param ?string $query
+     * @param ?string $fragment
+     */
+    private function __construct(
+        ?string $scheme,
+        ?string $user,
+        ?string $pass,
+        ?string $host,
+        ?int $port,
+        string $path,
+        ?string $query,
+        ?string $fragment
+    ) {
+        $this->scheme = $this->formatScheme($scheme);
+        $this->user_info = $this->formatUserInfo($user, $pass);
+        $this->host = $this->formatHost($host);
+        $this->port = $this->formatPort($port);
+        $this->authority = $this->setAuthority();
+        $this->path = $this->formatPath($path);
+        $this->query = $this->formatQueryAndFragment($query);
+        $this->fragment = $this->formatQueryAndFragment($fragment);
+        $this->assertValidState();
+    }
+
+    /**
+     * Format the Scheme and Host component.
+     *
+     * @param ?string $scheme
+     *
+     * @throws MalformedUri if the scheme is invalid
+     */
+    private function formatScheme(?string $scheme): ?string
+    {
+        if ('' === $scheme || null === $scheme) {
+            return $scheme;
+        }
+
+        $formatted_scheme = strtolower($scheme);
+        if (1 === preg_match(self::REGEXP_SCHEME, $formatted_scheme)) {
+            return $formatted_scheme;
+        }
+
+        throw new MalformedUri(sprintf('The scheme `%s` is invalid', $scheme));
+    }
+
+    /**
+     * Set the UserInfo component.
+     *
+     * @param ?string $user
+     * @param ?string $password
+     */
+    private function formatUserInfo(?string $user, ?string $password): ?string
+    {
+        if (null === $user) {
+            return $user;
+        }
+
+        static $user_pattern = '/(?:[^%'.self::REGEXP_CHARS_UNRESERVED.self::REGEXP_CHARS_SUBDELIM.']++|%(?![A-Fa-f0-9]{2}))/';
+        $user = preg_replace_callback($user_pattern, [Uri::class, 'urlEncodeMatch'], $user);
+        if (null === $password) {
+            return $user;
+        }
+
+        static $password_pattern = '/(?:[^%:'.self::REGEXP_CHARS_UNRESERVED.self::REGEXP_CHARS_SUBDELIM.']++|%(?![A-Fa-f0-9]{2}))/';
+
+        return $user.':'.preg_replace_callback($password_pattern, [Uri::class, 'urlEncodeMatch'], $password);
+    }
+
+    /**
+     * Returns the RFC3986 encoded string matched.
+     */
+    private static function urlEncodeMatch(array $matches): string
+    {
+        return rawurlencode($matches[0]);
+    }
+
+    /**
+     * Validate and Format the Host component.
+     *
+     * @param ?string $host
+     */
+    private function formatHost(?string $host): ?string
+    {
+        if (null === $host || '' === $host) {
+            return $host;
+        }
+
+        if ('[' !== $host[0]) {
+            return $this->formatRegisteredName($host);
+        }
+
+        return $this->formatIp($host);
+    }
+
+    /**
+     * Validate and format a registered name.
+     *
+     * The host is converted to its ascii representation if needed
+     *
+     * @throws MalformedUri if the submitted host is not a valid registered name
+     */
+    private function formatRegisteredName(string $host): string
+    {
+        // @codeCoverageIgnoreStart
+        // added because it is not possible in travis to disabled the ext/intl extension
+        // see travis issue https://github.com/travis-ci/travis-ci/issues/4701
+        static $idn_support = null;
+        $idn_support = $idn_support ?? function_exists('idn_to_ascii') && defined('INTL_IDNA_VARIANT_UTS46');
+        // @codeCoverageIgnoreEnd
+
+        $formatted_host = rawurldecode(strtolower($host));
+        if (1 === preg_match(self::REGEXP_HOST_REGNAME, $formatted_host)) {
+            if (false === strpos($formatted_host, 'xn--')) {
+                return $formatted_host;
+            }
+
+            // @codeCoverageIgnoreStart
+            if (!$idn_support) {
+                throw new InvalidUri(sprintf('the host `%s` could not be processed for IDN. Verify that ext/intl is installed for IDN support and that ICU is at least version 4.6.', $host));
+            }
+            // @codeCoverageIgnoreEnd
+
+            $unicode = idn_to_utf8(
+                $host,
+                IDNA_CHECK_BIDI | IDNA_CHECK_CONTEXTJ | IDNA_NONTRANSITIONAL_TO_UNICODE,
+                INTL_IDNA_VARIANT_UTS46,
+                $arr
+            );
+
+            if (0 !== $arr['errors']) {
+                throw new MalformedUri(sprintf('The host `%s` is invalid : %s', $host, $this->getIDNAErrors($arr['errors'])));
+            }
+
+            // @codeCoverageIgnoreStart
+            if (false === $unicode) {
+                throw new UnexpectedValueException(sprintf('The Intl extension is misconfigured for %s, please correct this issue before proceeding.', PHP_OS));
+            }
+            // @codeCoverageIgnoreEnd
+
+            return $formatted_host;
+        }
+
+        if (1 === preg_match(self::REGEXP_HOST_GEN_DELIMS, $formatted_host)) {
+            throw new MalformedUri(sprintf('The host `%s` is invalid : a registered name can not contain URI delimiters or spaces', $host));
+        }
+
+        // @codeCoverageIgnoreStart
+        if (!$idn_support) {
+            throw new InvalidUri(sprintf('the host `%s` could not be processed for IDN. Verify that ext/intl is installed for IDN support and that ICU is at least version 4.6.', $host));
+        }
+        // @codeCoverageIgnoreEnd
+
+        $formatted_host = idn_to_ascii(
+            $formatted_host,
+            IDNA_CHECK_BIDI | IDNA_CHECK_CONTEXTJ | IDNA_NONTRANSITIONAL_TO_ASCII,
+            INTL_IDNA_VARIANT_UTS46,
+            $arr
+        );
+        if (0 !== $arr['errors']) {
+            throw new MalformedUri(sprintf('The host `%s` is invalid : %s', $host, $this->getIDNAErrors($arr['errors'])));
+        }
+
+        // @codeCoverageIgnoreStart
+        if (false === $formatted_host) {
+            throw new UnexpectedValueException(sprintf('The Intl extension is misconfigured for %s, please correct this issue before proceeding.', PHP_OS));
+        }
+        // @codeCoverageIgnoreEnd
+
+        return $arr['result'];
+    }
+
+    /**
+     * Retrieves and format IDNA conversion error message.
+     *
+     * @see http://icu-project.org/apiref/icu4j/com/ibm/icu/text/IDNA.Error.html
+     */
+    private function getIDNAErrors(int $error_byte): string
+    {
+        $res = [];
+        foreach (self::IDNA_ERRORS as $error => $reason) {
+            if ($error === ($error_byte & $error)) {
+                $res[] = $reason;
+            }
+        }
+
+        return [] === $res ? 'Unknown IDNA conversion error.' : implode(', ', $res).'.';
+    }
+
+    /**
+     * Validate and Format the IPv6/IPvfuture host.
+     *
+     * @throws MalformedUri if the submitted host is not a valid IP host
+     */
+    private function formatIp(string $host): string
+    {
+        $ip = substr($host, 1, -1);
+        if (false !== filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+            return $host;
+        }
+
+        if (1 === preg_match(self::REGEXP_HOST_IPFUTURE, $ip, $matches) && !in_array($matches['version'], ['4', '6'], true)) {
+            return $host;
+        }
+
+        $pos = strpos($ip, '%');
+        if (false === $pos) {
+            throw new MalformedUri(sprintf('The host `%s` is invalid : the IP host is malformed', $host));
+        }
+
+        if (1 === preg_match(self::REGEXP_HOST_GEN_DELIMS, rawurldecode(substr($ip, $pos)))) {
+            throw new MalformedUri(sprintf('The host `%s` is invalid : the IP host is malformed', $host));
+        }
+
+        $ip = substr($ip, 0, $pos);
+        if (false === filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+            throw new MalformedUri(sprintf('The host `%s` is invalid : the IP host is malformed', $host));
+        }
+
+        //Only the address block fe80::/10 can have a Zone ID attach to
+        //let's detect the link local significant 10 bits
+        if (0 === strpos((string) inet_pton($ip), self::HOST_ADDRESS_BLOCK)) {
+            return $host;
+        }
+
+        throw new MalformedUri(sprintf('The host `%s` is invalid : the IP host is malformed', $host));
+    }
+
+    /**
+     * Format the Port component.
+     *
+     * @param null|mixed $port
+     */
+    private function formatPort($port = null): ?int
+    {
+        if (null === $port || '' === $port) {
+            return null;
+        }
+
+        if (!is_int($port) && !(is_string($port) && 1 === preg_match('/^\d*$/', $port))) {
+            throw new MalformedUri(sprintf('The port `%s` is invalid', $port));
+        }
+
+        $port = (int) $port;
+        if (0 > $port) {
+            throw new MalformedUri(sprintf('The port `%s` is invalid', $port));
+        }
+
+        $defaultPort = self::SCHEME_DEFAULT_PORT[$this->scheme] ?? null;
+        if ($defaultPort === $port) {
+            return null;
+        }
+
+        return $port;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public static function __set_state(array $components): self
+    {
+        $components['user'] = null;
+        $components['pass'] = null;
+        if (null !== $components['user_info']) {
+            [$components['user'], $components['pass']] = explode(':', $components['user_info'], 2) + [1 => null];
+        }
+
+        return new self(
+            $components['scheme'],
+            $components['user'],
+            $components['pass'],
+            $components['host'],
+            $components['port'],
+            $components['path'],
+            $components['query'],
+            $components['fragment']
+        );
+    }
+
+    /**
      * Create a new instance from a URI and a Base URI.
      *
      * The returned URI must be absolute.
@@ -327,7 +612,6 @@ final class Uri implements RFC3986Uri
             $components['fragment']
         );
     }
-
 
     /**
      * Create a new instance from a data file path.
@@ -549,281 +833,6 @@ final class Uri implements RFC3986Uri
         }
 
         return [$server['PHP_SELF'], $server['QUERY_STRING']];
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public static function __set_state(array $components): self
-    {
-        $components['user'] = null;
-        $components['pass'] = null;
-        if (null !== $components['user_info']) {
-            [$components['user'], $components['pass']] = explode(':', $components['user_info'], 2) + [1 => null];
-        }
-
-        return new self(
-            $components['scheme'],
-            $components['user'],
-            $components['pass'],
-            $components['host'],
-            $components['port'],
-            $components['path'],
-            $components['query'],
-            $components['fragment']
-        );
-    }
-
-    /**
-     * Create a new instance.
-     *
-     * @param ?string $scheme
-     * @param ?string $user
-     * @param ?string $pass
-     * @param ?string $host
-     * @param ?int    $port
-     * @param ?string $query
-     * @param ?string $fragment
-     */
-    private function __construct(
-        ?string $scheme,
-        ?string $user,
-        ?string $pass,
-        ?string $host,
-        ?int $port,
-        string $path,
-        ?string $query,
-        ?string $fragment
-    ) {
-        $this->scheme = $this->formatScheme($scheme);
-        $this->user_info = $this->formatUserInfo($user, $pass);
-        $this->host = $this->formatHost($host);
-        $this->port = $this->formatPort($port);
-        $this->authority = $this->setAuthority();
-        $this->path = $this->formatPath($path);
-        $this->query = $this->formatQueryAndFragment($query);
-        $this->fragment = $this->formatQueryAndFragment($fragment);
-        $this->assertValidState();
-    }
-
-    /**
-     * Format the Scheme and Host component.
-     *
-     * @param ?string $scheme
-     *
-     * @throws MalformedUri if the scheme is invalid
-     */
-    private function formatScheme(?string $scheme): ?string
-    {
-        if ('' === $scheme || null === $scheme) {
-            return $scheme;
-        }
-
-        $formatted_scheme = strtolower($scheme);
-        if (1 === preg_match(self::REGEXP_SCHEME, $formatted_scheme)) {
-            return $formatted_scheme;
-        }
-
-        throw new MalformedUri(sprintf('The scheme `%s` is invalid', $scheme));
-    }
-
-    /**
-     * Set the UserInfo component.
-     *
-     * @param ?string $user
-     * @param ?string $password
-     */
-    private function formatUserInfo(?string $user, ?string $password): ?string
-    {
-        if (null === $user) {
-            return $user;
-        }
-
-        static $user_pattern = '/(?:[^%'.self::REGEXP_CHARS_UNRESERVED.self::REGEXP_CHARS_SUBDELIM.']++|%(?![A-Fa-f0-9]{2}))/';
-        $user = preg_replace_callback($user_pattern, [Uri::class, 'urlEncodeMatch'], $user);
-        if (null === $password) {
-            return $user;
-        }
-
-        static $password_pattern = '/(?:[^%:'.self::REGEXP_CHARS_UNRESERVED.self::REGEXP_CHARS_SUBDELIM.']++|%(?![A-Fa-f0-9]{2}))/';
-
-        return $user.':'.preg_replace_callback($password_pattern, [Uri::class, 'urlEncodeMatch'], $password);
-    }
-
-    /**
-     * Returns the RFC3986 encoded string matched.
-     */
-    private static function urlEncodeMatch(array $matches): string
-    {
-        return rawurlencode($matches[0]);
-    }
-
-    /**
-     * Validate and Format the Host component.
-     *
-     * @param ?string $host
-     */
-    private function formatHost(?string $host): ?string
-    {
-        if (null === $host || '' === $host) {
-            return $host;
-        }
-
-        if ('[' !== $host[0]) {
-            return $this->formatRegisteredName($host);
-        }
-
-        return $this->formatIp($host);
-    }
-
-    /**
-     * Validate and format a registered name.
-     *
-     * The host is converted to its ascii representation if needed
-     *
-     * @throws MalformedUri if the submitted host is not a valid registered name
-     */
-    private function formatRegisteredName(string $host): string
-    {
-        // @codeCoverageIgnoreStart
-        // added because it is not possible in travis to disabled the ext/intl extension
-        // see travis issue https://github.com/travis-ci/travis-ci/issues/4701
-        static $idn_support = null;
-        $idn_support = $idn_support ?? function_exists('idn_to_ascii') && defined('INTL_IDNA_VARIANT_UTS46');
-        // @codeCoverageIgnoreEnd
-
-        $formatted_host = rawurldecode(strtolower($host));
-        if (1 === preg_match(self::REGEXP_HOST_REGNAME, $formatted_host)) {
-            if (false === strpos($formatted_host, 'xn--')) {
-                return $formatted_host;
-            }
-
-            // @codeCoverageIgnoreStart
-            if (!$idn_support) {
-                throw new InvalidUri(sprintf('the host `%s` could not be processed for IDN. Verify that ext/intl is installed for IDN support and that ICU is at least version 4.6.', $host));
-            }
-            // @codeCoverageIgnoreEnd
-
-            $unicode = idn_to_utf8($host, 0, INTL_IDNA_VARIANT_UTS46, $arr);
-            if (0 !== $arr['errors']) {
-                throw new MalformedUri(sprintf('The host `%s` is invalid : %s', $host, $this->getIDNAErrors($arr['errors'])));
-            }
-
-            // @codeCoverageIgnoreStart
-            if (false === $unicode) {
-                throw new UnexpectedValueException(sprintf('The Intl extension is misconfigured for %s, please correct this issue before proceeding.', PHP_OS));
-            }
-            // @codeCoverageIgnoreEnd
-
-            return $formatted_host;
-        }
-
-        if (1 === preg_match(self::REGEXP_HOST_GEN_DELIMS, $formatted_host)) {
-            throw new MalformedUri(sprintf('The host `%s` is invalid : a registered name can not contain URI delimiters or spaces', $host));
-        }
-
-        // @codeCoverageIgnoreStart
-        if (!$idn_support) {
-            throw new InvalidUri(sprintf('the host `%s` could not be processed for IDN. Verify that ext/intl is installed for IDN support and that ICU is at least version 4.6.', $host));
-        }
-        // @codeCoverageIgnoreEnd
-
-        $formatted_host = idn_to_ascii($formatted_host, 0, INTL_IDNA_VARIANT_UTS46, $arr);
-        if (0 !== $arr['errors']) {
-            throw new MalformedUri(sprintf('The host `%s` is invalid : %s', $host, $this->getIDNAErrors($arr['errors'])));
-        }
-
-        // @codeCoverageIgnoreStart
-        if (false === $formatted_host) {
-            throw new UnexpectedValueException(sprintf('The Intl extension is misconfigured for %s, please correct this issue before proceeding.', PHP_OS));
-        }
-        // @codeCoverageIgnoreEnd
-
-        return $formatted_host;
-    }
-
-    /**
-     * Retrieves and format IDNA conversion error message.
-     *
-     * @see http://icu-project.org/apiref/icu4j/com/ibm/icu/text/IDNA.Error.html
-     */
-    private function getIDNAErrors(int $error_byte): string
-    {
-        $res = [];
-        foreach (self::IDNA_ERRORS as $error => $reason) {
-            if (1 === ($error_byte & $error)) {
-                $res[] = $reason;
-            }
-        }
-
-        return [] === $res ? 'Unknown IDNA conversion error.' : implode(', ', $res).'.';
-    }
-
-    /**
-     * Validate and Format the IPv6/IPvfuture host.
-     *
-     * @throws MalformedUri if the submitted host is not a valid IP host
-     */
-    private function formatIp(string $host): string
-    {
-        $ip = substr($host, 1, -1);
-        if (false !== filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
-            return $host;
-        }
-
-        if (1 === preg_match(self::REGEXP_HOST_IPFUTURE, $ip, $matches) && !in_array($matches['version'], ['4', '6'], true)) {
-            return $host;
-        }
-
-        $pos = strpos($ip, '%');
-        if (false === $pos) {
-            throw new MalformedUri(sprintf('The host `%s` is invalid : the IP host is malformed', $host));
-        }
-
-        if (1 === preg_match(self::REGEXP_HOST_GEN_DELIMS, rawurldecode(substr($ip, $pos)))) {
-            throw new MalformedUri(sprintf('The host `%s` is invalid : the IP host is malformed', $host));
-        }
-
-        $ip = substr($ip, 0, $pos);
-        if (false === filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
-            throw new MalformedUri(sprintf('The host `%s` is invalid : the IP host is malformed', $host));
-        }
-
-        //Only the address block fe80::/10 can have a Zone ID attach to
-        //let's detect the link local significant 10 bits
-        if (0 === strpos((string) inet_pton($ip), self::HOST_ADDRESS_BLOCK)) {
-            return $host;
-        }
-
-        throw new MalformedUri(sprintf('The host `%s` is invalid : the IP host is malformed', $host));
-    }
-
-    /**
-     * Format the Port component.
-     *
-     * @param null|mixed $port
-     */
-    private function formatPort($port = null): ?int
-    {
-        if (null === $port || '' === $port) {
-            return null;
-        }
-
-        if (!is_int($port) && !(is_string($port) && 1 === preg_match('/^\d*$/', $port))) {
-            throw new MalformedUri(sprintf('The port `%s` is invalid', $port));
-        }
-
-        $port = (int) $port;
-        if (0 > $port) {
-            throw new MalformedUri(sprintf('The port `%s` is invalid', $port));
-        }
-
-        $defaultPort = self::SCHEME_DEFAULT_PORT[$this->scheme] ?? null;
-        if ($defaultPort === $port) {
-            return null;
-        }
-
-        return $port;
     }
 
     /**

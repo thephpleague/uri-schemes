@@ -39,9 +39,9 @@
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^2.0",
         "phpunit/phpunit" : "^7.0",
-        "phpstan/phpstan": "^0.10",
-        "phpstan/phpstan-strict-rules": "^0.10",
-        "phpstan/phpstan-phpunit": "^0.10"
+        "phpstan/phpstan": "^0.11",
+        "phpstan/phpstan-strict-rules": "^0.11",
+        "phpstan/phpstan-phpunit": "^0.11"
     },
     "autoload": {
         "psr-4": {
@@ -55,8 +55,8 @@
     },
     "scripts": {
         "phpcs": "php-cs-fixer fix -v --diff --dry-run --allow-risky=yes;",
-        "phpstan-src": "phpstan analyse -l 7 -c phpstan.src.neon src",
-        "phpstan-tests": "phpstan analyse -l 7 -c phpstan.tests.neon tests",
+        "phpstan-src": "phpstan analyse -l max -c phpstan.src.neon src",
+        "phpstan-tests": "phpstan analyse -l max -c phpstan.tests.neon tests",
         "phpstan": [
             "@phpstan-src",
             "@phpstan-tests"
