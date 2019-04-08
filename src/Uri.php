@@ -1,7 +1,7 @@
 <?php
 
 /**
- * League.Uri (http://uri.thephpleague.com).
+ * League.Uri (http://uri.thephpleague.com)
  *
  * @package    League\Uri
  * @subpackage League\Uri\Schemes
@@ -22,7 +22,7 @@ use finfo;
 use League\Uri\Exception\InvalidUri;
 use League\Uri\Exception\MalformedUri;
 use League\Uri\Parser\RFC3986;
-use Psr\Http\Message\UriInterface as Psr7UriInterface;
+use Psr\Http\Message\UriInterface;
 use TypeError;
 use UnexpectedValueException;
 use function array_filter;
@@ -73,7 +73,7 @@ use const IDNA_ERROR_PUNYCODE;
 use const IDNA_ERROR_TRAILING_HYPHEN;
 use const INTL_IDNA_VARIANT_UTS46;
 
-final class Uri implements RFC3986UriInterface
+final class Uri implements RFC3986Uri
 {
     /**
      * RFC3986 invalid characters.
@@ -253,9 +253,9 @@ final class Uri implements RFC3986UriInterface
      * @param mixed $uri      the input URI to create
      * @param mixed $base_uri the base URI used for reference
      */
-    public static function create($uri, $base_uri = null): RFC3986UriInterface
+    public static function create($uri, $base_uri = null): RFC3986Uri
     {
-        if (!$uri instanceof RFC3986UriInterface) {
+        if (!$uri instanceof RFC3986Uri) {
             $uri = self::createFromString($uri);
         }
 
@@ -271,7 +271,7 @@ final class Uri implements RFC3986UriInterface
             return Resolver::resolve($uri, $uri->withFragment(null)->withQuery(null)->withPath(''));
         }
 
-        if (!$base_uri instanceof RFC3986UriInterface) {
+        if (!$base_uri instanceof RFC3986Uri) {
             $base_uri = self::createFromString($base_uri);
         }
 
@@ -400,7 +400,7 @@ final class Uri implements RFC3986UriInterface
     /**
      * Create a new instance from a PSR7 UriInterface object.
      */
-    public static function createFromPsr7(Psr7UriInterface $uri): self
+    public static function createFromPsr7(UriInterface $uri): self
     {
         $components = [
             'scheme' => null,

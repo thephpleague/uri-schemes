@@ -1,7 +1,7 @@
 <?php
 
 /**
- * League.Uri (http://uri.thephpleague.com).
+ * League.Uri (http://uri.thephpleague.com)
  *
  * @package    League\Uri
  * @subpackage League\Uri\Schemes
@@ -21,7 +21,7 @@ namespace League\Uri;
 use InvalidArgumentException;
 use JsonSerializable;
 
-interface RFC3986UriInterface extends JsonSerializable
+interface RFC3986Uri extends JsonSerializable
 {
     /**
      * Returns the string representation as a URI reference.
