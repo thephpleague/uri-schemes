@@ -16,32 +16,35 @@ matrix:
       env:
         - COLLECT_COVERAGE=true
         - IGNORE_PLATFORMS=false
-        - RUN_PHPSTAN=false
-        - RUN_INFECTION=false
+        - RUN_PHPSTAN=true
         - VALIDATE_CODING_STYLE=false
     - php: 7.2
       env:
         - COLLECT_COVERAGE=true
         - IGNORE_PLATFORMS=false
         - RUN_PHPSTAN=true
-        - RUN_INFECTION=true
-        - VALIDATE_CODING_STYLE=true
+        - VALIDATE_CODING_STYLE=false
     - php: 7.3
       env:
         - COLLECT_COVERAGE=true
         - IGNORE_PLATFORMS=true
-        - RUN_PHPSTAN=false
-        - RUN_INFECTION=false
+        - RUN_PHPSTAN=true
+        - VALIDATE_CODING_STYLE=true
+    - php: 7.4snapshot
+      env:
+        - COLLECT_COVERAGE=false
         - VALIDATE_CODING_STYLE=false
+        - RUN_PHPSTAN=false
+        - IGNORE_PLATFORMS=true
     - php: nightly
       env:
         - COLLECT_COVERAGE=false
         - IGNORE_PLATFORMS=true
-        - RUN_PHPSTAN=false
-        - RUN_INFECTION=false
+        - RUN_PHPSTAN=true
         - VALIDATE_CODING_STYLE=false
   allow_failures:
     - php: nightly
+    - php: 7.4snapshot
   fast_finish: true
 
 before_install:
@@ -57,5 +60,4 @@ script:
   - composer phpunit
 
 after_script:
-  - if [ "$RUN_INFECTION" == "true" ]; then composer infection; fi
   - if [ "$COLLECT_COVERAGE" == "true" ]; then wget https://scrutinizer-ci.com/ocular.phar && php ocular.phar code-coverage:upload --format=php-clover build/clover.xml; fi
