@@ -237,11 +237,22 @@ final class Resolver
         return $uri->withPath('');
     }
 
+    /**
+     * Tells whether the component value from both URI object equals.
+     *
+     * @param RFC3986Uri|UriInterface $uri
+     * @param RFC3986Uri|UriInterface $base_uri
+     */
     private static function componentEquals(string $method, $uri, $base_uri): bool
     {
         return self::getComponent($method, $uri) === self::getComponent($method, $base_uri);
     }
 
+    /**
+     * Returns the component value from the submitted URI object.
+     *
+     * @param RFC3986Uri|UriInterface $uri
+     */
     private static function getComponent(string $method, $uri): ?string
     {
         $component = $uri->$method();

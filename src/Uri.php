@@ -16,7 +16,6 @@ namespace League\Uri;
 use finfo;
 use League\Uri\Exception\InvalidUri;
 use League\Uri\Exception\MalformedUri;
-use League\Uri\Parser\RFC3986;
 use Psr\Http\Message\UriInterface;
 use TypeError;
 use UnexpectedValueException;
@@ -574,7 +573,7 @@ final class Uri implements RFC3986Uri
      */
     public static function createFromString($uri = ''): self
     {
-        $components = RFC3986::parse($uri);
+        $components = UriString::parse($uri);
 
         return new self(
             $components['scheme'],

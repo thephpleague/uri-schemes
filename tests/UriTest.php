@@ -520,7 +520,7 @@ class UriTest extends TestCase
             ->withScheme('https')
             ->withPath('/v1/people/~:(first-name,last-name,email-address,picture-url)');
 
-        self::assertContains(
+        self::assertStringContainsString(
             '/v1/people/~:(first-name,last-name,email-address,picture-url)',
             (string) $uri
         );

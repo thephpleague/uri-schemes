@@ -57,7 +57,7 @@ class FactoryTest extends TestCase
         ]);
 
         $uri = Uri::createFromDataPath(__DIR__.'/data/'.$path, $context);
-        self::assertContains($expected, $uri->getPath());
+        self::assertStringContainsString($expected, $uri->getPath());
     }
 
     public function validFilePath(): array
