@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace League\Uri;
 
 use JsonSerializable;
-use League\Uri\Exception\MalformedUri;
 use Psr\Http\Message\UriInterface;
 use function is_scalar;
 use function method_exists;

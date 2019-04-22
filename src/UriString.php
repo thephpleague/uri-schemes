@@ -13,8 +13,6 @@ declare(strict_types=1);
 
 namespace League\Uri;
 
-use League\Uri\Exception\InvalidUri;
-use League\Uri\Exception\MalformedUri;
 use TypeError;
 use UnexpectedValueException;
 use function array_merge;

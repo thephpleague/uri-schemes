@@ -11,10 +11,8 @@
 
 declare(strict_types=1);
 
-namespace League\Uri\Exception;
+namespace League\Uri;
 
-use InvalidArgumentException;
-
-class InvalidUri extends InvalidArgumentException
+class MalformedUri extends InvalidUri
 {
 }
