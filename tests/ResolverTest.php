@@ -12,14 +12,14 @@
 namespace LeagueTest\Uri;
 
 use League\Uri\Http;
-use League\Uri\Resolver;
 use League\Uri\Uri;
+use League\Uri\UriResolver;
 use PHPUnit\Framework\TestCase;
 use TypeError;
 
 /**
  * @group modifer
- * @coversDefaultClass \League\Uri\Resolver
+ * @coversDefaultClass \League\Uri\UriResolver
  */
 class ResolverTest extends TestCase
 {
@@ -27,14 +27,14 @@ class ResolverTest extends TestCase
     {
         $http = Uri::createFromString('http://example.com/path/to/file');
         $ftp = Http::createFromString('ftp://a/b/c/d;p');
-        $res = Resolver::resolve($ftp, $http);
+        $res = UriResolver::resolve($ftp, $http);
         self::assertEquals($res, $ftp);
     }
 
     public function testResolveThrowExceptionOnConstructor(): void
     {
         self::expectException(TypeError::class);
-        Resolver::resolve('ftp//a/b/c/d;p', 'toto');
+        UriResolver::resolve('ftp//a/b/c/d;p', 'toto');
     }
 
     /**
@@ -42,7 +42,7 @@ class ResolverTest extends TestCase
      */
     public function testCreateResolve(string $base_uri, string $uri, string $expected): void
     {
-        self::assertSame($expected, (string) Resolver::resolve(
+        self::assertSame($expected, (string) UriResolver::resolve(
             Uri::createFromString($uri),
             Http::createFromString($base_uri)
         ));

@@ -14,22 +14,23 @@ declare(strict_types=1);
 namespace League\Uri;
 
 use JsonSerializable;
-use Psr\Http\Message\UriInterface;
+use League\Uri\Exception\MalformedUri;
+use Psr\Http\Message\UriInterface as Psr7UriInterface;
 use function is_scalar;
 use function method_exists;
 use function sprintf;
 
-final class Http implements UriInterface, JsonSerializable
+final class Http implements Psr7UriInterface, JsonSerializable
 {
     /**
-     * @var RFC3986Uri
+     * @var UriInterface
      */
     private $uri;
 
     /**
      * New instance.
      */
-    public function __construct(RFC3986Uri $uri)
+    public function __construct(UriInterface $uri)
     {
         $this->validate($uri);
         $this->uri = $uri;
@@ -40,7 +41,7 @@ final class Http implements UriInterface, JsonSerializable
      *
      * @throws MalformedUri if the given URI does not follow PSR-7 UriInterface rules
      */
-    private function validate(RFC3986Uri $uri): void
+    private function validate(UriInterface $uri): void
     {
         $scheme = $uri->getScheme();
         if (null === $scheme && '' === $uri->getHost()) {

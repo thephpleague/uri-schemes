@@ -11,7 +11,7 @@
 
 namespace LeagueTest\Uri;
 
-use League\Uri\MalformedUri;
+use League\Uri\Exception\MalformedUri;
 use League\Uri\UriString;
 use PHPUnit\Framework\TestCase;
 use TypeError;

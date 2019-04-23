@@ -14,7 +14,9 @@ declare(strict_types=1);
 namespace League\Uri;
 
 use finfo;
-use Psr\Http\Message\UriInterface;
+use League\Uri\Exception\InvalidUri;
+use League\Uri\Exception\MalformedUri;
+use Psr\Http\Message\UriInterface as Psr7UriInterface;
 use TypeError;
 use UnexpectedValueException;
 use function array_filter;
@@ -69,7 +71,7 @@ use const IDNA_NONTRANSITIONAL_TO_ASCII;
 use const IDNA_NONTRANSITIONAL_TO_UNICODE;
 use const INTL_IDNA_VARIANT_UTS46;
 
-final class Uri implements RFC3986Uri
+final class Uri implements UriInterface
 {
     /**
      * RFC3986 invalid characters.
@@ -535,9 +537,9 @@ final class Uri implements RFC3986Uri
      * @param mixed $uri      the input URI to create
      * @param mixed $base_uri the base URI used for reference
      */
-    public static function create($uri, $base_uri = null): RFC3986Uri
+    public static function create($uri, $base_uri = null): UriInterface
     {
-        if (!$uri instanceof RFC3986Uri) {
+        if (!$uri instanceof UriInterface) {
             $uri = self::createFromString($uri);
         }
 
@@ -550,10 +552,10 @@ final class Uri implements RFC3986Uri
                 return $uri;
             }
 
-            return Resolver::resolve($uri, $uri->withFragment(null)->withQuery(null)->withPath(''));
+            return UriResolver::resolve($uri, $uri->withFragment(null)->withQuery(null)->withPath(''));
         }
 
-        if (!$base_uri instanceof RFC3986Uri) {
+        if (!$base_uri instanceof UriInterface) {
             $base_uri = self::createFromString($base_uri);
         }
 
@@ -561,7 +563,7 @@ final class Uri implements RFC3986Uri
             throw new MalformedUri(sprintf('the base URI `%s` must be absolute', (string) $base_uri));
         }
 
-        return Resolver::resolve($uri, $base_uri);
+        return UriResolver::resolve($uri, $base_uri);
     }
 
     /**
@@ -681,7 +683,7 @@ final class Uri implements RFC3986Uri
     /**
      * Create a new instance from a PSR7 UriInterface object.
      */
-    public static function createFromPsr7(UriInterface $uri): self
+    public static function createFromPsr7(Psr7UriInterface $uri): self
     {
         $components = [
             'scheme' => null,

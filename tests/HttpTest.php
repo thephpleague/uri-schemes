@@ -12,8 +12,8 @@
 namespace LeagueTest\Uri;
 
 use InvalidArgumentException;
+use League\Uri\Exception\InvalidUri;
 use League\Uri\Http;
-use League\Uri\InvalidUri;
 use PHPUnit\Framework\TestCase;
 use TypeError;
 

@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace League\Uri;
 
-use Psr\Http\Message\UriInterface;
+use Psr\Http\Message\UriInterface as Psr7UriInterface;
 use TypeError;
 use function array_pop;
 use function array_reduce;
@@ -28,7 +28,7 @@ use function str_repeat;
 use function strpos;
 use function substr;
 
-final class Resolver
+final class UriResolver
 {
     /**
      * @var array
@@ -45,19 +45,19 @@ final class Resolver
     /**
      * Resolve an URI against a base URI using RFC3986 rules.
      *
-     * If the first argument is a RFC3986Uri the method returns a RFC3986Uri object
-     * If the first argument is a UriInterface the method returns a RFC3986Uri object
+     * If the first argument is a UriInterface the method returns a UriInterface object
+     * If the first argument is a Psr7UriInterface the method returns a Psr7UriInterface object
      *
-     * @param RFC3986Uri|UriInterface $uri
-     * @param RFC3986Uri|UriInterface $base_uri
+     * @param Psr7UriInterface|UriInterface $uri
+     * @param Psr7UriInterface|UriInterface $base_uri
      *
-     * @return RFC3986Uri|UriInterface
+     * @return Psr7UriInterface|UriInterface
      */
     public static function resolve($uri, $base_uri)
     {
         self::filterUri($uri);
         self::filterUri($base_uri);
-        $null = $uri instanceof UriInterface ? '' : null;
+        $null = $uri instanceof Psr7UriInterface ? '' : null;
 
         if ($null !== $uri->getScheme()) {
             return $uri
@@ -98,7 +98,7 @@ final class Resolver
      */
     private static function filterUri($uri): void
     {
-        if (!$uri instanceof UriInterface && !$uri instanceof RFC3986Uri) {
+        if (!$uri instanceof UriInterface && !$uri instanceof Psr7UriInterface) {
             throw new TypeError(sprintf('The uri must be a valid URI object received `%s`', gettype($uri)));
         }
     }
@@ -113,7 +113,7 @@ final class Resolver
         }
 
         $old_segments = explode('/', $path);
-        $new_path = implode('/', array_reduce($old_segments, [Resolver::class, 'reducer'], []));
+        $new_path = implode('/', array_reduce($old_segments, [UriResolver::class, 'reducer'], []));
         if (isset(self::DOT_SEGMENTS[end($old_segments)])) {
             $new_path .= '/';
         }
@@ -149,15 +149,15 @@ final class Resolver
     /**
      * Resolve an URI path and query component.
      *
-     * @param RFC3986Uri|UriInterface $uri
-     * @param RFC3986Uri|UriInterface $base_uri
+     * @param Psr7UriInterface|UriInterface $uri
+     * @param Psr7UriInterface|UriInterface $base_uri
      */
     private static function resolvePathAndQuery($uri, $base_uri): array
     {
         $target_path = $uri->getPath();
         $target_query = $uri->getQuery();
-        $null = $uri instanceof UriInterface ? '' : null;
-        $baseNull = $base_uri instanceof UriInterface ? '' : null;
+        $null = $uri instanceof Psr7UriInterface ? '' : null;
+        $baseNull = $base_uri instanceof Psr7UriInterface ? '' : null;
 
         if (0 === strpos($target_path, '/')) {
             return [$target_path, $target_query];
@@ -204,10 +204,10 @@ final class Resolver
      * This method MUST be transparent when dealing with error and exceptions.
      * It MUST not alter of silence them apart from validating its own parameters.
      *
-     * @param RFC3986Uri|UriInterface $uri
-     * @param RFC3986Uri|UriInterface $base_uri
+     * @param Psr7UriInterface|UriInterface $uri
+     * @param Psr7UriInterface|UriInterface $base_uri
      *
-     * @return RFC3986Uri|UriInterface
+     * @return Psr7UriInterface|UriInterface
      */
     public static function relativize($uri, $base_uri)
     {
@@ -219,7 +219,7 @@ final class Resolver
             return $uri;
         }
 
-        $null = $uri instanceof UriInterface ? '' : null;
+        $null = $uri instanceof Psr7UriInterface ? '' : null;
         $uri = $uri->withScheme($null)->withPort(null)->withUserInfo($null)->withHost($null);
         $target_path = $uri->getPath();
         if ($target_path !== $base_uri->getPath()) {
@@ -240,8 +240,8 @@ final class Resolver
     /**
      * Tells whether the component value from both URI object equals.
      *
-     * @param RFC3986Uri|UriInterface $uri
-     * @param RFC3986Uri|UriInterface $base_uri
+     * @param Psr7UriInterface|UriInterface $uri
+     * @param Psr7UriInterface|UriInterface $base_uri
      */
     private static function componentEquals(string $method, $uri, $base_uri): bool
     {
@@ -251,12 +251,12 @@ final class Resolver
     /**
      * Returns the component value from the submitted URI object.
      *
-     * @param RFC3986Uri|UriInterface $uri
+     * @param Psr7UriInterface|UriInterface $uri
      */
     private static function getComponent(string $method, $uri): ?string
     {
         $component = $uri->$method();
-        if ($uri instanceof UriInterface && '' === $component) {
+        if ($uri instanceof Psr7UriInterface && '' === $component) {
             return null;
         }
 
@@ -270,11 +270,11 @@ final class Resolver
      *
      * @throws TypeError if the URI object does not implements the supported interfaces.
      *
-     * @return RFC3986Uri|UriInterface
+     * @return Psr7UriInterface|UriInterface
      */
     private static function formatHost($uri)
     {
-        if (!$uri instanceof UriInterface) {
+        if (!$uri instanceof Psr7UriInterface) {
             return $uri;
         }
 
@@ -289,8 +289,8 @@ final class Resolver
     /**
      * Tell whether the submitted URI object can be relativize.
      *
-     * @param RFC3986Uri|UriInterface $uri
-     * @param RFC3986Uri|UriInterface $base_uri
+     * @param Psr7UriInterface|UriInterface $uri
+     * @param Psr7UriInterface|UriInterface $base_uri
      */
     private static function isRelativizable($uri, $base_uri): bool
     {

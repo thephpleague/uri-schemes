@@ -33,7 +33,8 @@
         "php": ">=7.1.3",
         "ext-fileinfo": "*",
         "ext-mbstring": "*",
-        "psr/http-message": "^1.0"
+        "psr/http-message": "^1.0",
+        "league/uri-interfaces": "dev-develop"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^2.0",
