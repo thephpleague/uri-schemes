@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace League\Uri;
 
 use finfo;
+use League\Uri\Contract\UriInterface;
 use League\Uri\Exception\InvalidUri;
 use League\Uri\Exception\MalformedUri;
 use Psr\Http\Message\UriInterface as Psr7UriInterface;
