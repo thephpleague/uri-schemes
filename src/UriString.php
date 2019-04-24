@@ -16,7 +16,6 @@ namespace League\Uri;
 use League\Uri\Exception\MalformedUri;
 use League\Uri\Exception\MissingIdnSupport;
 use TypeError;
-use UnexpectedValueException;
 use function array_merge;
 use function defined;
 use function explode;
@@ -425,7 +424,7 @@ final class UriString
 
             // @codeCoverageIgnoreStart
             if (false === $unicode) {
-                throw new UnexpectedValueException(sprintf('The Intl extension is misconfigured for %s, please correct this issue before proceeding.', PHP_OS));
+                throw new MissingIdnSupport(sprintf('The Intl extension is misconfigured for %s, please correct this issue before proceeding.', PHP_OS));
             }
             // @codeCoverageIgnoreEnd
 
@@ -450,7 +449,7 @@ final class UriString
 
         // @codeCoverageIgnoreStart
         if (false === $retval) {
-            throw new UnexpectedValueException(sprintf('The Intl extension is misconfigured for %s, please correct this issue before proceeding.', PHP_OS));
+            throw new MissingIdnSupport(sprintf('The Intl extension is misconfigured for %s, please correct this issue before proceeding.', PHP_OS));
         }
         // @codeCoverageIgnoreEnd
 

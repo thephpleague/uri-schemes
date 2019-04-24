@@ -19,7 +19,6 @@ use League\Uri\Exception\MalformedUri;
 use League\Uri\Exception\MissingIdnSupport;
 use Psr\Http\Message\UriInterface as Psr7UriInterface;
 use TypeError;
-use UnexpectedValueException;
 use function array_filter;
 use function array_map;
 use function base64_decode;
@@ -388,7 +387,7 @@ final class Uri implements UriInterface
 
             // @codeCoverageIgnoreStart
             if (false === $unicode) {
-                throw new UnexpectedValueException(sprintf('The Intl extension is misconfigured for %s, please correct this issue before proceeding.', PHP_OS));
+                throw new MissingIdnSupport(sprintf('The Intl extension is misconfigured for %s, please correct this issue before proceeding.', PHP_OS));
             }
             // @codeCoverageIgnoreEnd
 
@@ -417,7 +416,7 @@ final class Uri implements UriInterface
 
         // @codeCoverageIgnoreStart
         if (false === $formatted_host) {
-            throw new UnexpectedValueException(sprintf('The Intl extension is misconfigured for %s, please correct this issue before proceeding.', PHP_OS));
+            throw new MissingIdnSupport(sprintf('The Intl extension is misconfigured for %s, please correct this issue before proceeding.', PHP_OS));
         }
         // @codeCoverageIgnoreEnd
 
