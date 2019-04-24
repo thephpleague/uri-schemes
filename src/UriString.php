@@ -13,8 +13,8 @@ declare(strict_types=1);
 
 namespace League\Uri;
 
-use League\Uri\Exception\InvalidUri;
 use League\Uri\Exception\MalformedUri;
+use League\Uri\Exception\MissingIdnSupport;
 use TypeError;
 use UnexpectedValueException;
 use function array_merge;
@@ -394,8 +394,8 @@ final class UriString
      *
      * @see http://tools.ietf.org/html/rfc3986#section-3.2.2
      *
-     * @throws MalformedUri if the registered name is invalid
-     * @throws InvalidUri   if IDN support or ICU requirement are not available or met.
+     * @throws MalformedUri      if the registered name is invalid
+     * @throws MissingIdnSupport if IDN support or ICU requirement are not available or met.
      */
     private static function filterRegisteredName(string $host): string
     {
@@ -414,7 +414,7 @@ final class UriString
 
             // @codeCoverageIgnoreStart
             if (!$idn_support) {
-                throw new InvalidUri(sprintf('the host `%s` could not be processed for IDN. Verify that ext/intl is installed for IDN support and that ICU is at least version 4.6.', $host));
+                throw new MissingIdnSupport(sprintf('the host `%s` could not be processed for IDN. Verify that ext/intl is installed for IDN support and that ICU is at least version 4.6.', $host));
             }
             // @codeCoverageIgnoreEnd
 
@@ -439,7 +439,7 @@ final class UriString
 
         // @codeCoverageIgnoreStart
         if (!$idn_support) {
-            throw new InvalidUri(sprintf('the host `%s` could not be processed for IDN. Verify that ext/intl is installed for IDN support and that ICU is at least version 4.6.', $host));
+            throw new MissingIdnSupport(sprintf('the host `%s` could not be processed for IDN. Verify that ext/intl is installed for IDN support and that ICU is at least version 4.6.', $host));
         }
         // @codeCoverageIgnoreEnd
 

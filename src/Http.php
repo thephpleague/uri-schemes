@@ -87,6 +87,19 @@ final class Http implements Psr7UriInterface, JsonSerializable
     }
 
     /**
+     * Create a new instance from a URI and a Base URI.
+     *
+     * The returned URI must be absolute.
+     *
+     * @param mixed $uri      the input URI to create
+     * @param mixed $base_uri the base URI used for reference
+     */
+    public static function create($uri, $base_uri = null): self
+    {
+        return new self(Uri::create($uri, $base_uri));
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function getScheme(): string

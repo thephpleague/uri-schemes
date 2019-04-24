@@ -15,8 +15,8 @@ namespace League\Uri;
 
 use finfo;
 use League\Uri\Contract\UriInterface;
-use League\Uri\Exception\InvalidUri;
 use League\Uri\Exception\MalformedUri;
+use League\Uri\Exception\MissingIdnSupport;
 use Psr\Http\Message\UriInterface as Psr7UriInterface;
 use TypeError;
 use UnexpectedValueException;
@@ -351,7 +351,8 @@ final class Uri implements UriInterface
      *
      * The host is converted to its ascii representation if needed
      *
-     * @throws MalformedUri if the submitted host is not a valid registered name
+     * @throws MissingIdnSupport if the submitted host required missing or misconfigured IDN support
+     * @throws MalformedUri      if the submitted host is not a valid registered name
      */
     private function formatRegisteredName(string $host): string
     {
@@ -370,7 +371,7 @@ final class Uri implements UriInterface
 
             // @codeCoverageIgnoreStart
             if (!$idn_support) {
-                throw new InvalidUri(sprintf('the host `%s` could not be processed for IDN. Verify that ext/intl is installed for IDN support and that ICU is at least version 4.6.', $host));
+                throw new MissingIdnSupport(sprintf('the host `%s` could not be processed for IDN. Verify that ext/intl is installed for IDN support and that ICU is at least version 4.6.', $host));
             }
             // @codeCoverageIgnoreEnd
 
@@ -400,7 +401,7 @@ final class Uri implements UriInterface
 
         // @codeCoverageIgnoreStart
         if (!$idn_support) {
-            throw new InvalidUri(sprintf('the host `%s` could not be processed for IDN. Verify that ext/intl is installed for IDN support and that ICU is at least version 4.6.', $host));
+            throw new MissingIdnSupport(sprintf('the host `%s` could not be processed for IDN. Verify that ext/intl is installed for IDN support and that ICU is at least version 4.6.', $host));
         }
         // @codeCoverageIgnoreEnd
 
@@ -618,7 +619,7 @@ final class Uri implements UriInterface
      *
      * @param resource|null $context
      *
-     * @throws InvalidUri If the file does not exist or is not readable
+     * @throws MalformedUri If the file does not exist or is not readable
      */
     public static function createFromDataPath(string $path, $context = null): self
     {
@@ -631,7 +632,7 @@ final class Uri implements UriInterface
 
         $raw = @file_get_contents(...$file_args);
         if (false === $raw) {
-            throw new InvalidUri(sprintf('The file `%s` does not exist or is not readable', $path));
+            throw new MalformedUri(sprintf('The file `%s` does not exist or is not readable', $path));
         }
 
         return Uri::createFromComponents([
@@ -767,7 +768,7 @@ final class Uri implements UriInterface
         if (0 === strpos(strtolower($server['HTTP_AUTHORIZATION']), 'basic')) {
             $userinfo = base64_decode(substr($server['HTTP_AUTHORIZATION'], 6), true);
             if (false === $userinfo) {
-                throw new InvalidUri('The user info could not be detected');
+                throw new MalformedUri('The user info could not be detected');
             }
             [$user, $pass] = explode(':', $userinfo, 2) + [1 => null];
         }
@@ -786,7 +787,7 @@ final class Uri implements UriInterface
     /**
      * Returns the environment host.
      *
-     * @throws InvalidUri If the host can not be detected
+     * @throws MalformedUri If the host can not be detected
      */
     private static function fetchHostname(array $server): array
     {
@@ -805,7 +806,7 @@ final class Uri implements UriInterface
         }
 
         if (!isset($server['SERVER_ADDR'])) {
-            throw new InvalidUri('The host could not be detected');
+            throw new MalformedUri('The host could not be detected');
         }
 
         if (false === filter_var($server['SERVER_ADDR'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
@@ -876,7 +877,7 @@ final class Uri implements UriInterface
      *
      * @see https://tools.ietf.org/html/rfc2397
      *
-     * @throws InvalidUri If the path is not compliant with RFC2397
+     * @throws MalformedUri If the path is not compliant with RFC2397
      */
     private function formatDataPath(string $path): string
     {

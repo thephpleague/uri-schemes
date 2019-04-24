@@ -12,7 +12,7 @@
 namespace LeagueTest\Uri;
 
 use InvalidArgumentException;
-use League\Uri\Exception\InvalidUri;
+use League\Uri\Exception\MalformedUri;
 use League\Uri\Http;
 use PHPUnit\Framework\TestCase;
 use TypeError;
@@ -128,6 +128,17 @@ class HttpTest extends TestCase
     }
 
     /**
+     * @covers ::create
+     */
+    public function testCreate(): void
+    {
+        self::assertEquals(
+            Http::createFromString('http://0:0@0/0?0#0'),
+            Http::create('0?0#0', 'http://0:0@0/')
+        );
+    }
+
+    /**
      * @dataProvider setStateDataProvider
      *
      * @covers ::__set_state
@@ -193,7 +204,7 @@ class HttpTest extends TestCase
      */
     public function testIsValid(string $uri): void
     {
-        self::expectException(InvalidUri::class);
+        self::expectException(MalformedUri::class);
         Http::createFromString($uri);
     }
 
@@ -236,7 +247,7 @@ class HttpTest extends TestCase
      */
     public function testPathIsInvalid(string $path): void
     {
-        self::expectException(InvalidUri::class);
+        self::expectException(MalformedUri::class);
         Http::createFromString('')->withPath($path);
     }
 
@@ -256,7 +267,7 @@ class HttpTest extends TestCase
      */
     public function testCreateFromInvalidUrlKO(string $uri): void
     {
-        self::expectException(InvalidUri::class);
+        self::expectException(MalformedUri::class);
         Http::createFromString($uri);
     }
 
@@ -271,7 +282,7 @@ class HttpTest extends TestCase
     }
     public function testModificationFailedWithEmptyAuthority(): void
     {
-        self::expectException(InvalidUri::class);
+        self::expectException(MalformedUri::class);
         Http::createFromString('http://example.com/path')
             ->withScheme('')
             ->withHost('')

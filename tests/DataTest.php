@@ -11,7 +11,6 @@
 
 namespace LeagueTest\Uri;
 
-use League\Uri\Exception\InvalidUri;
 use League\Uri\Exception\MalformedUri;
 use League\Uri\Uri;
 use PHPUnit\Framework\TestCase;
@@ -84,7 +83,7 @@ class DataTest extends TestCase
      */
     public function testCreateFromStringFailed(string $uri): void
     {
-        self::expectException(InvalidUri::class);
+        self::expectException(MalformedUri::class);
         Uri::createFromString($uri);
     }
 
@@ -125,7 +124,7 @@ class DataTest extends TestCase
      */
     public function testCreateFromComponentsFailedWithInvalidArgumentException(): void
     {
-        self::expectException(InvalidUri::class);
+        self::expectException(MalformedUri::class);
         Uri::createFromString('data:image/png;base64,°28');
     }
 
@@ -143,7 +142,7 @@ class DataTest extends TestCase
 
     public function testCreateFromComponentsFailedWithException(): void
     {
-        self::expectException(InvalidUri::class);
+        self::expectException(MalformedUri::class);
         Uri::createFromString('data:text/plain;charset=us-ascii,Bonjour%20le%20monde%21#fragment');
     }
 
@@ -162,9 +161,9 @@ class DataTest extends TestCase
     /**
      * @covers ::assertValidState
      */
-    public function testInvalidUri(): void
+    public function testMalformedUri(): void
     {
-        self::expectException(InvalidUri::class);
+        self::expectException(MalformedUri::class);
         Uri::createFromString('http:text/plain;charset=us-ascii,Bonjour%20le%20monde%21');
     }
 }

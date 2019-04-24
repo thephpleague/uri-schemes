@@ -11,7 +11,7 @@
 
 namespace LeagueTest\Uri;
 
-use League\Uri\Exception\InvalidUri;
+use League\Uri\Exception\MalformedUri;
 use League\Uri\Uri;
 use PHPUnit\Framework\TestCase;
 
@@ -67,7 +67,7 @@ class FtpTest extends TestCase
      */
     public function testConstructorThrowInvalidArgumentException(string $uri): void
     {
-        self::expectException(InvalidUri::class);
+        self::expectException(MalformedUri::class);
         Uri::createFromString($uri);
     }
 
@@ -83,7 +83,7 @@ class FtpTest extends TestCase
 
     public function testModificationFailedWithEmptyAuthority(): void
     {
-        self::expectException(InvalidUri::class);
+        self::expectException(MalformedUri::class);
         Uri::createFromString('ftp://example.com/path')
             ->withScheme(null)
             ->withHost(null)

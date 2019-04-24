@@ -11,7 +11,7 @@
 
 namespace LeagueTest\Uri;
 
-use League\Uri\Exception\InvalidUri;
+use League\Uri\Exception\MalformedUri;
 use League\Uri\Http;
 use League\Uri\Uri;
 use PHPUnit\Framework\TestCase;
@@ -31,7 +31,7 @@ class FactoryTest extends TestCase
      */
     public function testCreateFromPathFailed($path): void
     {
-        self::expectException(InvalidUri::class);
+        self::expectException(MalformedUri::class);
         Uri::createFromDataPath($path);
     }
 
@@ -325,7 +325,7 @@ class FactoryTest extends TestCase
      */
     public function testFailCreateFromServerWithoutHost(): void
     {
-        self::expectException(InvalidUri::class);
+        self::expectException(MalformedUri::class);
         Uri::createFromEnvironment([
             'PHP_SELF' => '',
             'REQUEST_URI' => '',
@@ -339,7 +339,7 @@ class FactoryTest extends TestCase
      */
     public function testFailCreateFromServerWithoutInvalidUserInfo(): void
     {
-        self::expectException(InvalidUri::class);
+        self::expectException(MalformedUri::class);
         Uri::createFromEnvironment([
             'PHP_SELF' => '/toto',
             'SERVER_ADDR' => '127.0.0.1',
@@ -411,7 +411,7 @@ class FactoryTest extends TestCase
      */
     public function testCreateThrowExceptionWithBaseUriNotAbsolute(): void
     {
-        self::expectException(InvalidUri::class);
+        self::expectException(MalformedUri::class);
         Uri::create('/path/to/you', '//example.com');
     }
 
@@ -420,7 +420,7 @@ class FactoryTest extends TestCase
      */
     public function testCreateThrowExceptionWithUriNotAbsolute(): void
     {
-        self::expectException(InvalidUri::class);
+        self::expectException(MalformedUri::class);
         Uri::create('/path/to/you');
     }
 

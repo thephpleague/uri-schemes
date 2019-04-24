@@ -11,7 +11,6 @@
 
 namespace LeagueTest\Uri;
 
-use League\Uri\Exception\InvalidUri;
 use League\Uri\Exception\MalformedUri;
 use League\Uri\Uri;
 use PHPUnit\Framework\TestCase;
@@ -226,7 +225,7 @@ class UriTest extends TestCase
      */
     public function testCannotConvertInvalidHost(): void
     {
-        self::expectException(InvalidUri::class);
+        self::expectException(MalformedUri::class);
         Uri::createFromString('http://_b%C3%A9bé.be-/foo/bar');
     }
 
@@ -250,7 +249,7 @@ class UriTest extends TestCase
      */
     public function testWithPathFailedWithInvalidChars(): void
     {
-        self::expectException(InvalidUri::class);
+        self::expectException(MalformedUri::class);
         Uri::createFromString('http://example.com')->withPath('#24');
     }
 
@@ -259,7 +258,7 @@ class UriTest extends TestCase
      */
     public function testWithPathFailedWithInvalidPathRelativeToTheAuthority(): void
     {
-        self::expectException(InvalidUri::class);
+        self::expectException(MalformedUri::class);
         Uri::createFromString('http://example.com')->withPath('foo/bar');
     }
 
@@ -279,7 +278,7 @@ class UriTest extends TestCase
      */
     public function testModificationFailedWithMissingAuthority(string $path): void
     {
-        self::expectException(InvalidUri::class);
+        self::expectException(MalformedUri::class);
         Uri::createFromString('http://example.com/path')
             ->withScheme(null)
             ->withHost(null)
