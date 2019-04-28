@@ -13,8 +13,8 @@ declare(strict_types=1);
 
 namespace League\Uri;
 
-use League\Uri\Exception\MalformedUri;
 use League\Uri\Exception\MissingIdnSupport;
+use League\Uri\Exception\SyntaxError;
 use TypeError;
 use function array_merge;
 use function defined;
@@ -248,9 +248,9 @@ final class UriString
      *
      * @param mixed $uri any scalar or stringable object
      *
-     * @throws MalformedUri if the URI contains invalid characters
-     * @throws MalformedUri if the URI contains an invalid scheme
-     * @throws MalformedUri if the URI contains an invalid path
+     * @throws SyntaxError if the URI contains invalid characters
+     * @throws SyntaxError if the URI contains an invalid scheme
+     * @throws SyntaxError if the URI contains an invalid path
      */
     public static function parse($uri): array
     {
@@ -265,7 +265,7 @@ final class UriString
         }
 
         if (1 === preg_match(self::REGEXP_INVALID_URI_CHARS, $uri)) {
-            throw new MalformedUri(sprintf('The uri `%s` contains invalid characters', $uri));
+            throw new SyntaxError(sprintf('The uri `%s` contains invalid characters', $uri));
         }
 
         //if the first character is a known URI delimiter parsing can be simplified
@@ -296,11 +296,11 @@ final class UriString
         $parts += ['query' => '', 'fragment' => ''];
 
         if (':' === $parts['scheme'] || 1 !== preg_match(self::REGEXP_URI_SCHEME, $parts['scontent'])) {
-            throw new MalformedUri(sprintf('The uri `%s` contains an invalid scheme', $uri));
+            throw new SyntaxError(sprintf('The uri `%s` contains an invalid scheme', $uri));
         }
 
         if ('' === $parts['scheme'].$parts['authority'] && 1 === preg_match(self::REGEXP_INVALID_PATH, $parts['path'])) {
-            throw new MalformedUri(sprintf('The uri `%s` contains an invalid path.', $uri));
+            throw new SyntaxError(sprintf('The uri `%s` contains an invalid path.', $uri));
         }
 
         return array_merge(
@@ -320,7 +320,7 @@ final class UriString
      *
      * @see https://tools.ietf.org/html/rfc3986#section-3.2
      *
-     * @throws MalformedUri If the port component is invalid
+     * @throws SyntaxError If the port component is invalid
      */
     private static function parseAuthority(string $authority): array
     {
@@ -348,7 +348,7 @@ final class UriString
      *
      * @see https://tools.ietf.org/html/rfc3986#section-3.2.2
      *
-     * @throws MalformedUri if the registered name is invalid
+     * @throws SyntaxError if the registered name is invalid
      *
      */
     private static function filterPort(string $port): ?int
@@ -361,7 +361,7 @@ final class UriString
             return (int) $port;
         }
 
-        throw new MalformedUri(sprintf('The port `%s` is invalid', $port));
+        throw new SyntaxError(sprintf('The port `%s` is invalid', $port));
     }
 
     /**
@@ -369,7 +369,7 @@ final class UriString
      *
      * @see https://tools.ietf.org/html/rfc3986#section-3.2.2
      *
-     * @throws MalformedUri if the registered name is invalid
+     * @throws SyntaxError if the registered name is invalid
      */
     private static function filterHost(string $host): string
     {
@@ -382,7 +382,7 @@ final class UriString
         }
 
         if (!self::isIpHost(substr($host, 1, -1))) {
-            throw new MalformedUri(sprintf('Host `%s` is invalid : the IP host is malformed', $host));
+            throw new SyntaxError(sprintf('Host `%s` is invalid : the IP host is malformed', $host));
         }
 
         return $host;
@@ -393,7 +393,7 @@ final class UriString
      *
      * @see http://tools.ietf.org/html/rfc3986#section-3.2.2
      *
-     * @throws MalformedUri      if the registered name is invalid
+     * @throws SyntaxError       if the registered name is invalid
      * @throws MissingIdnSupport if IDN support or ICU requirement are not available or met.
      */
     private static function filterRegisteredName(string $host): string
@@ -419,7 +419,7 @@ final class UriString
 
             $unicode = idn_to_utf8($host, 0, INTL_IDNA_VARIANT_UTS46, $arr);
             if (0 !== $arr['errors']) {
-                throw new MalformedUri(sprintf('The host `%s` is invalid : %s', $host, self::getIDNAErrors($arr['errors'])));
+                throw new SyntaxError(sprintf('The host `%s` is invalid : %s', $host, self::getIDNAErrors($arr['errors'])));
             }
 
             // @codeCoverageIgnoreStart
@@ -433,7 +433,7 @@ final class UriString
 
         //to test IDN host non-ascii characters must be present in the host
         if (1 !== preg_match(self::REGEXP_IDN_PATTERN, $formatted_host)) {
-            throw new MalformedUri(sprintf('Host `%s` is invalid : the host is not a valid registered name', $host));
+            throw new SyntaxError(sprintf('Host `%s` is invalid : the host is not a valid registered name', $host));
         }
 
         // @codeCoverageIgnoreStart
@@ -444,7 +444,7 @@ final class UriString
 
         $retval = idn_to_ascii($formatted_host, 0, INTL_IDNA_VARIANT_UTS46, $arr);
         if (0 !== $arr['errors']) {
-            throw new MalformedUri(sprintf('Host `%s` is not a valid IDN host : %s', $host, self::getIDNAErrors($arr['errors'])));
+            throw new SyntaxError(sprintf('Host `%s` is not a valid IDN host : %s', $host, self::getIDNAErrors($arr['errors'])));
         }
 
         // @codeCoverageIgnoreStart
@@ -454,7 +454,7 @@ final class UriString
         // @codeCoverageIgnoreEnd
 
         if (false !== strpos($retval, '%')) {
-            throw new MalformedUri(sprintf('Host `%s` is invalid : the host is not a valid registered name', $host));
+            throw new SyntaxError(sprintf('Host `%s` is invalid : the host is not a valid registered name', $host));
         }
 
         return $host;

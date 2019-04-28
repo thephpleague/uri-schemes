@@ -11,7 +11,7 @@
 
 namespace LeagueTest\Uri;
 
-use League\Uri\Exception\MalformedUri;
+use League\Uri\Exception\SyntaxError;
 use League\Uri\Uri;
 use PHPUnit\Framework\TestCase;
 
@@ -83,7 +83,7 @@ class DataTest extends TestCase
      */
     public function testCreateFromStringFailed(string $uri): void
     {
-        self::expectException(MalformedUri::class);
+        self::expectException(SyntaxError::class);
         Uri::createFromString($uri);
     }
 
@@ -104,7 +104,7 @@ class DataTest extends TestCase
      */
     public function testCreateFromStringFailedWithWrongComponent(string $uri): void
     {
-        self::expectException(MalformedUri::class);
+        self::expectException(SyntaxError::class);
         Uri::createFromString($uri);
     }
 
@@ -124,7 +124,7 @@ class DataTest extends TestCase
      */
     public function testCreateFromComponentsFailedWithInvalidArgumentException(): void
     {
-        self::expectException(MalformedUri::class);
+        self::expectException(SyntaxError::class);
         Uri::createFromString('data:image/png;base64,°28');
     }
 
@@ -136,13 +136,13 @@ class DataTest extends TestCase
      */
     public function testCreateFromComponentsFailedInvalidMediatype(): void
     {
-        self::expectException(MalformedUri::class);
+        self::expectException(SyntaxError::class);
         Uri::createFromString('data:image/png;base64=toto;base64,dsqdfqfd');
     }
 
     public function testCreateFromComponentsFailedWithException(): void
     {
-        self::expectException(MalformedUri::class);
+        self::expectException(SyntaxError::class);
         Uri::createFromString('data:text/plain;charset=us-ascii,Bonjour%20le%20monde%21#fragment');
     }
 
@@ -161,9 +161,9 @@ class DataTest extends TestCase
     /**
      * @covers ::assertValidState
      */
-    public function testMalformedUri(): void
+    public function testSyntaxError(): void
     {
-        self::expectException(MalformedUri::class);
+        self::expectException(SyntaxError::class);
         Uri::createFromString('http:text/plain;charset=us-ascii,Bonjour%20le%20monde%21');
     }
 }

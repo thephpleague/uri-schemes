@@ -11,7 +11,7 @@
 
 namespace LeagueTest\Uri;
 
-use League\Uri\Exception\MalformedUri;
+use League\Uri\Exception\SyntaxError;
 use League\Uri\UriString;
 use PHPUnit\Framework\TestCase;
 use TypeError;
@@ -752,7 +752,7 @@ class UriStringTest extends TestCase
      */
     public function testParseFailed(string $uri): void
     {
-        self::expectException(MalformedUri::class);
+        self::expectException(SyntaxError::class);
         UriString::parse($uri);
     }
 

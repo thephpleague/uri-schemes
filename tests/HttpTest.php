@@ -12,7 +12,7 @@
 namespace LeagueTest\Uri;
 
 use InvalidArgumentException;
-use League\Uri\Exception\MalformedUri;
+use League\Uri\Exception\SyntaxError;
 use League\Uri\Http;
 use PHPUnit\Framework\TestCase;
 use TypeError;
@@ -204,7 +204,7 @@ class HttpTest extends TestCase
      */
     public function testIsValid(string $uri): void
     {
-        self::expectException(MalformedUri::class);
+        self::expectException(SyntaxError::class);
         Http::createFromString($uri);
     }
 
@@ -247,7 +247,7 @@ class HttpTest extends TestCase
      */
     public function testPathIsInvalid(string $path): void
     {
-        self::expectException(MalformedUri::class);
+        self::expectException(SyntaxError::class);
         Http::createFromString('')->withPath($path);
     }
 
@@ -267,7 +267,7 @@ class HttpTest extends TestCase
      */
     public function testCreateFromInvalidUrlKO(string $uri): void
     {
-        self::expectException(MalformedUri::class);
+        self::expectException(SyntaxError::class);
         Http::createFromString($uri);
     }
 
@@ -282,7 +282,7 @@ class HttpTest extends TestCase
     }
     public function testModificationFailedWithEmptyAuthority(): void
     {
-        self::expectException(MalformedUri::class);
+        self::expectException(SyntaxError::class);
         Http::createFromString('http://example.com/path')
             ->withScheme('')
             ->withHost('')

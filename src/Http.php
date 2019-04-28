@@ -15,7 +15,7 @@ namespace League\Uri;
 
 use JsonSerializable;
 use League\Uri\Contract\UriInterface;
-use League\Uri\Exception\MalformedUri;
+use League\Uri\Exception\SyntaxError;
 use Psr\Http\Message\UriInterface as Psr7UriInterface;
 use function is_scalar;
 use function method_exists;
@@ -40,18 +40,18 @@ final class Http implements Psr7UriInterface, JsonSerializable
     /**
      * Validate the submitted uri against PSR-7 UriInterface.
      *
-     * @throws MalformedUri if the given URI does not follow PSR-7 UriInterface rules
+     * @throws SyntaxError if the given URI does not follow PSR-7 UriInterface rules
      */
     private function validate(UriInterface $uri): void
     {
         $scheme = $uri->getScheme();
         if (null === $scheme && '' === $uri->getHost()) {
-            throw new MalformedUri(sprintf('an URI without scheme can not contains a empty host string according to PSR-7: %s', (string) $uri));
+            throw new SyntaxError(sprintf('an URI without scheme can not contains a empty host string according to PSR-7: %s', (string) $uri));
         }
 
         $port = $uri->getPort();
         if (null !== $port && ($port < 0 || $port > 65535)) {
-            throw new MalformedUri(sprintf('The URI port is outside the established TCP and UDP port ranges: %s', (string) $uri->getPort()));
+            throw new SyntaxError(sprintf('The URI port is outside the established TCP and UDP port ranges: %s', (string) $uri->getPort()));
         }
     }
 
@@ -186,7 +186,7 @@ final class Http implements Psr7UriInterface, JsonSerializable
      *
      * @param mixed $str the value to evaluate as a string
      *
-     * @throws MalformedUri if the submitted data can not be converted to string
+     * @throws SyntaxError if the submitted data can not be converted to string
      *
      * @return string|mixed
      */

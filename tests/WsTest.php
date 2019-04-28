@@ -11,7 +11,7 @@
 
 namespace LeagueTest\Uri;
 
-use League\Uri\Exception\MalformedUri;
+use League\Uri\Exception\SyntaxError;
 use League\Uri\Uri;
 use PHPUnit\Framework\TestCase;
 
@@ -67,7 +67,7 @@ class WsTest extends TestCase
      */
     public function testConstructorThrowInvalidArgumentException(string $uri): void
     {
-        self::expectException(MalformedUri::class);
+        self::expectException(SyntaxError::class);
         Uri::createFromString($uri);
     }
 
@@ -82,7 +82,7 @@ class WsTest extends TestCase
 
     public function testModificationFailedWithEmptyAuthority(): void
     {
-        self::expectException(MalformedUri::class);
+        self::expectException(SyntaxError::class);
         Uri::createFromString('wss://example.com/path')
             ->withScheme(null)
             ->withHost(null)

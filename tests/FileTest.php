@@ -11,7 +11,7 @@
 
 namespace LeagueTest\Uri;
 
-use League\Uri\Exception\MalformedUri;
+use League\Uri\Exception\SyntaxError;
 use League\Uri\Uri;
 use PHPUnit\Framework\TestCase;
 
@@ -96,7 +96,7 @@ class FileTest extends TestCase
      */
     public function testConstructorThrowsException(string $uri): void
     {
-        self::expectException(MalformedUri::class);
+        self::expectException(SyntaxError::class);
         Uri::createFromString($uri);
     }
 

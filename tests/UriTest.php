@@ -11,7 +11,7 @@
 
 namespace LeagueTest\Uri;
 
-use League\Uri\Exception\MalformedUri;
+use League\Uri\Exception\SyntaxError;
 use League\Uri\Uri;
 use PHPUnit\Framework\TestCase;
 use TypeError;
@@ -225,13 +225,13 @@ class UriTest extends TestCase
      */
     public function testCannotConvertInvalidHost(): void
     {
-        self::expectException(MalformedUri::class);
+        self::expectException(SyntaxError::class);
         Uri::createFromString('http://_b%C3%A9bé.be-/foo/bar');
     }
 
     public function testWithSchemeFailedWithInvalidSchemeValue(): void
     {
-        self::expectException(MalformedUri::class);
+        self::expectException(SyntaxError::class);
         Uri::createFromString('http://example.com')->withScheme('tété');
     }
 
@@ -249,7 +249,7 @@ class UriTest extends TestCase
      */
     public function testWithPathFailedWithInvalidChars(): void
     {
-        self::expectException(MalformedUri::class);
+        self::expectException(SyntaxError::class);
         Uri::createFromString('http://example.com')->withPath('#24');
     }
 
@@ -258,7 +258,7 @@ class UriTest extends TestCase
      */
     public function testWithPathFailedWithInvalidPathRelativeToTheAuthority(): void
     {
-        self::expectException(MalformedUri::class);
+        self::expectException(SyntaxError::class);
         Uri::createFromString('http://example.com')->withPath('foo/bar');
     }
 
@@ -268,7 +268,7 @@ class UriTest extends TestCase
      */
     public function testModificationFailedWithInvalidHost(): void
     {
-        self::expectException(MalformedUri::class);
+        self::expectException(SyntaxError::class);
         Uri::createFromString('http://example.com/path')->withHost('%23');
     }
 
@@ -278,7 +278,7 @@ class UriTest extends TestCase
      */
     public function testModificationFailedWithMissingAuthority(string $path): void
     {
-        self::expectException(MalformedUri::class);
+        self::expectException(SyntaxError::class);
         Uri::createFromString('http://example.com/path')
             ->withScheme(null)
             ->withHost(null)
@@ -387,7 +387,7 @@ class UriTest extends TestCase
      */
     public function testModificationFailedWithInvalidPort(): void
     {
-        self::expectException(MalformedUri::class);
+        self::expectException(SyntaxError::class);
         Uri::createFromString('http://example.com/path')->withPort(-1);
     }
 
@@ -397,7 +397,7 @@ class UriTest extends TestCase
      */
     public function testModificationFailedWithInvalidPort2(): void
     {
-        self::expectException(MalformedUri::class);
+        self::expectException(SyntaxError::class);
         Uri::createFromString('http://example.com/path')->withPort('-1');
     }
 
@@ -431,7 +431,7 @@ class UriTest extends TestCase
      */
     public function testCreateFromComponentsThrowsOnInvalidIpvFuture(): void
     {
-        self::expectException(MalformedUri::class);
+        self::expectException(SyntaxError::class);
         Uri::createFromComponents(['host' => '[v4.1.2.3]']);
     }
 
@@ -440,7 +440,7 @@ class UriTest extends TestCase
      */
     public function testCreateFromComponentsThrowsExceptionWithInvalidChars(): void
     {
-        self::expectException(MalformedUri::class);
+        self::expectException(SyntaxError::class);
         Uri::createFromComponents()->withFragment("\n\rtoto");
     }
 
@@ -449,7 +449,7 @@ class UriTest extends TestCase
      */
     public function testCreateFromComponentsThrowsException(): void
     {
-        self::expectException(MalformedUri::class);
+        self::expectException(SyntaxError::class);
         Uri::createFromComponents(['host' => '[127.0.0.1]']);
     }
 
@@ -458,7 +458,7 @@ class UriTest extends TestCase
      */
     public function testCreateFromComponentsThrowsException2(): void
     {
-        self::expectException(MalformedUri::class);
+        self::expectException(SyntaxError::class);
         Uri::createFromComponents(['host' => '[127.0.0.1%251]']);
     }
 
@@ -467,7 +467,7 @@ class UriTest extends TestCase
      */
     public function testCreateFromComponentsThrowsException3(): void
     {
-        self::expectException(MalformedUri::class);
+        self::expectException(SyntaxError::class);
         Uri::createFromComponents(['host' => '[fe80:1234::%25 1]']);
     }
 
@@ -476,7 +476,7 @@ class UriTest extends TestCase
      */
     public function testCreateFromComponentsThrowsException4(): void
     {
-        self::expectException(MalformedUri::class);
+        self::expectException(SyntaxError::class);
         Uri::createFromComponents(['host' => '[::1%251]']);
     }
 
@@ -486,7 +486,7 @@ class UriTest extends TestCase
      */
     public function testCreateFromComponentsThrowsException5(): void
     {
-        self::expectException(MalformedUri::class);
+        self::expectException(SyntaxError::class);
         Uri::createFromComponents(['host' => 'a⒈com']);
     }
 
@@ -496,7 +496,7 @@ class UriTest extends TestCase
      */
     public function testCreateFromComponentsThrowsException6(): void
     {
-        self::expectException(MalformedUri::class);
+        self::expectException(SyntaxError::class);
         Uri::createFromComponents(['host' => 'xn--3']);
     }
 
