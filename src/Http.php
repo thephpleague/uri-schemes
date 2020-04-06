@@ -1,7 +1,7 @@
 <?php
 
 /**
- * League.Uri (http://uri.thephpleague.com).
+ * League.Uri (http://uri.thephpleague.com)
  *
  * @package    League\Uri
  * @subpackage League\Uri\Schemes
@@ -21,6 +21,7 @@ namespace League\Uri;
 use Psr\Http\Message\UriInterface as Psr7UriInterface;
 
 use function base64_decode;
+use function class_alias;
 use function explode;
 use function filter_var;
 use function preg_match;
@@ -197,3 +198,5 @@ class Http extends AbstractUri implements Psr7UriInterface
         return [$server['PHP_SELF'], $server['QUERY_STRING']];
     }
 }
+
+class_alias(Http::class, League\Schemes\Http::class);

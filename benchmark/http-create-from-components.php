@@ -1,7 +1,7 @@
 <?php
 
 /**
- * League.Uri (http://uri.thephpleague.com).
+ * League.Uri (http://uri.thephpleague.com)
  *
  * @package    League\Uri
  * @subpackage League\Uri\Schemes
@@ -13,6 +13,7 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
 require __DIR__.'/../vendor/autoload.php';
 
 $components = [

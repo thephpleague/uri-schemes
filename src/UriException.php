@@ -1,7 +1,7 @@
 <?php
 
 /**
- * League.Uri (http://uri.thephpleague.com).
+ * League.Uri (http://uri.thephpleague.com)
  *
  * @package    League\Uri
  * @subpackage League\Uri\Schemes
@@ -18,6 +18,8 @@ declare(strict_types=1);
 
 namespace League\Uri;
 
+use function class_alias;
+
 /**
  * Base Exception class for League Uri Schemes.
  *
@@ -28,3 +30,5 @@ namespace League\Uri;
 class UriException extends Exception
 {
 }
+
+class_alias(UriException::class, League\Uri\Schemes\UriException::class);

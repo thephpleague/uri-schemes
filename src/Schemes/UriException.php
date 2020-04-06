@@ -1,7 +1,7 @@
 <?php
 
 /**
- * League.Uri (http://uri.thephpleague.com).
+ * League.Uri (http://uri.thephpleague.com)
  *
  * @package    League\Uri
  * @subpackage League\Uri\Schemes
@@ -16,7 +16,14 @@
 
 namespace League\Uri\Schemes;
 
-use League\Uri;
 use function class_exists;
 
-class_exists(Uri\UriException::class);
+class_exists(\League\Uri\UriException::class);
+if (!class_exists(UriException::class)) {
+    /**
+     * @deprecated use instead {@link League\Uri\UriException}
+     */
+    class UriException
+    {
+    }
+}

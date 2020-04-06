@@ -1,7 +1,7 @@
 <?php
 
 /**
- * League.Uri (http://uri.thephpleague.com).
+ * League.Uri (http://uri.thephpleague.com)
  *
  * @package    League\Uri
  * @subpackage League\Uri\Schemes
@@ -17,6 +17,8 @@
 declare(strict_types=1);
 
 namespace League\Uri;
+
+use function class_alias;
 
 /**
  * Immutable Value object representing a RFC3986 Uri.
@@ -41,3 +43,5 @@ class Uri extends AbstractUri
         return true;
     }
 }
+
+class_alias(Uri::class, League\Uri\Schemes\Uri::class);

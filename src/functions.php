@@ -1,7 +1,7 @@
 <?php
 
 /**
- * League.Uri (http://uri.thephpleague.com).
+ * League.Uri (http://uri.thephpleague.com)
  *
  * @package    League\Uri
  * @subpackage League\Uri\Schemes
@@ -25,8 +25,8 @@ use Psr\Http\Message\UriInterface as Psr7UriInterface;
  * Create a new URI optionally according to
  * a base URI object.
  *
- * @see Uri\Factory::__construct
- * @see Uri\Factory::create
+ * @see \League\Uri\Factory::__construct
+ * @see \League\Uri\Factory::create
  *
  * @param  null|mixed                                                 $base_uri
  * @return Psr7UriInterface|DeprecatedLeagueUriInterface|UriInterface
