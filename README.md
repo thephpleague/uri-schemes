@@ -1,6 +1,10 @@
 Uri Schemes
 =======
 
+# This package is EOL since 2019-10-18
+
+**You should instead use: [The latest League URI package](https://github.com/thephpleague/uri/releases).**
+
 [![Build Status](https://img.shields.io/travis/thephpleague/uri-schemes/master.svg?style=flat-square)](https://travis-ci.org/thephpleague/uri-schemes)
 [![Latest Version](https://img.shields.io/github/release/thephpleague/uri-schemes.svg?style=flat-square)](https://github.com/thephpleague/uri-components/schemes)
 
