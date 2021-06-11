@@ -1,7 +1,7 @@
 <?php
 
 /**
- * League.Uri (http://uri.thephpleague.com).
+ * League.Uri (http://uri.thephpleague.com)
  *
  * @package    League\Uri
  * @subpackage League\Uri\Schemes
@@ -22,6 +22,7 @@ use BadMethodCallException;
 use League\Uri\Interfaces\Uri as DeprecatedLeagueUriInterface;
 use UnexpectedValueException;
 use function array_keys;
+use function class_alias;
 use function defined;
 use function explode;
 use function filter_var;
@@ -1142,3 +1143,5 @@ abstract class AbstractUri implements UriInterface, DeprecatedLeagueUriInterface
         throw new BadMethodCallException(sprintf('"%s" is an undefined or inaccessible property', $property));
     }
 }
+
+class_alias(AbstractUri::class, League\Schemes\AbstractUri::class);

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * League.Uri (http://uri.thephpleague.com).
+ * League.Uri (http://uri.thephpleague.com)
  *
  * @package    League\Uri
  * @subpackage League\Uri\Schemes
@@ -21,6 +21,7 @@ namespace League\Uri;
 use function array_filter;
 use function base64_decode;
 use function base64_encode;
+use function class_alias;
 use function count;
 use function explode;
 use function file_exists;
@@ -172,3 +173,5 @@ class Data extends AbstractUri
         );
     }
 }
+
+class_alias(Data::class, League\Schemes\Data::class);

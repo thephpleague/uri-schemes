@@ -1,7 +1,7 @@
 <?php
 
 /**
- * League.Uri (http://uri.thephpleague.com).
+ * League.Uri (http://uri.thephpleague.com)
  *
  * @package    League\Uri
  * @subpackage League\Uri\Schemes
@@ -28,7 +28,7 @@ use function var_export;
 
 /**
  * @group uri
- * @coversDefaultClass League\Uri\Schemes\AbstractUri
+ * @coversDefaultClass \League\Uri\AbstractUri
  */
 class UriTest extends TestCase
 {

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * League.Uri (http://uri.thephpleague.com).
+ * League.Uri (http://uri.thephpleague.com)
  *
  * @package    League\Uri
  * @subpackage League\Uri\Schemes
@@ -17,6 +17,8 @@
 declare(strict_types=1);
 
 namespace League\Uri;
+
+use function class_alias;
 
 /**
  * Immutable Value object representing a FTP Uri.
@@ -58,3 +60,5 @@ class Ftp extends AbstractUri
             && !('' != $this->scheme && null === $this->host);
     }
 }
+
+class_alias(Ftp::class, League\Schemes\Ftp::class);

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * League.Uri (http://uri.thephpleague.com).
+ * League.Uri (http://uri.thephpleague.com)
  *
  * @package    League\Uri
  * @subpackage League\Uri\Schemes
@@ -19,6 +19,7 @@ declare(strict_types=1);
 namespace League\Uri;
 
 use function array_map;
+use function class_alias;
 use function explode;
 use function implode;
 use function in_array;
@@ -136,3 +137,5 @@ class File extends AbstractUri
         return new static(null, null, null, null, null, $uri);
     }
 }
+
+class_alias(File::class, League\Schemes\File::class);
